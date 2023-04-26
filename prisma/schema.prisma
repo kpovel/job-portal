@@ -83,8 +83,8 @@ model Resume {
 model Vacancy {
     questionnaireId   String        @unique
     questionnaire     Questionnaire @relation(fields: [questionnaireId], references: [id])
-    empoyerId         String        @unique
-    employer          Employer      @relation(fields: [empoyerId], references: [employerId])
+    employerId        String        @unique
+    employer          Employer      @relation(fields: [employerId], references: [employerId])
     specialty         String
     salary            Int?
     duties            String?
