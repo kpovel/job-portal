@@ -14,7 +14,7 @@ model User {
     lastName   String
     firstName  String
     middleName String?
-    age        Int
+    age        Int?
 
     phoneNumber  String
     email        String  @unique
@@ -29,16 +29,18 @@ model User {
 }
 
 model Candidate {
-    userId         String          @unique
-    user           User            @relation(fields: [userId], references: [id])
+    candidateId      String           @unique
+    candidate        User             @relation(fields: [candidateId], references: [id])
+    moderationStatus ModerationStatus @default(PENDING)
+
     questionnaires Questionnaire[]
     responses      Response[]
     resume         Resume[]
 }
 
 model Employer {
-    userId String @unique
-    user   User   @relation(fields: [userId], references: [id])
+    employerId String @unique
+    employer   User   @relation(fields: [employerId], references: [id])
 
     companyName    String
     companyAddress String
@@ -48,21 +50,23 @@ model Employer {
 }
 
 model Questionnaire {
-    id                String     @id @default(cuid())
-    questionnaireType String
-    candidateId       String?    @unique
-    employerId        String?    @unique
-    candidate         Candidate? @relation(fields: [candidateId], references: [userId])
-    employer          Employer?  @relation(fields: [employerId], references: [userId])
+    id                String            @id @default(cuid())
+    questionnaireType QuestionnaireType
+    candidateId       String?           @unique
+    employerId        String?           @unique
+    candidate         Candidate?        @relation(fields: [candidateId], references: [candidateId])
+    employer          Employer?         @relation(fields: [employerId], references: [employerId])
     resume            Resume?
     vacancy           Vacancy?
 }
 
 model Resume {
-    questionnaireId  String        @unique
-    questionnaire    Questionnaire @relation(fields: [questionnaireId], references: [id])
-    candidateId      String        @unique
-    candidate        Candidate     @relation(fields: [candidateId], references: [userId])
+    questionnaireId  String           @unique
+    questionnaire    Questionnaire    @relation(fields: [questionnaireId], references: [id])
+    candidateId      String           @unique
+    candidate        Candidate        @relation(fields: [candidateId], references: [candidateId])
+    moderationStatus ModerationStatus @default(PENDING)
+
     workExperience   String
     skills           String
     education        String?
@@ -72,7 +76,7 @@ model Resume {
     specialty        String?
     desiredSalary    Int?
     employment       String?
-    updatedAt        DateTime      @updatedAt()
+    updatedAt        DateTime  @updatedAt()
     response         Response?
 }
 
@@ -80,7 +84,7 @@ model Vacancy {
     questionnaireId   String        @unique
     questionnaire     Questionnaire @relation(fields: [questionnaireId], references: [id])
     empoyerId         String        @unique
-    employer          Employer      @relation(fields: [empoyerId], references: [userId])
+    employer          Employer      @relation(fields: [empoyerId], references: [employerId])
     specialty         String
     salary            Int?
     duties            String?
@@ -102,8 +106,8 @@ model Response {
     responseDate   DateTime        @default(now())
     resume         Resume          @relation(fields: [resumeId], references: [questionnaireId])
     vacancy        Vacancy         @relation(fields: [vacancyId], references: [questionnaireId])
-    candidate      Candidate       @relation(fields: [candidateId], references: [userId])
-    employer       Employer        @relation(fields: [employerId], references: [userId])
+    candidate      Candidate       @relation(fields: [candidateId], references: [candidateId])
+    employer       Employer        @relation(fields: [employerId], references: [employerId])
     feedbackResult FeedbackResult?
 }
 
@@ -119,4 +123,15 @@ enum UserType {
     CANDIDATE
     EMPLOYER
     ADMIN
+}
+
+enum ModerationStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+}
+
+enum QuestionnaireType {
+    RESUME
+    VACANCY
 }
