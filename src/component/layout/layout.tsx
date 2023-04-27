@@ -1,12 +1,15 @@
 import { type ReactNode } from "react";
 import { Header } from "~/component/layout/header";
+import { Footer } from "~/component/layout/footer";
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="h-max min-h-screen bg-gray-50">
+    <div className="flex h-max min-h-screen flex-col bg-gray-50">
       <Header />
-      <main>{children}</main>
-      <footer></footer>
+      <main className="container mx-auto flex w-full grow flex-col p-4 ">
+        {children}
+      </main>
+      <Footer />
     </div>
   );
 }
