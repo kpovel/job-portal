@@ -1,7 +1,10 @@
 import Head from "next/head";
+import { type GetServerSideProps, type GetServerSidePropsContext } from "next";
 import { Layout } from "~/component/layout/layout";
+import { parse as parseCookies } from "cookie";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 
-export default function Home() {
+const Home = () => {
   return (
     <>
       <Head>
@@ -12,4 +15,26 @@ export default function Home() {
       <Layout>job portal</Layout>
     </>
   );
-}
+};
+
+export default Home;
+
+export const getServerSideProps: GetServerSideProps = async (
+  context: GetServerSidePropsContext
+) => {
+  const { req } = context;
+  const parsedCookies = parseCookies(req.headers.cookie ?? "");
+
+  if (parsedCookies[AUTHORIZATION_TOKEN_KEY]) {
+    return Promise.resolve({
+      redirect: {
+        destination: "/jobs",
+        permanent: false,
+      },
+    });
+  }
+
+  return Promise.resolve({
+    props: {},
+  });
+};
