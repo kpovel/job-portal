@@ -1,10 +1,14 @@
 import { type FormEvent, useState } from "react";
 
-interface AuthFormProps {
+export interface AuthFormProps {
   handleFormSubmit: (login: string, password: string) => Promise<void>;
+  authorizationType: "Log in" | "Sign up";
 }
 
-export function AuthForm({ handleFormSubmit }: AuthFormProps) {
+export function AuthForm({
+  handleFormSubmit,
+  authorizationType,
+}: AuthFormProps) {
   const [login, setLogin] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
@@ -67,7 +71,7 @@ export function AuthForm({ handleFormSubmit }: AuthFormProps) {
             !isFormValid ? "cursor-not-allowed opacity-50" : ""
           }`}
         >
-          Log in
+          {authorizationType}
         </button>
       </div>
     </form>
