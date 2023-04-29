@@ -11,7 +11,7 @@ import { Layout } from "~/component/layout/layout";
 const Signup = () => {
   const router = useRouter();
 
-  async function verifyLogin(login: string, password: string) {
+  async function createAccount(login: string, password: string) {
     try {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
@@ -43,7 +43,10 @@ const Signup = () => {
   return (
     <Layout>
       <AuthLayout authorizationType="Sign up">
-        <AuthForm handleFormSubmit={verifyLogin} authorizationType="Sign up" />
+        <AuthForm
+          handleFormSubmit={createAccount}
+          authorizationType="Sign up"
+        />
         <p className="mt-10 text-center text-sm text-gray-500">
           Already have an account?{" "}
           <Link
