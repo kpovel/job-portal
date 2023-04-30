@@ -2,7 +2,11 @@ import { type FormEvent, useState } from "react";
 import { SelectUserType, type UserType } from "~/component/auth/selectUserType";
 
 export interface AuthFormProps {
-  handleFormSubmit: (login: string, password: string) => Promise<void>;
+  handleFormSubmit: (
+    login: string,
+    password: string,
+    userType?: string
+  ) => Promise<void>;
   authorizationType: "Log in" | "Sign up";
 }
 
@@ -18,7 +22,10 @@ export function AuthForm({
 
   function submitForm(e: FormEvent) {
     e.preventDefault();
-    void handleFormSubmit(login, password);
+
+    authorizationType === "Sign up"
+      ? void handleFormSubmit(login, password, selectedUserType?.type)
+      : void handleFormSubmit(login, password);
   }
 
   const isFilledForm = {

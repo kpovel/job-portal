@@ -11,12 +11,16 @@ import { Layout } from "~/component/layout/layout";
 const Signup = () => {
   const router = useRouter();
 
-  async function createAccount(login: string, password: string) {
+  async function createAccount(
+    login: string,
+    password: string,
+    userType: string | undefined
+  ) {
     try {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ login, password }),
+        body: JSON.stringify({ login, password, userType }),
       });
 
       type AuthorizationResponse = {
