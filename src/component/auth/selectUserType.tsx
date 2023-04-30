@@ -24,52 +24,48 @@ export function SelectUserType({
   onUserTypeChange: (value: UserType) => void;
 }) {
   return (
-    <div className="m-full">
-      <div className="mx-auto w-full max-w-md text-sm font-medium leading-6 text-gray-900">
-        Оберіть тип користувача:
-        <RadioGroup
-          value={userType || { type: "", description: "" }}
-          onChange={onUserTypeChange}
-          className="mt-2"
-        >
-          <div className="space-y-2">
-            {userTypes.map((user) => (
-              <RadioGroup.Option
-                key={user.type}
-                value={user}
-                className={({ checked }) =>
-                  `${
-                    checked
-                      ? "bg-blue-600 bg-opacity-75 text-white"
-                      : "bg-white"
-                  }
-                    relative flex w-full cursor-pointer rounded-md px-3 py-3 shadow-sm ring-1 ring-inset ring-gray-300`
+    <div className="mx-auto w-full text-sm font-medium leading-6 text-gray-900">
+      Оберіть тип користувача:
+      <RadioGroup
+        value={userType || { type: "", description: "" }}
+        onChange={onUserTypeChange}
+        className="mt-2"
+      >
+        <div className="space-y-2">
+          {userTypes.map((user) => (
+            <RadioGroup.Option
+              key={user.type}
+              value={user}
+              className={({ checked }) =>
+                `${
+                  checked ? "bg-blue-600 bg-opacity-75 text-white" : "bg-white"
                 }
-              >
-                {({ checked }) => (
-                  <div className="flex w-full items-center justify-between">
-                    <div className="text-sm">
-                      <RadioGroup.Label
-                        as="p"
-                        className={`font-medium  ${
-                          checked ? "text-white" : "text-gray-900"
-                        }`}
-                      >
-                        {user.description}
-                      </RadioGroup.Label>
-                    </div>
-                    {checked && (
-                      <div className="shrink-0 text-white">
-                        <CheckIcon />
-                      </div>
-                    )}
+                    relative flex w-full cursor-pointer rounded-md px-3 py-3 shadow-sm ring-1 ring-inset ring-gray-300`
+              }
+            >
+              {({ checked }) => (
+                <div className="flex w-full items-center justify-between">
+                  <div className="text-sm">
+                    <RadioGroup.Label
+                      as="p"
+                      className={`font-medium  ${
+                        checked ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      {user.description}
+                    </RadioGroup.Label>
                   </div>
-                )}
-              </RadioGroup.Option>
-            ))}
-          </div>
-        </RadioGroup>
-      </div>
+                  {checked && (
+                    <div className="shrink-0 text-white">
+                      <CheckIcon />
+                    </div>
+                  )}
+                </div>
+              )}
+            </RadioGroup.Option>
+          ))}
+        </div>
+      </RadioGroup>
     </div>
   );
 }
