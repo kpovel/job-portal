@@ -7,6 +7,7 @@ import { AuthLayout } from "~/component/auth/authLayout";
 import Link from "next/link";
 import { AuthForm } from "~/component/auth/authForm";
 import { Layout } from "~/component/layout/layout";
+import { type User } from ".prisma/client";
 
 const Signup = () => {
   const router = useRouter();
@@ -23,20 +24,22 @@ const Signup = () => {
         body: JSON.stringify({ login, password, userType }),
       });
 
-      type AuthorizationResponse = {
+      type SignupResponse = {
         message: string;
         token: string;
+        user: User;
       };
 
       if (response.ok) {
-        const data = (await response.json()) as AuthorizationResponse;
+        const data = (await response.json()) as SignupResponse;
+
         Cookie.set(AUTHORIZATION_TOKEN_KEY, data.token, {
           expires: 30,
           path: "/",
         });
-        void router.push("/jobs");
+        await router.push("/jobs");
       } else {
-        const errorData = (await response.json()) as AuthorizationResponse;
+        const errorData = (await response.json()) as SignupResponse;
         console.error(errorData.message);
       }
     } catch (error) {
