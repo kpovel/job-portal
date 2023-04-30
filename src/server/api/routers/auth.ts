@@ -4,11 +4,17 @@ import { UserType } from ".prisma/client";
 import { prisma } from "~/server/db";
 
 export const authRouter = createTRPCRouter({
-  findUniqUser: publicProcedure
+  findUserByLogin: publicProcedure
     .input(z.object({ login: z.string() }))
     .query(async ({ input }) => {
       const { login } = input;
       return prisma.user.findUnique({ where: { login: login } });
+    }),
+  findUserById: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input }) => {
+      const { id } = input;
+      return prisma.user.findUnique({ where: { id } });
     }),
   createCandidate: publicProcedure
     .input(

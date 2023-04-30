@@ -10,7 +10,7 @@ export default async function login(req: NextApiRequest, res: NextApiResponse) {
     const caller = appRouter.createCaller({ prisma });
 
     try {
-      const user = await caller.auth.findUniqUser({ login });
+      const user = await caller.auth.findUserByLogin({ login });
 
       if (!user) {
         return res.status(401).json({ message: "Invalid email or password" });
