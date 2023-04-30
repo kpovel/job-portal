@@ -2,11 +2,11 @@ import { Layout } from "~/component/layout/layout";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Cookie from "js-cookie";
-import { type GetServerSideProps, type GetServerSidePropsContext } from "next";
-import { parse as parseCookies } from "cookie";
+import { type GetServerSideProps } from "next";
 import { AuthForm } from "~/component/auth/authForm";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { AuthLayout } from "~/component/auth/authLayout";
+import { withoutAuth } from "~/utils/auth/withoutAuth";
 
 const Login = () => {
   const router = useRouter();
@@ -58,24 +58,6 @@ const Login = () => {
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  const { req } = context;
-  const parsedCookies = parseCookies(req.headers.cookie ?? "");
-
-  if (parsedCookies[AUTHORIZATION_TOKEN_KEY]) {
-    return Promise.resolve({
-      redirect: {
-        destination: "/jobs",
-        permanent: false,
-      },
-    });
-  }
-
-  return Promise.resolve({
-    props: {},
-  });
-};
+export const getServerSideProps: GetServerSideProps = withoutAuth();
 
 export default Login;

@@ -1,13 +1,13 @@
 import { useRouter } from "next/router";
 import Cookie from "js-cookie";
-import { type GetServerSideProps, type GetServerSidePropsContext } from "next";
-import { parse as parseCookies } from "cookie";
+import { type GetServerSideProps } from "next";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { AuthLayout } from "~/component/auth/authLayout";
 import Link from "next/link";
 import { AuthForm } from "~/component/auth/authForm";
 import { Layout } from "~/component/layout/layout";
 import { type User } from ".prisma/client";
+import { withoutAuth } from "~/utils/auth/withoutAuth";
 
 const Signup = () => {
   const router = useRouter();
@@ -70,22 +70,4 @@ const Signup = () => {
 
 export default Signup;
 
-export const getServerSideProps: GetServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  const { req } = context;
-  const parsedCookies = parseCookies(req.headers.cookie ?? "");
-
-  if (parsedCookies[AUTHORIZATION_TOKEN_KEY]) {
-    return Promise.resolve({
-      redirect: {
-        destination: "/jobs",
-        permanent: false,
-      },
-    });
-  }
-
-  return Promise.resolve({
-    props: {},
-  });
-};
+export const getServerSideProps: GetServerSideProps = withoutAuth();
