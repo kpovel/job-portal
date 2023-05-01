@@ -1,7 +1,9 @@
 import Head from "next/head";
+import { type GetServerSideProps } from "next";
 import { Layout } from "~/component/layout/layout";
+import { withoutAuth } from "~/utils/auth/withoutAuth";
 
-export default function Home() {
+const Home = () => {
   return (
     <>
       <Head>
@@ -12,4 +14,8 @@ export default function Home() {
       <Layout>job portal</Layout>
     </>
   );
-}
+};
+
+export default Home;
+
+export const getServerSideProps: GetServerSideProps = withoutAuth();

@@ -11,13 +11,13 @@ datasource db {
 model User {
     id         String   @id @default(cuid())
     userType   UserType
-    lastName   String
-    firstName  String
+    lastName   String?
+    firstName  String?
     middleName String?
     age        Int?
 
-    phoneNumber  String
-    email        String  @unique
+    phoneNumber  String?
+    email        String? @unique
     linkedinLink String?
     githubLink   String?
     telegramLink String?
@@ -42,8 +42,8 @@ model Employer {
     employerId String @unique
     employer   User   @relation(fields: [employerId], references: [id])
 
-    companyName    String
-    companyAddress String
+    companyName    String?
+    companyAddress String?
     questionnaires Questionnaire[]
     responses      Response[]
     vacancy        Vacancy[]
