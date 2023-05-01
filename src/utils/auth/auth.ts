@@ -1,9 +1,6 @@
 import { compare, hash } from "bcrypt";
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import dotenv from "dotenv";
 import { env } from "~/env.mjs";
-
-dotenv.config();
 
 const saltRounds = 10;
 const jwtSecret = env.JWT_SECRET;
@@ -20,7 +17,7 @@ export async function verifyPassword(
 }
 
 export function generateToken(userId: string): string {
-  return jwt.sign({ userId }, jwtSecret, { expiresIn: "7d" });
+  return jwt.sign({ userId }, jwtSecret, { expiresIn: "30d" });
 }
 
 export function verifyToken(token: string): JwtPayload | null {

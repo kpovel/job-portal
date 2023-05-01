@@ -1,8 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { hashPassword } from "~/utils/auth/auth";
+import { generateToken, hashPassword } from "~/utils/auth/auth";
 import type { User, UserType } from ".prisma/client";
-import { sign } from "jsonwebtoken";
-import { env } from "~/env.mjs";
 import { appRouter } from "~/server/api/root";
 import { prisma } from "~/server/db";
 
@@ -16,18 +14,13 @@ export default async function signup(
     try {
       const hashedPassword = await hashPassword(password);
       const createdUser = await createUser(userType, login, hashedPassword);
+      const token = generateToken(createdUser.id);
 
-      const token = sign({ id: createdUser?.id }, env.JWT_SECRET, {
-        expiresIn: "30d",
+      res.status(201).json({
+        message: "User created successfully",
+        user: createdUser,
+        token,
       });
-
-      res
-        .status(201)
-        .json({
-          message: "User created successfully",
-          user: createdUser,
-          token,
-        });
     } catch (error) {
       res.status(400).json({ message: "Error creating user", error });
     } finally {
