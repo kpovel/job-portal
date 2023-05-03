@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function GuestOnlyHeader() {
   return (
-    <header className="bg-gray-800 sm:items-stretch sm:justify-start">
+    <header className="fixed top-0 z-10 w-full bg-gray-800 sm:items-stretch sm:justify-start">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="flex h-16 content-center items-center">
           <Link
