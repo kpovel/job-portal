@@ -15,7 +15,7 @@ const Home = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Layout>
-        <div className="min-h-screen bg-gray-100">
+        <div className="flex flex-col items-center justify-center">
           <div className="container mx-auto px-4 py-16">
             <div className="flex flex-col items-center justify-center text-center">
               <Image
@@ -42,6 +42,54 @@ const Home = () => {
                   Розпочати пошук роботи
                 </Link>
               </div>
+            </div>
+          </div>
+          <div className="mx-auto flex w-screen flex-col content-center items-center justify-center bg-gray-100 px-4 py-16">
+            <div className="container">
+              <h2 className="mb-8 text-center text-3xl font-semibold">
+                Особливості
+              </h2>
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                <div className="text-center">
+                  <i className="fas fa-search mb-4 text-5xl"></i>
+                  <h3 className="mb-4 text-2xl font-semibold">Швидкий пошук</h3>
+                  <p>
+                    Знайдіть вакансії, що відповідають вашим навичкам та
+                    бажанням.
+                  </p>
+                </div>
+                <div className="text-center">
+                  <i className="fas fa-users mb-4 text-5xl"></i>
+                  <h3 className="mb-4 text-2xl font-semibold">
+                    Велика база роботодавців
+                  </h3>
+                  <p>Сотні компаній з різних галузей шукають співробітників.</p>
+                </div>
+                <div className="text-center">
+                  <i className="fas fa-cog mb-4 text-5xl"></i>
+                  <h3 className="mb-4 text-2xl font-semibold">
+                    Персональні налаштування
+                  </h3>
+                  <p>Налаштуйте пошук вакансій відповідно до ваших потреб.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="py-16">
+            <div className="container mx-auto px-4 text-center">
+              <h2 className="mb-8 text-3xl font-semibold">
+                Почніть пошук роботи сьогодні
+              </h2>
+              <p className="mx-auto mb-8 max-w-2xl">
+                Зареєструйтеся на Job Portal та отримайте доступ до великої
+                кількості вакансій від провідних компаній.
+              </p>
+              <Link
+                href="/signup"
+                className="rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 active:bg-blue-800"
+              >
+                Реєстрація
+              </Link>
             </div>
           </div>
         </div>
