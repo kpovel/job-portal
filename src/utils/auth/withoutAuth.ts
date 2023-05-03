@@ -6,7 +6,7 @@ import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { verifyToken } from "~/utils/auth/auth";
 import { prisma } from "~/server/db";
 
-type VerifyToken = JwtPayload & {
+export type VerifyToken = JwtPayload & {
   userId: string;
 };
 
