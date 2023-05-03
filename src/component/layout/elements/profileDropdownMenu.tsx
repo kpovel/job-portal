@@ -1,9 +1,16 @@
 import { Menu, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import { Fragment, useContext } from "react";
 import Link from "next/link";
 import { classNames } from "~/component/layout/elements/header";
+import { AuthContext } from "~/utils/auth/authContext";
 
 export function ProfileDropdownMenu() {
+  const authUser = useContext(AuthContext);
+  const previewName =
+    authUser?.firstName && authUser?.lastName
+      ? authUser.firstName.slice(0, 1) + authUser.lastName.slice(0, 1)
+      : authUser?.login.slice(0, 2);
+
   return (
     <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
       {/*todo: add profile status*/}
@@ -11,10 +18,10 @@ export function ProfileDropdownMenu() {
         <div>
           <Menu.Button className="flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
             <span className="sr-only">Open user menu</span>
-
-            {/*todo: display first letter of First name and Last name*/}
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-500">
-              <span className="font-medium leading-none text-white">KP</span>
+              <span className="font-medium leading-none text-white">
+                {previewName?.toUpperCase()}
+              </span>
             </span>
           </Menu.Button>
         </div>
