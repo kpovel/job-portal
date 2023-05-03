@@ -19,7 +19,7 @@ export function Header() {
   const isActivePage = (currentPage: string) => currentPage === router.pathname;
 
   return (
-    <header>
+    <header className="fixed top-0 z-10 w-full">
       <Disclosure as="nav" className="bg-gray-800">
         {({ open }) => (
           <>

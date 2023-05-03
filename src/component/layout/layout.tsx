@@ -9,7 +9,9 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-max min-h-screen flex-col bg-gray-50">
       {isAuthorizedUser ? <Header /> : <GuestOnlyHeader />}
-      <main className="mx-auto flex w-full grow flex-col">{children}</main>
+      <main className="mx-auto flex w-full grow flex-col pt-16">
+        {children}
+      </main>
       <Footer />
     </div>
   );
