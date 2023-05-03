@@ -3,6 +3,8 @@ import { Fragment, useContext } from "react";
 import Link from "next/link";
 import { classNames } from "~/component/layout/elements/header";
 import { AuthContext } from "~/utils/auth/authContext";
+import Cookie from "js-cookie";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 
 export function ProfileDropdownMenu() {
   const authUser = useContext(AuthContext);
@@ -10,6 +12,10 @@ export function ProfileDropdownMenu() {
     authUser?.firstName && authUser?.lastName
       ? authUser.firstName.slice(0, 1) + authUser.lastName.slice(0, 1)
       : authUser?.login.slice(0, 2);
+
+  function signOut() {
+    Cookie.set(AUTHORIZATION_TOKEN_KEY, "");
+  }
 
   return (
     <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
@@ -64,13 +70,14 @@ export function ProfileDropdownMenu() {
             <Menu.Item>
               {({ active }) => (
                 <Link
-                  href="#"
+                  onClick={signOut}
+                  href="/"
                   className={classNames(
                     active ? "bg-gray-100" : "",
                     "block px-4 py-2 text-sm text-gray-700"
                   )}
                 >
-                  Sign out
+                  Вийти
                 </Link>
               )}
             </Menu.Item>
