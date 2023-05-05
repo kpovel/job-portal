@@ -1,5 +1,5 @@
 import React from "react";
-import { type FormInputConfig } from "~/pages/my/profile";
+import { type FormInputConfig } from "~/component/candidate/candidateAccountForm";
 
 export function FormInput({
   label,
