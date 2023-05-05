@@ -5,7 +5,7 @@ export type FormInputConfig = {
   label: string;
   type: string;
   name: string;
-  autoComplete: string;
+  autoComplete?: string;
   id: string;
 };
 

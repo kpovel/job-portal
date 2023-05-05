@@ -2,6 +2,7 @@ import { Layout } from "~/component/layout/layout";
 import React, { type FormEvent } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { CandidateAccountForm } from "~/component/candidate/candidateAccountForm";
+import { CandidateResumeForm } from "~/component/candidate/candidateResumeForm";
 
 export default function Profile() {
   function updateCandidateAccountData(e: FormEvent) {
@@ -62,12 +63,7 @@ export default function Profile() {
                 value="tab2"
                 className="rounded-b-md bg-white p-5 outline-none"
               >
-                <form
-                  onSubmit={updateCandidateResume}
-                  className="mx-auto my-5 max-w-xl"
-                >
-                  <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2"></div>
-                </form>
+                <CandidateResumeForm onFormSubmit={updateCandidateResume} />
               </Tabs.Content>
             </Tabs.Root>
           </div>
