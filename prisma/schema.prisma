@@ -14,7 +14,7 @@ model User {
     lastName   String?
     firstName  String?
     middleName String?
-    age        Int?
+    age        String?
 
     phoneNumber  String?
     email        String? @unique

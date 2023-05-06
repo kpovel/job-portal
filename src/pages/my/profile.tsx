@@ -3,12 +3,19 @@ import React, { type FormEvent } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { CandidateAccountForm } from "~/component/candidate/candidateAccountForm";
 import { CandidateResumeForm } from "~/component/candidate/candidateResumeForm";
+import type {
+  GetServerSidePropsContext,
+  InferGetServerSidePropsType,
+} from "next";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+import { appRouter } from "~/server/api/root";
+import { prisma } from "~/server/db";
+import { verifyToken } from "~/utils/auth/auth";
+import type { VerifyToken } from "~/utils/auth/withoutAuth";
 
-export default function Profile() {
-  function updateCandidateAccountData(e: FormEvent) {
-    e.preventDefault();
-  }
-
+function Profile({
+  candidateData,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   function updateCandidateResume(e: FormEvent) {
     e.preventDefault();
   }
@@ -55,9 +62,7 @@ export default function Profile() {
                 className="rounded-b-md bg-white p-5 outline-none"
                 value="tab1"
               >
-                <CandidateAccountForm
-                  onFormSubmit={updateCandidateAccountData}
-                />
+                <CandidateAccountForm candidateData={candidateData} />
               </Tabs.Content>
               <Tabs.Content
                 value="tab2"
@@ -72,3 +77,33 @@ export default function Profile() {
     </Layout>
   );
 }
+
+export const getServerSideProps = async ({
+  req,
+}: GetServerSidePropsContext) => {
+  const authToken = req.cookies[AUTHORIZATION_TOKEN_KEY] ?? "";
+  const verifiedToken = verifyToken(authToken) as VerifyToken | null;
+
+  if (!verifiedToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const caller = appRouter.createCaller({ prisma });
+  const candidateData = await caller.candidate.findCandidateById({
+    id: verifiedToken.userId,
+  });
+
+  console.log(candidateData);
+  return {
+    props: {
+      candidateData,
+    },
+  };
+};
+
+export default Profile;

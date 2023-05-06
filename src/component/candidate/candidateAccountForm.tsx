@@ -1,5 +1,6 @@
 import React, { type ChangeEvent, type FormEvent, useState } from "react";
 import { FormInput } from "~/component/profileForm/formInput";
+import type { User, Candidate, Resume } from ".prisma/client";
 
 export type FormInputConfig = {
   label: string;
@@ -73,23 +74,57 @@ const formInputs: FormInputConfig[] = [
  *
  * @prop {Function} onFormSubmit - A function that handles form submission.
  */
+type CandidateAccountFormProps = {
+  candidateData:
+    | (User & { candidate: (Candidate & { resume: Resume[] }) | null })
+    | null;
+};
+
+type FormData = {
+  [key: string]: string;
+} & {
+  firstName: string;
+  lastName: string;
+  age: string;
+  phoneNumber: string;
+  email: string;
+  linkedinLink: string;
+  githubLink: string;
+  telegramLink: string;
+};
 
 export function CandidateAccountForm({
-  onFormSubmit,
-}: {
-  onFormSubmit: (e: FormEvent) => void;
-}) {
-  const [formData, setFormData] = useState(
-    Object.fromEntries(formInputs.map(({ name }) => [name, ""]))
-  );
+  candidateData,
+}: CandidateAccountFormProps) {
+  const [formData, setFormData] = useState<FormData>({
+    firstName: candidateData?.firstName ?? "",
+    lastName: candidateData?.lastName ?? "",
+    age: candidateData?.age ?? "",
+    phoneNumber: candidateData?.phoneNumber ?? "",
+    email: candidateData?.email ?? "",
+    linkedinLink: candidateData?.linkedinLink ?? "",
+    githubLink: candidateData?.githubLink ?? "",
+    telegramLink: candidateData?.telegramLink ?? "",
+  });
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
+  function updateCandidateAccountData(e: FormEvent) {
+    e.preventDefault();
+  }
+
   return (
-    <form onSubmit={onFormSubmit} className="mx-auto my-5 max-w-xl">
+    <form
+      onSubmit={updateCandidateAccountData}
+      className="mx-auto my-5 max-w-xl"
+    >
       <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
         {formInputs.map((formInput) => {
           return (
