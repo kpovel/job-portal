@@ -1,4 +1,4 @@
-import React, { type FormEvent } from "react";
+import React, { type ChangeEvent, type FormEvent, useState } from "react";
 import { FormInput } from "~/component/profileForm/formInput";
 
 type ResumeInput = {
@@ -58,10 +58,10 @@ const resumeInputs: ResumeInput[] = [
     id: "desiredSalary",
   },
   {
-    label: "Досвід роботи",
+    label: "Бажана зайнятість",
     type: "text",
-    name: "desiredSalary",
-    id: "desiredSalary",
+    name: "employment",
+    id: "employment",
   },
 ];
 
@@ -70,6 +70,15 @@ export function CandidateResumeForm({
 }: {
   onFormSubmit: (e: FormEvent) => void;
 }) {
+  const [formData, setFormData] = useState(
+    Object.fromEntries(resumeInputs.map(({ name }) => [name, ""]))
+  );
+  console.log(formData);
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
   return (
     <form onSubmit={onFormSubmit} className="mx-auto my-5 max-w-xl">
       <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
@@ -81,6 +90,8 @@ export function CandidateResumeForm({
               label={resumeInput.label}
               name={resumeInput.name}
               id={resumeInput.id}
+              value={formData[resumeInput.name] as string}
+              onChange={handleInputChange}
             />
           );
         })}

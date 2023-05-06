@@ -1,4 +1,4 @@
-import React, { type FormEvent } from "react";
+import React, { type ChangeEvent, type FormEvent, useState } from "react";
 import { FormInput } from "~/component/profileForm/formInput";
 
 export type FormInputConfig = {
@@ -13,29 +13,29 @@ const formInputs: FormInputConfig[] = [
   {
     label: "Прізвище",
     type: "text",
-    name: "first-name",
-    id: "first-name",
+    name: "firstName",
+    id: "firstName",
     autoComplete: "given-name",
   },
   {
     label: "Імʼя",
     type: "text",
-    name: "last-name",
-    id: "last-name",
+    name: "lastName",
+    id: "lastName",
     autoComplete: "family-name",
   },
   {
     label: "Вік",
     type: "text",
-    name: "company",
-    id: "company",
-    autoComplete: "organization",
+    name: "age",
+    id: "age",
+    autoComplete: "age",
   },
   {
     label: "Номер телефону",
     type: "tel",
-    name: "phone-number",
-    id: "phone-number",
+    name: "phoneNumber",
+    id: "phoneNumber",
     autoComplete: "tel",
   },
   {
@@ -48,22 +48,22 @@ const formInputs: FormInputConfig[] = [
   {
     label: "Посилання на LinkedIn акаунт",
     type: "url",
-    name: "LinedInUrl",
-    id: "LinedInUrl",
+    name: "linkedinLink",
+    id: "linkedinLink",
     autoComplete: "LinkedIn",
   },
   {
     label: "Посилання на GitHub акаунт",
     type: "url",
-    name: "GitHubUrl",
-    id: "GitHubUrl",
+    name: "githubLink",
+    id: "githubLink",
     autoComplete: "GitHub",
   },
   {
     label: "Посилання на Telegram акаунт",
     type: "url",
-    name: "TelegramUrl",
-    id: "TelegramUrl",
+    name: "telegramLink",
+    id: "telegramLink",
     autoComplete: "Telegram",
   },
 ];
@@ -79,6 +79,15 @@ export function CandidateAccountForm({
 }: {
   onFormSubmit: (e: FormEvent) => void;
 }) {
+  const [formData, setFormData] = useState(
+    Object.fromEntries(formInputs.map(({ name }) => [name, ""]))
+  );
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
   return (
     <form onSubmit={onFormSubmit} className="mx-auto my-5 max-w-xl">
       <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
@@ -91,6 +100,8 @@ export function CandidateAccountForm({
               name={formInput.name}
               id={formInput.id}
               autoComplete={formInput.autoComplete}
+              value={formData[formInput.name] as string}
+              onChange={handleInputChange}
             />
           );
         })}
