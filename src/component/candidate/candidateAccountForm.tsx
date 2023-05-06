@@ -13,16 +13,16 @@ const formInputs: FormInputConfig[] = [
   {
     label: "Прізвище",
     type: "text",
-    name: "firstName",
-    id: "firstName",
-    autoComplete: "given-name",
+    name: "lastName",
+    id: "lastName",
+    autoComplete: "family-name",
   },
   {
     label: "Імʼя",
     type: "text",
-    name: "lastName",
-    id: "lastName",
-    autoComplete: "family-name",
+    name: "firstName",
+    id: "firstName",
+    autoComplete: "given-name",
   },
   {
     label: "Вік",
