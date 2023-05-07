@@ -80,9 +80,7 @@ type CandidateAccountFormProps = {
     | null;
 };
 
-type FormData = {
-  [key: string]: string;
-} & {
+export type CandidateFields = {
   firstName: string;
   lastName: string;
   age: string;
@@ -92,6 +90,10 @@ type FormData = {
   githubLink: string;
   telegramLink: string;
 };
+
+type FormData = {
+  [key: string]: string;
+} & CandidateFields;
 
 export function CandidateAccountForm({
   candidateData,
@@ -116,15 +118,25 @@ export function CandidateAccountForm({
     }));
   };
 
-  function updateCandidateAccountData(e: FormEvent) {
+  function handleFormSubmit(e: FormEvent): void {
     e.preventDefault();
+    void updateCandidateAccountData();
+  }
+
+  async function updateCandidateAccountData(): Promise<void> {
+    try {
+      await fetch("/api/user/updateProfile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, id: candidateData?.id }),
+      });
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   return (
-    <form
-      onSubmit={updateCandidateAccountData}
-      className="mx-auto my-5 max-w-xl"
-    >
+    <form onSubmit={handleFormSubmit} className="mx-auto my-5 max-w-xl">
       <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
         {formInputs.map((formInput) => {
           return (
