@@ -9,7 +9,11 @@ export const candidateAccountRouter = createTRPCRouter({
       const { id } = input;
       return prisma.user.findUnique({
         where: { id },
-        include: { candidate: { include: { resume: true } } },
+        include: {
+          candidate: {
+            include: { questionnaires: { include: { resume: true } } },
+          },
+        },
       });
     }),
   updateCandidateProfile: publicProcedure

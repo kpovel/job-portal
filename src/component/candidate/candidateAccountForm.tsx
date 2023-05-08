@@ -1,6 +1,6 @@
 import React, { type ChangeEvent, type FormEvent, useState } from "react";
 import { FormInput } from "~/component/profileForm/formInput";
-import type { User, Candidate, Resume } from ".prisma/client";
+import type { ParsedCandidateData } from "~/pages/my/profile";
 
 export type FormInputConfig = {
   label: string;
@@ -75,9 +75,7 @@ const formInputs: FormInputConfig[] = [
  * @prop {Function} onFormSubmit - A function that handles form submission.
  */
 type CandidateAccountFormProps = {
-  candidateData:
-    | (User & { candidate: (Candidate & { resume: Resume[] }) | null })
-    | null;
+  candidateData: ParsedCandidateData;
 };
 
 export type CandidateFields = {

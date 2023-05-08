@@ -12,10 +12,25 @@ import { appRouter } from "~/server/api/root";
 import { prisma } from "~/server/db";
 import { verifyToken } from "~/utils/auth/auth";
 import type { VerifyToken } from "~/utils/auth/withoutAuth";
+import superjson from "superjson";
+import type { User, Candidate, Questionnaire, Resume } from "@prisma/client";
+
+export type ParsedCandidateData =
+  | (User & {
+      candidate:
+        | (Candidate & {
+            questionnaires: (Questionnaire & { resume: Resume | null }) | null;
+          })
+        | null;
+    })
+  | null;
 
 function Profile({
   candidateData,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const parsedCandidateData: ParsedCandidateData =
+    superjson.parse(candidateData);
+
   function updateCandidateResume(e: FormEvent) {
     e.preventDefault();
   }
@@ -62,7 +77,7 @@ function Profile({
                 className="rounded-b-md bg-white p-5 outline-none"
                 value="tab1"
               >
-                <CandidateAccountForm candidateData={candidateData} />
+                <CandidateAccountForm candidateData={parsedCandidateData} />
               </Tabs.Content>
               <Tabs.Content
                 value="tab2"
@@ -98,10 +113,11 @@ export const getServerSideProps = async ({
     id: verifiedToken.userId,
   });
 
-  console.log(candidateData);
+  const serializedCandidateData = superjson.stringify(candidateData);
+
   return {
     props: {
-      candidateData,
+      candidateData: serializedCandidateData,
     },
   };
 };
