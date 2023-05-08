@@ -71,7 +71,7 @@ type CandidateResumeFormProps = {
   candidateData: ParsedCandidateData;
 };
 
-type CandidateResumeFormData = {
+export type CandidateResumeFormData = {
   workExperience: string;
   skills: string;
   education: string;
@@ -119,8 +119,20 @@ export function CandidateResumeForm({
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  function handleFormSubmit(e: FormEvent<HTMLFormElement>) {
+  function handleFormSubmit(e: FormEvent<HTMLFormElement>): void {
     e.preventDefault();
+    void updateCandidateResume();
+  }
+
+  async function updateCandidateResume(): Promise<void> {
+    await fetch("/api/candidate/updateResume", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...formData,
+        candidateId: candidateData?.candidate?.candidateId,
+      }),
+    });
   }
 
   return (

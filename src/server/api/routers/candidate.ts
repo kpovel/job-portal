@@ -56,4 +56,48 @@ export const candidateAccountRouter = createTRPCRouter({
         },
       });
     }),
+
+  updateCandidateResume: publicProcedure
+    .input(
+      z.object({
+        workExperience: z.string().nullish(),
+        skills: z.string().nullish(),
+        education: z.string().nullish(),
+        foreignLanguages: z.string().nullish(),
+        interests: z.string().nullish(),
+        achievements: z.string().nullish(),
+        specialty: z.string().nullish(),
+        desiredSalary: z.string().nullish(),
+        employment: z.string().nullish(),
+        candidateId: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const {
+        workExperience,
+        skills,
+        education,
+        foreignLanguages,
+        interests,
+        achievements,
+        specialty,
+        desiredSalary,
+        employment,
+        candidateId,
+      } = input;
+      return prisma.resume.update({
+        where: { candidateId },
+        data: {
+          workExperience,
+          skills,
+          education,
+          foreignLanguages,
+          interests,
+          achievements,
+          specialty,
+          desiredSalary,
+          employment,
+        },
+      });
+    }),
 });
