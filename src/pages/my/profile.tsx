@@ -1,5 +1,5 @@
 import { Layout } from "~/component/layout/layout";
-import React, { type FormEvent } from "react";
+import React from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { CandidateAccountForm } from "~/component/candidate/candidateAccountForm";
 import { CandidateResumeForm } from "~/component/candidate/candidateResumeForm";
@@ -30,10 +30,6 @@ function Profile({
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const parsedCandidateData: ParsedCandidateData =
     superjson.parse(candidateData);
-
-  function updateCandidateResume(e: FormEvent) {
-    e.preventDefault();
-  }
 
   return (
     <Layout>
@@ -83,7 +79,7 @@ function Profile({
                 value="tab2"
                 className="rounded-b-md bg-white p-5 outline-none"
               >
-                <CandidateResumeForm onFormSubmit={updateCandidateResume} />
+                <CandidateResumeForm candidateData={parsedCandidateData} />
               </Tabs.Content>
             </Tabs.Root>
           </div>

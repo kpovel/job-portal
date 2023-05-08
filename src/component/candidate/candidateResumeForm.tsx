@@ -1,5 +1,7 @@
 import React, { type ChangeEvent, type FormEvent, useState } from "react";
 import { FormInput } from "~/component/profileForm/formInput";
+import type { ParsedCandidateData } from "~/pages/my/profile";
+import type { Resume } from "@prisma/client";
 
 type ResumeInput = {
   label: string;
@@ -65,22 +67,64 @@ const resumeInputs: ResumeInput[] = [
   },
 ];
 
+type CandidateResumeFormProps = {
+  candidateData: ParsedCandidateData;
+};
+
+type CandidateResumeFormData = {
+  workExperience: string;
+  skills: string;
+  education: string;
+  foreignLanguages: string;
+  interests: string;
+  achievements: string;
+  specialty: string;
+  desiredSalary: string;
+  employment: string;
+};
+
+type FormData = {
+  [key: string]: string;
+} & CandidateResumeFormData;
+
 export function CandidateResumeForm({
-  onFormSubmit,
-}: {
-  onFormSubmit: (e: FormEvent) => void;
-}) {
-  const [formData, setFormData] = useState(
-    Object.fromEntries(resumeInputs.map(({ name }) => [name, ""]))
-  );
-  console.log(formData);
+  candidateData,
+}: CandidateResumeFormProps) {
+  const {
+    workExperience,
+    skills,
+    education,
+    foreignLanguages,
+    interests,
+    achievements,
+    specialty,
+    desiredSalary,
+    employment,
+  } = candidateData?.candidate?.questionnaires?.resume as Resume;
+
+  const [formData, setFormData] = useState<FormData>({
+    workExperience: workExperience ?? "",
+    skills: skills ?? "",
+    education: education ?? "",
+    foreignLanguages: foreignLanguages ?? "",
+    interests: interests ?? "",
+    achievements: achievements ?? "",
+    specialty: specialty ?? "",
+    desiredSalary: desiredSalary ?? "",
+    employment: employment ?? "",
+  });
+
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  function handleFormSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+  }
+
   return (
-    <form onSubmit={onFormSubmit} className="mx-auto my-5 max-w-xl">
+    <form onSubmit={handleFormSubmit} className="mx-auto my-5 max-w-xl">
       <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
         {resumeInputs.map((resumeInput) => {
           return (
