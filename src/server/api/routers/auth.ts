@@ -26,16 +26,42 @@ export const authRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const { login, password, userType } = input;
-      return prisma.user.create({
+      const createdCandidate = await prisma.user.create({
         data: {
           userType,
           login,
           password,
           candidate: {
-            create: {},
+            create: {
+              questionnaires: {
+                create: { questionnaireType: "RESUME", resume: {} },
+              },
+            },
           },
         },
       });
+
+      const candidateQuestionnaire = await prisma.questionnaire.create({
+        data: {
+          questionnaireType: "RESUME",
+          candidate: {
+            connect: { candidateId: createdCandidate.id },
+          },
+        },
+      });
+
+      await prisma.resume.create({
+        data: {
+          candidate: { connect: { candidateId: createdCandidate.id } },
+          questionnaire: {
+            connect: {
+              questionnaireId: candidateQuestionnaire.questionnaireId,
+            },
+          },
+        },
+      });
+
+      return createdCandidate;
     }),
   createEmployer: publicProcedure
     .input(
