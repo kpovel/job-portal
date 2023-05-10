@@ -5,6 +5,7 @@ import superjson from "superjson";
 import Head from "next/head";
 import type { InferGetStaticPropsType } from "next";
 import type { User, Candidate, Questionnaire, Resume } from "@prisma/client";
+import Link from "next/link";
 
 export default function Candidates({
   candidates,
@@ -41,16 +42,19 @@ export default function Candidates({
                 className="rounded-md border border-gray-300 p-4"
                 key={candidate.id}
               >
-                <div className="mb-3 flex items-center">
+                <Link
+                  href={`/candidate/${candidate.id}`}
+                  className="mb-3 flex items-center"
+                >
                   <div>
-                    <div className="font-bold text-gray-900">
+                    <div className="font-bold text-blue-600  hover:text-blue-800">
                       {candidate.firstName} {candidate.lastName}
                     </div>
                     <div className="text-sm text-gray-500">
                       {candidate.candidate?.questionnaires?.resume?.specialty}
                     </div>
                   </div>
-                </div>
+                </Link>
                 <div className="mb-2">
                   <strong>Work Experience:</strong>{" "}
                   {candidate.candidate?.questionnaires?.resume?.workExperience}
