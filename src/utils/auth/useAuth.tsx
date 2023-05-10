@@ -29,7 +29,7 @@ const useCurrentUser = (authToken: string | undefined) => {
       }
 
       try {
-        const response = await fetch("api/auth/findUserByToken", {
+        const response = await fetch("/api/auth/findUserByToken", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ authToken }),

@@ -11,6 +11,27 @@ import { withoutAuth } from "~/utils/auth/withoutAuth";
 
 const Signup = () => {
   const router = useRouter();
+  type SignupResponse = {
+    message: string;
+    token: string;
+    user: User;
+  };
+
+  const switchToPageAfterSignup = async (
+    signupResponse: SignupResponse
+  ): Promise<void> => {
+    switch (signupResponse.user.userType) {
+      case "EMPLOYER":
+        await router.push("/home/profile");
+        break;
+      case "CANDIDATE":
+        await router.push("/my/profile");
+        break;
+      case "ADMIN":
+        await router.push("/admin");
+        break;
+    }
+  };
 
   async function createAccount(
     login: string,
@@ -24,12 +45,6 @@ const Signup = () => {
         body: JSON.stringify({ login, password, userType }),
       });
 
-      type SignupResponse = {
-        message: string;
-        token: string;
-        user: User;
-      };
-
       if (response.ok) {
         const data = (await response.json()) as SignupResponse;
 
@@ -37,7 +52,8 @@ const Signup = () => {
           expires: 30,
           path: "/",
         });
-        await router.push("/jobs");
+
+        void switchToPageAfterSignup(data);
       } else {
         const errorData = (await response.json()) as SignupResponse;
         console.error(errorData.message);
