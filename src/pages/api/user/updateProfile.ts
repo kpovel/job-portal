@@ -25,18 +25,17 @@ export default async function updateProfile(
     } = req.body as CandidateFields & { id: string };
 
     const caller = appRouter.createCaller({ prisma });
-    const updatedCandidateProfile =
-      await caller.candidate.updateCandidateProfile({
-        id,
-        firstName,
-        lastName,
-        age,
-        githubLink,
-        linkedinLink,
-        telegramLink,
-        phoneNumber,
-        email,
-      });
+    const updatedCandidateProfile = await caller.user.updateUserProfile({
+      id,
+      firstName,
+      lastName,
+      age,
+      githubLink,
+      linkedinLink,
+      telegramLink,
+      phoneNumber,
+      email,
+    });
     res.status(200).json({
       message: "Successful update user profile",
       updatedCandidateProfile,
