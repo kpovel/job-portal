@@ -116,18 +116,4 @@ export const candidateAccountRouter = createTRPCRouter({
       },
     });
   }),
-
-  fetchCandidateById: publicProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
-      const { id } = input;
-      return prisma.user.findUnique({
-        where: { id },
-        include: {
-          candidate: {
-            include: { questionnaires: { include: { resume: true } } },
-          },
-        },
-      });
-    }),
 });

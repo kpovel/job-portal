@@ -153,7 +153,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps = async ({ params }: StaticPaths) => {
   const caller = appRouter.createCaller({ prisma });
-  const candidate = await caller.candidate.fetchCandidateById({
+  const candidate = await caller.candidate.findCandidateById({
     id: params.candidate,
   });
   const serializedCandidate = superjson.stringify(candidate);
