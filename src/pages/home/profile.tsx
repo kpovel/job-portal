@@ -12,7 +12,7 @@ import { EmployerNavigationMenu } from "~/component/employer/employerNavigationM
 import Head from "next/head";
 import { getEmployerData } from "~/utils/getEmployerData/getEmployerData";
 
-type EmployerData =
+export type EmployerData =
   | User & {
       employer:
         | Employer & {
