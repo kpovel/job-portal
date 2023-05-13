@@ -22,7 +22,7 @@ export type VacancyFields = {
   employment: string;
 };
 
-export default function Jobs({
+export default function CreateVacancy({
   employer,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const router = useRouter();
@@ -66,7 +66,7 @@ export default function Jobs({
         }),
       });
       if (!createdVacancy.ok) throw new Error("Error creating vacancy");
-      await router.push("/home/jobs");
+      await router.push("/home/vacancies");
     } catch (e) {
       console.log(e);
     }

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { appRouter } from "~/server/api/root";
 import { prisma } from "~/server/db";
-import type { VacancyFields } from "~/pages/home/create-job";
+import type { VacancyFields } from "~/pages/home/create-vacancy";
 
 export default async function updateProfile(
   req: NextApiRequest,

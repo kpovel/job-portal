@@ -10,8 +10,8 @@ export function EmployerNavigationMenu() {
   const navigation: { name: string; href: string }[] = [
     { name: "Мій профіль", href: "/home/profile" },
     { name: "Про компанію", href: "/home/about" },
-    { name: "Вакансії", href: "/home/jobs" },
-    { name: "Створити вакансію", href: "/home/create-job" },
+    { name: "Вакансії", href: "/home/vacancies" },
+    { name: "Створити вакансію", href: "/home/create-vacancy" },
   ];
 
   return (
