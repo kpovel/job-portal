@@ -95,7 +95,14 @@ export const getServerSideProps = async ({
   const authToken = req.cookies[AUTHORIZATION_TOKEN_KEY] ?? "";
   const verifiedToken = verifyToken(authToken) as VerifyToken | null;
 
-  if (!verifiedToken) {
+  const caller = appRouter.createCaller({ prisma });
+  const candidateData = await caller.candidate.findCandidateById({
+    id: verifiedToken?.userId ?? "",
+  });
+
+  const isUserCandidate = candidateData?.userType === "CANDIDATE";
+
+  if (!verifiedToken || !isUserCandidate) {
     return {
       redirect: {
         destination: "/",
@@ -103,11 +110,6 @@ export const getServerSideProps = async ({
       },
     };
   }
-
-  const caller = appRouter.createCaller({ prisma });
-  const candidateData = await caller.candidate.findCandidateById({
-    id: verifiedToken.userId,
-  });
 
   const serializedCandidateData = superjson.stringify(candidateData);
 
