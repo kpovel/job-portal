@@ -34,4 +34,48 @@ export const employerAccountRouter = createTRPCRouter({
         },
       });
     }),
+  createVacancy: publicProcedure
+    .input(
+      z.object({
+        employerId: z.string(),
+        specialty: z.string(),
+        salary: z.string().nullish(),
+        duties: z.string().nullish(),
+        requirements: z.string().nullish(),
+        conditions: z.string().nullish(),
+        workSchedule: z.string().nullish(),
+        employment: z.string().nullish(),
+      })
+    )
+    .query(async ({ input }) => {
+      const {
+        employerId,
+        specialty,
+        salary,
+        duties,
+        requirements,
+        conditions,
+        workSchedule,
+        employment,
+      } = input;
+
+      return prisma.questionnaire.create({
+        data: {
+          questionnaireType: "VACANCY",
+          employerId,
+          vacancy: {
+            create: {
+              employerId,
+              specialty,
+              salary,
+              duties,
+              requirements,
+              conditions,
+              workSchedule,
+              employment,
+            },
+          },
+        },
+      });
+    }),
 });

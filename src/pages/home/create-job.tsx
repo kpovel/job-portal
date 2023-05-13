@@ -10,21 +10,23 @@ import { getEmployerData } from "~/utils/getEmployerData/getEmployerData";
 import type { EmployerData } from "~/pages/home/profile";
 import superjson from "superjson";
 import { FormInput } from "~/component/profileForm/formInput";
+import { useRouter } from "next/router";
+
+export type VacancyFields = {
+  specialty: string;
+  salary: string;
+  duties: string;
+  requirements: string;
+  conditions: string;
+  workSchedule: string;
+  employment: string;
+};
 
 export default function Jobs({
   employer,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const router = useRouter();
   const parsedEmployerData: EmployerData = superjson.parse(employer);
-
-  type VacancyFields = {
-    specialty: string;
-    salary: string;
-    duties: string;
-    requirements: string;
-    conditions: string;
-    workSchedule: string;
-    employment: string;
-  };
 
   type FormData = {
     [key: string]: string | number;
@@ -55,7 +57,7 @@ export default function Jobs({
 
   async function createVacancy(): Promise<void> {
     try {
-      await fetch("/api/employer/createVacancy", {
+      const createdVacancy = await fetch("/api/employer/createVacancy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -63,6 +65,8 @@ export default function Jobs({
           employerId: parsedEmployerData?.id,
         }),
       });
+      if (!createdVacancy.ok) throw new Error("Error creating vacancy");
+      await router.push("/home/jobs");
     } catch (e) {
       console.log(e);
     }
