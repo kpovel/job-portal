@@ -9,6 +9,7 @@ import type {
 import { getEmployerData } from "~/utils/getEmployerData/getEmployerData";
 import type { EmployerData } from "~/pages/home/profile";
 import superjson from "superjson";
+import Link from "next/link";
 
 export default function Jobs({
   employer,
@@ -57,14 +58,12 @@ export default function Jobs({
                 Ви ще не створили жодної вакансії
               </h2>
             )}
-
-            {/*todo: create a new vacancy*/}
-            <button
-              type="submit"
+            <Link
+              href="/home/create-job"
               className="block w-full self-start rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Створити вакансію
-            </button>
+              <button type="submit">Створити вакансію</button>
+            </Link>
           </div>
         </div>
       </Layout>

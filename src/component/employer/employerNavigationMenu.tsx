@@ -11,6 +11,7 @@ export function EmployerNavigationMenu() {
     { name: "Мій профіль", href: "/home/profile" },
     { name: "Про компанію", href: "/home/about" },
     { name: "Вакансії", href: "/home/jobs" },
+    { name: "Створити вакансію", href: "/home/create-job" },
   ];
 
   return (
