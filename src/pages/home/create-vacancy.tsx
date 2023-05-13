@@ -9,8 +9,8 @@ import type {
 import { getEmployerData } from "~/utils/getEmployerData/getEmployerData";
 import type { EmployerData } from "~/pages/home/profile";
 import superjson from "superjson";
-import { FormInput } from "~/component/profileForm/formInput";
 import { useRouter } from "next/router";
+import { VacancyInputField } from "~/component/employer/vacancyInputField";
 
 export type VacancyFields = {
   specialty: string;
@@ -85,71 +85,10 @@ export default function CreateVacancy({
             onSubmit={handleCreateVacancy}
             className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg"
           >
-            <div className="space-y-4">
-              <FormInput
-                label="Посада"
-                id="specialty"
-                name="specialty"
-                autoComplete="specialty"
-                type="text"
-                value={formData.specialty}
-                onChange={handleUpdateForm}
-              />
-              <FormInput
-                label="Зарплата"
-                id="salary"
-                name="salary"
-                autoComplete="salary"
-                type="text"
-                value={formData.salary}
-                onChange={handleUpdateForm}
-              />
-              <FormInput
-                label="Обов'язки"
-                id="duties"
-                name="duties"
-                autoComplete="duties"
-                type="text"
-                value={formData.duties}
-                onChange={handleUpdateForm}
-              />
-              <FormInput
-                label="Вимоги"
-                id="requirements"
-                name="requirements"
-                autoComplete="requirements"
-                type="text"
-                value={formData.requirements}
-                onChange={handleUpdateForm}
-              />
-              <FormInput
-                label="Умови праці"
-                id="conditions"
-                name="conditions"
-                autoComplete="conditions"
-                type="text"
-                value={formData.conditions}
-                onChange={handleUpdateForm}
-              />
-              <FormInput
-                label="Графік роботи"
-                id="workSchedule"
-                name="workSchedule"
-                autoComplete="workSchedule"
-                type="text"
-                value={formData.workSchedule}
-                onChange={handleUpdateForm}
-              />
-              <FormInput
-                label="Тип зайнятості"
-                id="employment"
-                name="employment"
-                autoComplete="employment"
-                type="text"
-                value={formData.employment}
-                onChange={handleUpdateForm}
-              />
-            </div>
+            <VacancyInputField
+              formData={formData}
+              onChange={handleUpdateForm}
+            />
             <button
               type="submit"
               className="mt-6 block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
