@@ -36,7 +36,12 @@ export default function Vacancies({
                   >
                     <div className="mb-4 flex items-center align-top">
                       <h2 className="grow text-xl font-bold text-gray-800">
-                        {questionnaire.vacancy.specialty}
+                        <Link
+                          href={`/home/edit-vacancy/${questionnaire.questionnaireId}`}
+                          className="text-blue-600  hover:text-blue-800"
+                        >
+                          {questionnaire.vacancy.specialty}
+                        </Link>
                       </h2>
                       {questionnaire.vacancy.salary && (
                         <p className="font-semibold text-gray-700">

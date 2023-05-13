@@ -78,4 +78,51 @@ export const employerAccountRouter = createTRPCRouter({
         },
       });
     }),
+  getQuestionnaireById: publicProcedure
+    .input(z.object({ questionnaireId: z.string() }))
+    .query(async ({ input }) => {
+      const { questionnaireId } = input;
+      return prisma.questionnaire.findUnique({
+        where: { questionnaireId },
+        include: { vacancy: true },
+      });
+    }),
+  updateVacancy: publicProcedure
+    .input(
+      z.object({
+        questionnaireId: z.string(),
+        specialty: z.string(),
+        salary: z.string().nullish(),
+        duties: z.string().nullish(),
+        requirements: z.string().nullish(),
+        conditions: z.string().nullish(),
+        workSchedule: z.string().nullish(),
+        employment: z.string().nullish(),
+      })
+    )
+    .query(async ({ input }) => {
+      const {
+        questionnaireId,
+        specialty,
+        salary,
+        duties,
+        requirements,
+        conditions,
+        workSchedule,
+        employment,
+      } = input;
+
+      return prisma.vacancy.update({
+        where: { questionnaireId },
+        data: {
+          specialty,
+          salary,
+          duties,
+          requirements,
+          conditions,
+          workSchedule,
+          employment,
+        },
+      });
+    }),
 });
