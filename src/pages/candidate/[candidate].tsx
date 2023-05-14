@@ -7,27 +7,25 @@ import type { User, Candidate, Questionnaire, Resume } from "@prisma/client";
 import Head from "next/head";
 import React, { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
-import { SelectModerationStatus } from "~/component/admin/selectModerationStatus";
 import { renderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
 import { renderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
+import { ModerateCandidate } from "~/component/admin/moderation/moderateCandidate";
+
+export type ParsedCandidate =
+  | (User & {
+      candidate:
+        | (Candidate & {
+            questionnaires: (Questionnaire & { resume: Resume | null }) | null;
+          })
+        | null;
+    })
+  | null;
 
 export default function Candidate({
   candidate,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const authorizedUser = useContext(AuthContext);
   const isUserAdmin = authorizedUser?.userType === "ADMIN";
-
-  type ParsedCandidate =
-    | (User & {
-        candidate:
-          | (Candidate & {
-              questionnaires:
-                | (Questionnaire & { resume: Resume | null })
-                | null;
-            })
-          | null;
-      })
-    | null;
 
   const parsedCandidate: ParsedCandidate = superjson.parse(candidate);
   const candidatesResume = parsedCandidate?.candidate?.questionnaires?.resume;
@@ -107,22 +105,7 @@ export default function Candidate({
               parsedCandidate?.telegramLink
             )}
             {isUserAdmin && (
-              <>
-                <hr className="w-full border-gray-300" />
-                <strong className="py-4 text-lg font-semibold">
-                  Статус модерації:
-                </strong>
-                <SelectModerationStatus
-                  moderationStatus={
-                    parsedCandidate?.candidate?.questionnaires?.resume
-                      ?.moderationStatus || "PENDING"
-                  }
-                  questionnaireId={
-                    parsedCandidate?.candidate?.questionnaires
-                      ?.questionnaireId || ""
-                  }
-                />
-              </>
+              <ModerateCandidate candidateData={parsedCandidate} />
             )}
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import type { ModerationStatus } from "@prisma/client";
@@ -11,44 +11,16 @@ const moderationStatuses: ModerationStatus[] = [
 
 export function SelectModerationStatus({
   moderationStatus,
-  questionnaireId,
+  handleChangeStatus,
 }: {
   moderationStatus: ModerationStatus;
-  questionnaireId: string;
+  handleChangeStatus: (moderationStatus: ModerationStatus) => void;
 }) {
-  const [selectedStatus, setSelectedStatus] =
-    useState<ModerationStatus>(moderationStatus);
-
-  function handleChangeStatus(moderationStatus: ModerationStatus) {
-    void updateModerationStatus(moderationStatus);
-  }
-
-  async function updateModerationStatus(
-    moderationStatus: ModerationStatus
-  ): Promise<void> {
-    try {
-      const response = await fetch("/api/candidate/updateModerationStatus", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          moderationStatus,
-          questionnaireId,
-        }),
-      });
-
-      if (response.ok) {
-        setSelectedStatus(moderationStatus);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
   return (
-    <Listbox value={selectedStatus} onChange={handleChangeStatus}>
+    <Listbox value={moderationStatus} onChange={handleChangeStatus}>
       <div className="relative mt-1">
         <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
-          <span className="block truncate">{selectedStatus}</span>
+          <span className="block truncate">{moderationStatus}</span>
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
             <ChevronUpDownIcon
               className="h-5 w-5 text-gray-400"
