@@ -8,6 +8,8 @@ import Head from "next/head";
 import React, { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { SelectModerationStatus } from "~/component/admin/selectModerationStatus";
+import { renderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
+import { renderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
 
 export default function Candidate({
   candidate,
@@ -30,39 +32,6 @@ export default function Candidate({
   const parsedCandidate: ParsedCandidate = superjson.parse(candidate);
   const candidatesResume = parsedCandidate?.candidate?.questionnaires?.resume;
 
-  function renderCandidateResumeInfo(
-    title: string,
-    data: string | null | undefined
-  ) {
-    if (!data) return null;
-    return (
-      <div className="mb-4">
-        <strong className="text-lg font-semibold">{title}:</strong>
-        <p className="mt-2 text-gray-700">{data}</p>
-      </div>
-    );
-  }
-
-  function renderCandidateContactInfo(
-    title: string,
-    data: string | null | undefined,
-    href?: string | null
-  ) {
-    if (!data) return null;
-    return (
-      <div className="mb-4 flex items-center gap-2">
-        <strong className="text-lg font-semibold">{title}:</strong>
-        {href ? (
-          <a href={href} className="text-blue-600 hover:text-blue-800">
-            {data}
-          </a>
-        ) : (
-          <p className="text-gray-700">{data}</p>
-        )}
-      </div>
-    );
-  }
-
   return (
     <>
       <Head>
@@ -80,59 +49,59 @@ export default function Candidate({
             <h3 className="mb-4 text-xl font-medium">
               {candidatesResume?.specialty}
             </h3>
-            {renderCandidateResumeInfo(
+            {renderQuestionnaireDetail(
               "Досвід роботи",
               candidatesResume?.workExperience
             )}
-            {renderCandidateResumeInfo("Навички", candidatesResume?.skills)}
-            {renderCandidateResumeInfo("Освіта", candidatesResume?.education)}
-            {renderCandidateResumeInfo(
+            {renderQuestionnaireDetail("Навички", candidatesResume?.skills)}
+            {renderQuestionnaireDetail("Освіта", candidatesResume?.education)}
+            {renderQuestionnaireDetail(
               "Іноземні мови",
               candidatesResume?.foreignLanguages
             )}
-            {renderCandidateResumeInfo("Інтереси", candidatesResume?.interests)}
-            {renderCandidateResumeInfo(
+            {renderQuestionnaireDetail("Інтереси", candidatesResume?.interests)}
+            {renderQuestionnaireDetail(
               "Досягнення",
               candidatesResume?.achievements
             )}
-            {renderCandidateResumeInfo(
+            {renderQuestionnaireDetail(
               "Досвід роботи",
               candidatesResume?.workExperience
             )}
           </div>
           <div className="w-1/3 rounded-lg border bg-white p-6 shadow-lg">
             <h3 className="mb-4 text-xl font-medium">Контактна інформація</h3>
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Бажана зарплата",
               candidatesResume?.desiredSalary
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Бажана зайнятість",
               candidatesResume?.employment
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Номере телефону",
               parsedCandidate?.phoneNumber,
               parsedCandidate?.phoneNumber
                 ? `tel:${parsedCandidate.phoneNumber}`
                 : ""
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Email",
               parsedCandidate?.email,
               parsedCandidate?.email ? `mailto:${parsedCandidate.email}` : ""
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Linkedin",
               parsedCandidate?.linkedinLink,
               parsedCandidate?.linkedinLink
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Github",
               parsedCandidate?.githubLink,
               parsedCandidate?.githubLink
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Telegram",
               parsedCandidate?.telegramLink,
               parsedCandidate?.telegramLink
