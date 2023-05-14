@@ -125,4 +125,9 @@ export const employerAccountRouter = createTRPCRouter({
         },
       });
     }),
+  fetchAvailableVacancies: publicProcedure.query(async () => {
+    return prisma.vacancy.findMany({
+      where: { moderationStatus: "ACCEPTED" },
+    });
+  }),
 });
