@@ -9,7 +9,18 @@ export const adminRouter = createTRPCRouter({
       const { adminId } = input;
       return prisma.user.findUnique({ where: { id: adminId } });
     }),
-  unmoderatedResumes: publicProcedure.query(async () => {
-    return prisma.resume.findMany({ where: { moderationStatus: "PENDING" } });
+  fetchUnmoderatedCandidates: publicProcedure.query(async () => {
+    return prisma.user.findMany({
+      include: {
+        candidate: {
+          include: { questionnaires: { include: { resume: true } } },
+        },
+      },
+      where: {
+        candidate: {
+          questionnaires: { resume: { moderationStatus: "PENDING" } },
+        },
+      },
+    });
   }),
 });
