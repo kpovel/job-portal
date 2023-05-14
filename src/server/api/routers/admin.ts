@@ -23,4 +23,9 @@ export const adminRouter = createTRPCRouter({
       },
     });
   }),
+  fetchUnmoderatedVacancies: publicProcedure.query(async () => {
+    return prisma.vacancy.findMany({
+      where: { moderationStatus: "PENDING" },
+    });
+  }),
 });
