@@ -65,6 +65,21 @@ export const candidateAccountRouter = createTRPCRouter({
     return prisma.user.findMany({
       where: {
         userType: "CANDIDATE",
+        candidate: {
+          questionnaires: { resume: { moderationStatus: "ACCEPTED" } },
+        },
+      },
+      include: {
+        candidate: {
+          include: { questionnaires: { include: { resume: true } } },
+        },
+      },
+    });
+  }),
+  fetchAllCandidates: publicProcedure.query(async () => {
+    return prisma.user.findMany({
+      where: {
+        userType: "CANDIDATE",
       },
       include: {
         candidate: {

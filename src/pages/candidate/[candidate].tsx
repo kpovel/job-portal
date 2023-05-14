@@ -16,17 +16,24 @@ export default function Candidate({
   const isUserAdmin = authorizedUser?.userType === "ADMIN";
 
   type ParsedCandidate =
-    | User & {
+    | (User & {
         candidate:
-          | Candidate & {
-              questionnaires: Questionnaire & { resume: Resume };
-            };
-      };
+          | (Candidate & {
+              questionnaires:
+                | (Questionnaire & { resume: Resume | null })
+                | null;
+            })
+          | null;
+      })
+    | null;
 
   const parsedCandidate: ParsedCandidate = superjson.parse(candidate);
-  const candidatesResume = parsedCandidate.candidate.questionnaires.resume;
+  const candidatesResume = parsedCandidate?.candidate?.questionnaires?.resume;
 
-  function renderCandidateResumeInfo(title: string, data: string | null) {
+  function renderCandidateResumeInfo(
+    title: string,
+    data: string | null | undefined
+  ) {
     if (!data) return null;
     return (
       <div className="mb-4">
@@ -38,7 +45,7 @@ export default function Candidate({
 
   function renderCandidateContactInfo(
     title: string,
-    data: string | null,
+    data: string | null | undefined,
     href?: string | null
   ) {
     if (!data) return null;
@@ -60,75 +67,75 @@ export default function Candidate({
     <>
       <Head>
         <title>
-          Job Portal – {parsedCandidate.firstName} {parsedCandidate.lastName}
+          Job Portal – {parsedCandidate?.firstName} {parsedCandidate?.lastName}
         </title>
       </Head>
       <Layout>
         <div className="container mx-auto mt-6 flex space-x-6">
           <div className="w-2/3 rounded-lg border bg-white p-6 shadow-lg">
             <h2 className="mb-6 text-2xl font-bold">
-              {parsedCandidate.firstName} {parsedCandidate.lastName}
-              {parsedCandidate.age ? ` - ${parsedCandidate.age}` : ""}
+              {parsedCandidate?.firstName} {parsedCandidate?.lastName}
+              {parsedCandidate?.age ? ` - ${parsedCandidate?.age}` : ""}
             </h2>
             <h3 className="mb-4 text-xl font-medium">
-              {candidatesResume.specialty}
+              {candidatesResume?.specialty}
             </h3>
             {renderCandidateResumeInfo(
               "Досвід роботи",
-              candidatesResume.workExperience
+              candidatesResume?.workExperience
             )}
-            {renderCandidateResumeInfo("Навички", candidatesResume.skills)}
-            {renderCandidateResumeInfo("Освіта", candidatesResume.education)}
+            {renderCandidateResumeInfo("Навички", candidatesResume?.skills)}
+            {renderCandidateResumeInfo("Освіта", candidatesResume?.education)}
             {renderCandidateResumeInfo(
               "Іноземні мови",
-              candidatesResume.foreignLanguages
+              candidatesResume?.foreignLanguages
             )}
-            {renderCandidateResumeInfo("Інтереси", candidatesResume.interests)}
+            {renderCandidateResumeInfo("Інтереси", candidatesResume?.interests)}
             {renderCandidateResumeInfo(
               "Досягнення",
-              candidatesResume.achievements
+              candidatesResume?.achievements
             )}
             {renderCandidateResumeInfo(
               "Досвід роботи",
-              candidatesResume.workExperience
+              candidatesResume?.workExperience
             )}
           </div>
           <div className="w-1/3 rounded-lg border bg-white p-6 shadow-lg">
             <h3 className="mb-4 text-xl font-medium">Контактна інформація</h3>
             {renderCandidateContactInfo(
               "Бажана зарплата",
-              candidatesResume.desiredSalary
+              candidatesResume?.desiredSalary
             )}
             {renderCandidateContactInfo(
               "Бажана зайнятість",
-              candidatesResume.employment
+              candidatesResume?.employment
             )}
             {renderCandidateContactInfo(
               "Номере телефону",
-              parsedCandidate.phoneNumber,
-              parsedCandidate.phoneNumber
+              parsedCandidate?.phoneNumber,
+              parsedCandidate?.phoneNumber
                 ? `tel:${parsedCandidate.phoneNumber}`
                 : ""
             )}
             {renderCandidateContactInfo(
               "Email",
-              parsedCandidate.email,
-              parsedCandidate.email ? `mailto:${parsedCandidate.email}` : ""
+              parsedCandidate?.email,
+              parsedCandidate?.email ? `mailto:${parsedCandidate.email}` : ""
             )}
             {renderCandidateContactInfo(
               "Linkedin",
-              parsedCandidate.linkedinLink,
-              parsedCandidate.linkedinLink
+              parsedCandidate?.linkedinLink,
+              parsedCandidate?.linkedinLink
             )}
             {renderCandidateContactInfo(
               "Github",
-              parsedCandidate.githubLink,
-              parsedCandidate.githubLink
+              parsedCandidate?.githubLink,
+              parsedCandidate?.githubLink
             )}
             {renderCandidateContactInfo(
               "Telegram",
-              parsedCandidate.telegramLink,
-              parsedCandidate.telegramLink
+              parsedCandidate?.telegramLink,
+              parsedCandidate?.telegramLink
             )}
             {isUserAdmin && (
               <>
@@ -138,11 +145,12 @@ export default function Candidate({
                 </strong>
                 <SelectModerationStatus
                   moderationStatus={
-                    parsedCandidate.candidate.questionnaires.resume
-                      .moderationStatus
+                    parsedCandidate?.candidate?.questionnaires?.resume
+                      ?.moderationStatus || "PENDING"
                   }
                   questionnaireId={
-                    parsedCandidate.candidate.questionnaires.questionnaireId
+                    parsedCandidate?.candidate?.questionnaires
+                      ?.questionnaireId || ""
                   }
                 />
               </>
@@ -162,7 +170,7 @@ type StaticPaths = {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const caller = appRouter.createCaller({ prisma });
-  const candidates = await caller.candidate.fetchAvailableCandidates();
+  const candidates = await caller.candidate.fetchAllCandidates();
 
   const paths: StaticPaths[] = candidates.map((candidate) => ({
     params: { candidate: candidate.id },
