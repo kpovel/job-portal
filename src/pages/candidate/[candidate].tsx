@@ -5,10 +5,16 @@ import superjson from "superjson";
 import type { GetStaticPaths, InferGetStaticPropsType } from "next";
 import type { User, Candidate, Questionnaire, Resume } from "@prisma/client";
 import Head from "next/head";
+import React, { useContext } from "react";
+import { AuthContext } from "~/utils/auth/authContext";
+import { SelectModerationStatus } from "~/component/admin/selectModerationStatus";
 
 export default function Candidate({
   candidate,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
+  const authorizedUser = useContext(AuthContext);
+  const isUserAdmin = authorizedUser?.userType === "ADMIN";
+
   type ParsedCandidate =
     | User & {
         candidate:
@@ -124,6 +130,23 @@ export default function Candidate({
               parsedCandidate.telegramLink,
               parsedCandidate.telegramLink
             )}
+            {isUserAdmin && (
+              <>
+                <hr className="w-full border-gray-300" />
+                <strong className="py-4 text-lg font-semibold">
+                  Статус модерації:
+                </strong>
+                <SelectModerationStatus
+                  moderationStatus={
+                    parsedCandidate.candidate.questionnaires.resume
+                      .moderationStatus
+                  }
+                  questionnaireId={
+                    parsedCandidate.candidate.questionnaires.questionnaireId
+                  }
+                />
+              </>
+            )}
           </div>
         </div>
       </Layout>
@@ -162,5 +185,6 @@ export const getStaticProps = async ({ params }: StaticPaths) => {
     props: {
       candidate: serializedCandidate,
     },
+    revalidate: 20,
   };
 };
