@@ -1,6 +1,7 @@
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { z } from "zod";
 import { prisma } from "~/server/db";
+import { ModerationStatus } from "@prisma/client";
 
 export const employerAccountRouter = createTRPCRouter({
   findEmployeeById: publicProcedure
@@ -152,5 +153,19 @@ export const employerAccountRouter = createTRPCRouter({
         vacancy,
         employer,
       };
+    }),
+  updateModerationStatus: publicProcedure
+    .input(
+      z.object({
+        moderationStatus: z.nativeEnum(ModerationStatus),
+        questionnaireId: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const { moderationStatus, questionnaireId } = input;
+      return prisma.vacancy.update({
+        where: { questionnaireId },
+        data: { moderationStatus },
+      });
     }),
 });
