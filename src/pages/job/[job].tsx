@@ -3,52 +3,98 @@ import { appRouter } from "~/server/api/root";
 import { prisma } from "~/server/db";
 import type { GetStaticPaths, InferGetStaticPropsType } from "next";
 import superjson from "superjson";
-import type { Vacancy } from "@prisma/client";
+import type { User, Employer, Vacancy } from "@prisma/client";
 import Head from "next/head";
 import React from "react";
 import { format } from "date-fns";
+import { renderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
+import { renderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
 
 export default function Job({
-  job,
+  jobInformation,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
-  const parsedJob: Vacancy = superjson.parse(job);
+  type JobInformation = {
+    vacancy: Vacancy | null;
+    employer: (User & { employer: Employer | null }) | null;
+  };
 
-  function renderJobDetail(title: string, data: string | null | undefined) {
-    if (!data) return null;
-    return (
-      <div className="mb-4">
-        <strong className="text-lg font-semibold">{title}:</strong>
-        <p className="mt-2 text-gray-700">{data}</p>
-      </div>
-    );
-  }
-
+  const parsedJobInformation: JobInformation = superjson.parse(jobInformation);
+  console.log(parsedJobInformation);
   return (
     <>
       <Head>
-        <title>Job Portal – {parsedJob.specialty}</title>
+        <title>Job Portal – {parsedJobInformation.vacancy?.specialty}</title>
       </Head>
       <Layout>
-        <div className="container mx-auto mt-6">
-          <div className="rounded-lg border bg-white p-6 shadow-lg">
-            <h2 className="mb-6 text-2xl font-bold">{parsedJob.specialty}</h2>
-            {renderJobDetail(
-              "Salary",
-              parsedJob.salary && `$${parsedJob.salary}`
+        <div className="container mx-auto mt-6 flex flex-row gap-4">
+          <div className="basis-2/3 rounded-lg border bg-white p-6 shadow-lg">
+            <h2 className="mb-6 text-2xl font-bold">
+              {parsedJobInformation.vacancy?.specialty}
+            </h2>
+            {renderQuestionnaireDetail(
+              "Обов'язки",
+              parsedJobInformation.vacancy?.duties
             )}
-            {renderJobDetail("Обов'язки", parsedJob.duties)}
-            {renderJobDetail("Вимоги", parsedJob.requirements)}
-            {renderJobDetail("Умови", parsedJob.conditions)}
-            {renderJobDetail("Графік роботи", parsedJob.workSchedule)}
-            {renderJobDetail("Тип зайнятості", parsedJob.employment)}
+            {renderQuestionnaireDetail(
+              "Вимоги",
+              parsedJobInformation.vacancy?.requirements
+            )}
+            {renderQuestionnaireDetail(
+              "Умови",
+              parsedJobInformation.vacancy?.conditions
+            )}
+            {renderQuestionnaireDetail(
+              "Графік роботи",
+              parsedJobInformation.vacancy?.workSchedule
+            )}
+            {renderQuestionnaireDetail(
+              "Тип зайнятості",
+              parsedJobInformation.vacancy?.employment
+            )}
             <div className="mb-4">
               <strong className="text-lg font-semibold">
                 Дата публікації:
               </strong>
               <p className="mt-2 text-gray-700">
-                {format(parsedJob?.dateOfPublication, "d MMMM yyyy, HH:mm")}
+                {parsedJobInformation.vacancy?.dateOfPublication &&
+                  format(
+                    parsedJobInformation.vacancy.dateOfPublication,
+                    "d MMMM yyyy, HH:mm"
+                  )}
               </p>
             </div>
+          </div>
+          <div className="w-28 basis-1/3 rounded-lg border bg-white p-6 shadow-lg">
+            {renderQuestionnaireInfo(
+              "Salary",
+              parsedJobInformation.vacancy?.salary &&
+                `$${parsedJobInformation.vacancy.salary}`
+            )}
+            {renderQuestionnaireInfo(
+              "Company name",
+              parsedJobInformation.employer?.employer?.companyName
+            )}
+            {renderQuestionnaireInfo(
+              "Company address",
+              parsedJobInformation.employer?.employer?.companyAddress
+            )}
+            {renderQuestionnaireInfo(
+              "Phone number",
+              parsedJobInformation.employer?.phoneNumber,
+              parsedJobInformation.employer?.phoneNumber &&
+                `tel:${parsedJobInformation.employer.phoneNumber}`
+            )}
+            {renderQuestionnaireInfo(
+              "Email",
+              parsedJobInformation.employer?.email,
+              parsedJobInformation.employer?.email &&
+                `mailto:${parsedJobInformation.employer.email}`
+            )}
+            {renderQuestionnaireInfo(
+              "Linkedin link",
+              parsedJobInformation.employer?.linkedinLink,
+              parsedJobInformation.employer?.linkedinLink
+            )}
           </div>
         </div>
       </Layout>
@@ -78,15 +124,15 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps = async ({ params }: StaticPath) => {
   const caller = appRouter.createCaller({ prisma });
-  const job = await caller.employer.findVacancyById({
+  const jobInformation = await caller.employer.informationAboutVacancy({
     vacancyId: params.job,
   });
 
-  const serializedJob = superjson.stringify(job);
+  const serializedJob = superjson.stringify(jobInformation);
 
   return {
     props: {
-      job: serializedJob,
+      jobInformation: serializedJob,
     },
     revalidate: 20,
   };

@@ -133,12 +133,24 @@ export const employerAccountRouter = createTRPCRouter({
   fetchAllVacancies: publicProcedure.query(async () => {
     return prisma.vacancy.findMany();
   }),
-  findVacancyById: publicProcedure
+  informationAboutVacancy: publicProcedure
     .input(z.object({ vacancyId: z.string() }))
     .query(async ({ input }) => {
       const { vacancyId } = input;
-      return prisma.vacancy.findUnique({
+      const vacancy = await prisma.vacancy.findUnique({
         where: { questionnaireId: vacancyId },
       });
+
+      const employer = await prisma.user.findUnique({
+        where: { id: vacancy?.employerId },
+        include: {
+          employer: true,
+        },
+      });
+
+      return {
+        vacancy,
+        employer,
+      };
     }),
 });
