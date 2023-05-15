@@ -1,4 +1,4 @@
-import React, { type FormEvent, useContext, useState } from "react";
+import React, { type FormEvent, useContext, useEffect, useState } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 
 export function VacancyResponse({
@@ -12,6 +12,36 @@ export function VacancyResponse({
 
   const [coverLetter, setCoverLetter] = useState("");
   const isFormFieldOut = coverLetter.length > 100;
+
+  const [isSentResponse, setIsSentResponse] = useState<boolean>(true);
+
+  useEffect(() => {
+    void checkIsSentResponse();
+  }, []);
+
+  async function checkIsSentResponse(): Promise<void> {
+    try {
+      const responsesByCandidate = await fetch(
+        "/api/response/hasCandidateRespondedToVacancy",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            candidateId: authContext?.id,
+            vacancyId,
+          }),
+        }
+      );
+      const responses = (await responsesByCandidate.json()) as {
+        responsesByCandidate: Response[];
+        message: string;
+      };
+      console.log(responses);
+      setIsSentResponse(!!responses.responsesByCandidate.length);
+    } catch (e) {
+      console.log(e);
+    }
+  }
 
   function handleSubmitCoverLetter(e: FormEvent) {
     e.preventDefault();
@@ -60,9 +90,10 @@ export function VacancyResponse({
           </div>
           <button
             type="submit"
-            disabled={!isFormFieldOut}
             className={`mt-6 block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
-              !isFormFieldOut ? "cursor-not-allowed opacity-50" : ""
+              isSentResponse || !isFormFieldOut
+                ? "cursor-not-allowed opacity-50"
+                : ""
             }`}
           >
             Відгукнутись на вакансію
