@@ -1,6 +1,7 @@
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { z } from "zod";
 import { prisma } from "~/server/db";
+import { ModerationStatus } from "@prisma/client";
 
 export const employerAccountRouter = createTRPCRouter({
   findEmployeeById: publicProcedure
@@ -123,6 +124,48 @@ export const employerAccountRouter = createTRPCRouter({
           workSchedule,
           employment,
         },
+      });
+    }),
+  fetchAvailableVacancies: publicProcedure.query(async () => {
+    return prisma.vacancy.findMany({
+      where: { moderationStatus: "ACCEPTED" },
+    });
+  }),
+  fetchAllVacancies: publicProcedure.query(async () => {
+    return prisma.vacancy.findMany();
+  }),
+  informationAboutVacancy: publicProcedure
+    .input(z.object({ vacancyId: z.string() }))
+    .query(async ({ input }) => {
+      const { vacancyId } = input;
+      const vacancy = await prisma.vacancy.findUnique({
+        where: { questionnaireId: vacancyId },
+      });
+
+      const employer = await prisma.user.findUnique({
+        where: { id: vacancy?.employerId },
+        include: {
+          employer: true,
+        },
+      });
+
+      return {
+        vacancy,
+        employer,
+      };
+    }),
+  updateModerationStatus: publicProcedure
+    .input(
+      z.object({
+        moderationStatus: z.nativeEnum(ModerationStatus),
+        questionnaireId: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const { moderationStatus, questionnaireId } = input;
+      return prisma.vacancy.update({
+        where: { questionnaireId },
+        data: { moderationStatus },
       });
     }),
 });

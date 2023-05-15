@@ -5,124 +5,107 @@ import superjson from "superjson";
 import type { GetStaticPaths, InferGetStaticPropsType } from "next";
 import type { User, Candidate, Questionnaire, Resume } from "@prisma/client";
 import Head from "next/head";
+import React, { useContext } from "react";
+import { AuthContext } from "~/utils/auth/authContext";
+import { renderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
+import { renderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
+import { ModerateCandidate } from "~/component/admin/moderation/moderateCandidate";
+
+export type ParsedCandidate =
+  | (User & {
+      candidate:
+        | (Candidate & {
+            questionnaires: (Questionnaire & { resume: Resume | null }) | null;
+          })
+        | null;
+    })
+  | null;
 
 export default function Candidate({
   candidate,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
-  type ParsedCandidate =
-    | User & {
-        candidate:
-          | Candidate & {
-              questionnaires: Questionnaire & { resume: Resume };
-            };
-      };
+  const authorizedUser = useContext(AuthContext);
+  const isUserAdmin = authorizedUser?.userType === "ADMIN";
 
   const parsedCandidate: ParsedCandidate = superjson.parse(candidate);
-  const candidatesResume = parsedCandidate.candidate.questionnaires.resume;
-
-  function renderCandidateResumeInfo(title: string, data: string | null) {
-    if (!data) return null;
-    return (
-      <div className="mb-4">
-        <strong className="text-lg font-semibold">{title}:</strong>
-        <p className="mt-2 text-gray-700">{data}</p>
-      </div>
-    );
-  }
-
-  function renderCandidateContactInfo(
-    title: string,
-    data: string | null,
-    href?: string | null
-  ) {
-    if (!data) return null;
-    return (
-      <div className="mb-4 flex items-center gap-2">
-        <strong className="text-lg font-semibold">{title}:</strong>
-        {href ? (
-          <a href={href} className="text-blue-600 hover:text-blue-800">
-            {data}
-          </a>
-        ) : (
-          <p className="text-gray-700">{data}</p>
-        )}
-      </div>
-    );
-  }
+  const candidatesResume = parsedCandidate?.candidate?.questionnaires?.resume;
 
   return (
     <>
       <Head>
         <title>
-          Job Portal – {parsedCandidate.firstName} {parsedCandidate.lastName}
+          Job Portal – {parsedCandidate?.firstName} {parsedCandidate?.lastName}
         </title>
       </Head>
       <Layout>
         <div className="container mx-auto mt-6 flex space-x-6">
           <div className="w-2/3 rounded-lg border bg-white p-6 shadow-lg">
             <h2 className="mb-6 text-2xl font-bold">
-              {parsedCandidate.firstName} {parsedCandidate.lastName}
-              {parsedCandidate.age ? ` - ${parsedCandidate.age}` : ""}
+              {parsedCandidate?.firstName} {parsedCandidate?.lastName}
+              {parsedCandidate?.age ? ` - ${parsedCandidate?.age}` : ""}
             </h2>
             <h3 className="mb-4 text-xl font-medium">
-              {candidatesResume.specialty}
+              {candidatesResume?.specialty}
             </h3>
-            {renderCandidateResumeInfo(
+            {renderQuestionnaireDetail(
               "Досвід роботи",
-              candidatesResume.workExperience
+              candidatesResume?.workExperience
             )}
-            {renderCandidateResumeInfo("Навички", candidatesResume.skills)}
-            {renderCandidateResumeInfo("Освіта", candidatesResume.education)}
-            {renderCandidateResumeInfo(
+            {renderQuestionnaireDetail("Навички", candidatesResume?.skills)}
+            {renderQuestionnaireDetail("Освіта", candidatesResume?.education)}
+            {renderQuestionnaireDetail(
               "Іноземні мови",
-              candidatesResume.foreignLanguages
+              candidatesResume?.foreignLanguages
             )}
-            {renderCandidateResumeInfo("Інтереси", candidatesResume.interests)}
-            {renderCandidateResumeInfo(
+            {renderQuestionnaireDetail("Інтереси", candidatesResume?.interests)}
+            {renderQuestionnaireDetail(
               "Досягнення",
-              candidatesResume.achievements
+              candidatesResume?.achievements
             )}
-            {renderCandidateResumeInfo(
+            {renderQuestionnaireDetail(
               "Досвід роботи",
-              candidatesResume.workExperience
+              candidatesResume?.workExperience
             )}
           </div>
           <div className="w-1/3 rounded-lg border bg-white p-6 shadow-lg">
             <h3 className="mb-4 text-xl font-medium">Контактна інформація</h3>
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Бажана зарплата",
-              candidatesResume.desiredSalary
+              candidatesResume?.desiredSalary
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Бажана зайнятість",
-              candidatesResume.employment
+              candidatesResume?.employment
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Номере телефону",
-              parsedCandidate.phoneNumber,
-              parsedCandidate.phoneNumber
+              parsedCandidate?.phoneNumber,
+              parsedCandidate?.phoneNumber
                 ? `tel:${parsedCandidate.phoneNumber}`
                 : ""
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Email",
-              parsedCandidate.email,
-              parsedCandidate.email ? `mailto:${parsedCandidate.email}` : ""
+              parsedCandidate?.email,
+              parsedCandidate?.email ? `mailto:${parsedCandidate.email}` : ""
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Linkedin",
-              parsedCandidate.linkedinLink,
-              parsedCandidate.linkedinLink
+              parsedCandidate?.linkedinLink,
+              parsedCandidate?.linkedinLink
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Github",
-              parsedCandidate.githubLink,
-              parsedCandidate.githubLink
+              parsedCandidate?.githubLink,
+              parsedCandidate?.githubLink
             )}
-            {renderCandidateContactInfo(
+            {renderQuestionnaireInfo(
               "Telegram",
-              parsedCandidate.telegramLink,
-              parsedCandidate.telegramLink
+              parsedCandidate?.telegramLink,
+              parsedCandidate?.telegramLink
+            )}
+            {isUserAdmin && (
+              <ModerateCandidate candidateData={parsedCandidate} />
             )}
           </div>
         </div>
@@ -139,7 +122,7 @@ type StaticPaths = {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const caller = appRouter.createCaller({ prisma });
-  const candidates = await caller.candidate.fetchAvailableCandidates();
+  const candidates = await caller.candidate.fetchAllCandidates();
 
   const paths: StaticPaths[] = candidates.map((candidate) => ({
     params: { candidate: candidate.id },
@@ -162,5 +145,6 @@ export const getStaticProps = async ({ params }: StaticPaths) => {
     props: {
       candidate: serializedCandidate,
     },
+    revalidate: 20,
   };
 };

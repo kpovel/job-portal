@@ -5,20 +5,20 @@ import superjson from "superjson";
 import Head from "next/head";
 import type { InferGetStaticPropsType } from "next";
 import type { User, Candidate, Questionnaire, Resume } from "@prisma/client";
-import Link from "next/link";
+import { CandidateResumePreview } from "~/component/candidate/resumePreview";
+
+export type ParsedCandidate = User & {
+  candidate:
+    | (Candidate & {
+        questionnaires: (Questionnaire & { resume: Resume | null }) | null;
+      })
+    | null;
+};
 
 export default function Candidates({
   candidates,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
-  type ParsedCandidates = (User & {
-    candidate:
-      | (Candidate & {
-          questionnaires: (Questionnaire & { resume: Resume | null }) | null;
-        })
-      | null;
-  })[];
-
-  const parsedCandidates: ParsedCandidates = superjson.parse(candidates);
+  const parsedCandidates: ParsedCandidate[] = superjson.parse(candidates);
 
   return (
     <>
@@ -38,51 +38,10 @@ export default function Candidates({
           )}
           <div className="grid grid-cols-1 gap-4">
             {parsedCandidates.map((candidate) => (
-              <div
-                className="rounded-md border border-gray-300 p-4"
+              <CandidateResumePreview
                 key={candidate.id}
-              >
-                <Link
-                  href={`/candidate/${candidate.id}`}
-                  className="mb-3 flex items-center"
-                >
-                  <div>
-                    <div className="font-bold text-blue-600  hover:text-blue-800">
-                      {candidate.firstName} {candidate.lastName}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {candidate.candidate?.questionnaires?.resume?.specialty}
-                    </div>
-                  </div>
-                </Link>
-                <div className="mb-2">
-                  <strong>Work Experience:</strong>{" "}
-                  {candidate.candidate?.questionnaires?.resume?.workExperience}
-                </div>
-                <div className="mb-2">
-                  <strong>Skills:</strong>{" "}
-                  {candidate.candidate?.questionnaires?.resume?.skills}
-                </div>
-                <div className="mb-2">
-                  <strong>Education:</strong>{" "}
-                  {candidate.candidate?.questionnaires?.resume?.education}
-                </div>
-                <div className="mb-2">
-                  <strong>Foreign Languages:</strong>{" "}
-                  {
-                    candidate.candidate?.questionnaires?.resume
-                      ?.foreignLanguages
-                  }
-                </div>
-                <div className="mb-2">
-                  <strong>Interests:</strong>{" "}
-                  {candidate.candidate?.questionnaires?.resume?.interests}
-                </div>
-                <div className="mb-2">
-                  <strong>Achievements:</strong>{" "}
-                  {candidate.candidate?.questionnaires?.resume?.achievements}
-                </div>
-              </div>
+                candidate={candidate}
+              />
             ))}
           </div>
         </div>
