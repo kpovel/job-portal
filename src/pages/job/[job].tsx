@@ -105,7 +105,14 @@ export default function Job({
             {isAdmin && <ModerateJob jobInfo={parsedJobInformation} />}
           </div>
         </div>
-        {isCandidate && <VacancyResponse />}
+        {isCandidate && (
+          <VacancyResponse
+            vacancyId={parsedJobInformation.vacancy?.questionnaireId || ""}
+            employerId={
+              parsedJobInformation.employer?.employer?.employerId || ""
+            }
+          />
+        )}
       </Layout>
     </>
   );
