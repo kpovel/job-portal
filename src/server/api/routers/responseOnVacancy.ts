@@ -25,6 +25,7 @@ export const responseRouter = createTRPCRouter({
           employerId,
           resumeId: candidatesResume?.questionnaireId || "",
           coverLetter,
+          responseBy: "CANDIDATE",
         },
       });
     }),
