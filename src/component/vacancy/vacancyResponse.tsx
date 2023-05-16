@@ -1,5 +1,6 @@
 import React, { type FormEvent, useContext, useEffect, useState } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
+import type { Response } from "@prisma/client";
 
 export function VacancyResponse({
   vacancyId,
@@ -13,7 +14,7 @@ export function VacancyResponse({
   const [coverLetter, setCoverLetter] = useState("");
   const isFormFieldOut = coverLetter.length > 100;
 
-  const [isSentResponse, setIsSentResponse] = useState<boolean>(true);
+  const [isSentResponse, setIsSentResponse] = useState<boolean>(false);
 
   useEffect(() => {
     void checkIsSentResponse();
@@ -22,7 +23,7 @@ export function VacancyResponse({
   async function checkIsSentResponse(): Promise<void> {
     try {
       const responsesByCandidate = await fetch(
-        "/api/response/hasCandidateRespondedToVacancy",
+        "/api/response/findResponsesByCandidate",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -32,12 +33,20 @@ export function VacancyResponse({
           }),
         }
       );
-      const responses = (await responsesByCandidate.json()) as {
+
+      const parsedResponses = (await responsesByCandidate.json()) as {
         responsesByCandidate: Response[];
         message: string;
       };
-      console.log(responses);
-      setIsSentResponse(!!responses.responsesByCandidate.length);
+
+      const isExistResponseOnTheVacancy =
+        parsedResponses.responsesByCandidate.find(
+          (element) =>
+            element.vacancyId === vacancyId &&
+            element.candidateId === authContext?.id
+        );
+
+      setIsSentResponse(!!isExistResponseOnTheVacancy);
     } catch (e) {
       console.log(e);
     }
@@ -62,6 +71,9 @@ export function VacancyResponse({
           coverLetter,
         }),
       });
+
+      setIsSentResponse(true);
+      setCoverLetter("");
     } catch (e) {
       console.log(e);
     }
@@ -96,7 +108,9 @@ export function VacancyResponse({
                 : ""
             }`}
           >
-            Відгукнутись на вакансію
+            {isSentResponse
+              ? "Ви вже відправили відгук на цю вакансію"
+              : "Відгукнутись на вакансію"}
           </button>
         </div>
       </form>

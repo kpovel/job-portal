@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { appRouter } from "~/server/api/root";
 import { prisma } from "~/server/db";
 
-export default async function responseOnVacancy(
+export default async function findResponsesByCandidate(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -17,11 +17,12 @@ export default async function responseOnVacancy(
     };
 
     const caller = appRouter.createCaller({ prisma });
-    const responsesByCandidate =
-      await caller.response.hasCandidateRespondedToVacancy({
+    const responsesByCandidate = await caller.response.findResponsesByCandidate(
+      {
         candidateId,
         vacancyId,
-      });
+      }
+    );
 
     res.status(200).json({
       message: "Successfully receive responses",

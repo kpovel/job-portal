@@ -29,15 +29,12 @@ export const responseRouter = createTRPCRouter({
         },
       });
     }),
-  hasCandidateRespondedToVacancy: publicProcedure
+  findResponsesByCandidate: publicProcedure
     .input(z.object({ candidateId: z.string(), vacancyId: z.string() }))
     .query(async ({ input }) => {
       const { candidateId, vacancyId } = input;
       return prisma.response.findMany({
-        where: {
-          candidateId,
-          vacancyId,
-        },
+        where: { candidateId, vacancyId },
       });
     }),
 });
