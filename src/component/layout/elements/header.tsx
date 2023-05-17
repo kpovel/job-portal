@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import { ProfileDropdownMenu } from "~/component/layout/elements/profileDropdownMenu";
 import { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
-import { CandidateModerationStatus } from "~/component/layout/elements/candidateModerationStatus";
+import { CandidateModerationStatus } from "~/component/layout/elements/moderation/candidateModerationStatus";
 
 const navigation: { name: string; href: string }[] = [
   { name: "Пропозиції", href: "/my/offers" },

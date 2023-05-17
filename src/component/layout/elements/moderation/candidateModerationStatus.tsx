@@ -2,6 +2,7 @@ import type { ModerationStatus } from "@prisma/client";
 import { useContext, useEffect, useState } from "react";
 import { api } from "~/utils/api";
 import { AuthContext } from "~/utils/auth/authContext";
+import { ModerationLabel } from "~/component/layout/elements/moderation/moderationLabel";
 
 export function CandidateModerationStatus() {
   const authContext = useContext(AuthContext);
@@ -19,19 +20,5 @@ export function CandidateModerationStatus() {
     }
   }, [candidatesQuestionnaire]);
 
-  const moderationStyle = {
-    ACCEPTED: "bg-green-50 text-green-700 ring-green-600/20",
-    PENDING: "bg-yellow-50 text-yellow-800 ring-yellow-600/20",
-    REJECTED: "bg-red-50 text-red-700 ring-red-600/10",
-  };
-
-  return (
-    <div>
-      <span
-        className={`inline-flex items-center rounded-md px-2 py-1 text-sm font-medium ring-1 ring-inset ${moderationStyle[moderationStatus]}`}
-      >
-        {moderationStatus}
-      </span>
-    </div>
-  );
+  return <ModerationLabel moderationStatus={moderationStatus} />;
 }
