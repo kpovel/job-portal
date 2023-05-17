@@ -3,6 +3,9 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { ProfileDropdownMenu } from "~/component/layout/elements/profileDropdownMenu";
+import { useContext } from "react";
+import { AuthContext } from "~/utils/auth/authContext";
+import { CandidateModerationStatus } from "~/component/layout/elements/moderation/candidateModerationStatus";
 
 const navigation: { name: string; href: string }[] = [
   { name: "Пропозиції", href: "/my/offers" },
@@ -15,6 +18,8 @@ export function classNames(...classes: { toString: () => string }[]) {
 
 export function Header() {
   const router = useRouter();
+  const authContext = useContext(AuthContext);
+  const isCandidate = authContext?.userType === "CANDIDATE";
 
   const isActivePage = (currentPage: string) => currentPage === router.pathname;
 
@@ -67,6 +72,7 @@ export function Header() {
                     </div>
                   </div>
                 </div>
+                {isCandidate && <CandidateModerationStatus />}
                 <ProfileDropdownMenu />
               </div>
             </div>

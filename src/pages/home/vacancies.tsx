@@ -10,6 +10,7 @@ import { getEmployerData } from "~/utils/getEmployerData/getEmployerData";
 import type { EmployerData } from "~/pages/home/profile";
 import superjson from "superjson";
 import Link from "next/link";
+import { ModerationLabel } from "~/component/layout/elements/moderation/moderationLabel";
 
 export default function Vacancies({
   employer,
@@ -43,6 +44,13 @@ export default function Vacancies({
                           {questionnaire.vacancy.specialty}
                         </Link>
                       </h2>
+                      <div className="mr-3">
+                        <ModerationLabel
+                          moderationStatus={
+                            questionnaire.vacancy.moderationStatus
+                          }
+                        />
+                      </div>
                       {questionnaire.vacancy.salary && (
                         <p className="font-semibold text-gray-700">
                           ${questionnaire.vacancy.salary}
