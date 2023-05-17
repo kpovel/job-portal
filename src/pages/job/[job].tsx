@@ -105,7 +105,6 @@ export default function Job({
             {isAdmin && <ModerateJob jobInfo={parsedJobInformation} />}
           </div>
         </div>
-        {/*todo: restrict send response for unmoderated candidate*/}
         {isCandidate && (
           <VacancyResponse
             vacancyId={parsedJobInformation.vacancy?.questionnaireId || ""}

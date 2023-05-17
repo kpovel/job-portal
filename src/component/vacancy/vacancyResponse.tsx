@@ -1,6 +1,8 @@
 import React, { type FormEvent, useContext, useEffect, useState } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import type { Response } from "@prisma/client";
+import type { ModerationStatus } from "@prisma/client";
+import { api } from "~/utils/api";
 
 export function VacancyResponse({
   vacancyId,
@@ -12,9 +14,21 @@ export function VacancyResponse({
   const authContext = useContext(AuthContext);
 
   const [coverLetter, setCoverLetter] = useState("");
+  const [isSentResponse, setIsSentResponse] = useState<boolean>(false);
+  const [moderationStatus, setModerationStatus] =
+    useState<ModerationStatus>("PENDING");
   const isFormFieldOut = coverLetter.length > 100;
 
-  const [isSentResponse, setIsSentResponse] = useState<boolean>(false);
+  const { data: candidatesQuestionnaire } =
+    api.candidate.findQuestionnaireByCandidateId.useQuery({
+      candidateId: authContext?.id || "",
+    });
+
+  useEffect(() => {
+    if (candidatesQuestionnaire) {
+      setModerationStatus(candidatesQuestionnaire.moderationStatus);
+    }
+  }, [candidatesQuestionnaire]);
 
   useEffect(() => {
     void checkIsSentResponse();
@@ -79,6 +93,18 @@ export function VacancyResponse({
     }
   }
 
+  function buttonText() {
+    if (isSentResponse) {
+      return "Ви вже відправили відгук на цю вакансію";
+    }
+
+    if (moderationStatus === "PENDING") {
+      return "Почекайте допоки адміністратор не підтвердить вашу анкету";
+    }
+
+    return "Відгукнутись на вакансію";
+  }
+
   return (
     <div className="container mx-auto my-6 flex flex-col rounded-lg border bg-white p-6 shadow-lg">
       <h2 className="mb-6 text-xl font-bold">Надішліть відгук на вакансію</h2>
@@ -103,14 +129,14 @@ export function VacancyResponse({
           <button
             type="submit"
             className={`mt-6 block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
-              isSentResponse || !isFormFieldOut
+              isSentResponse ||
+              !isFormFieldOut ||
+              moderationStatus === "PENDING"
                 ? "cursor-not-allowed opacity-50"
                 : ""
             }`}
           >
-            {isSentResponse
-              ? "Ви вже відправили відгук на цю вакансію"
-              : "Відгукнутись на вакансію"}
+            {buttonText()}
           </button>
         </div>
       </form>

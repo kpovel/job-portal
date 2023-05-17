@@ -17,6 +17,14 @@ export const candidateAccountRouter = createTRPCRouter({
         },
       });
     }),
+  findQuestionnaireByCandidateId: publicProcedure
+    .input(z.object({ candidateId: z.string() }))
+    .query(({ input }) => {
+      const { candidateId } = input;
+      return prisma.resume.findUnique({
+        where: { candidateId },
+      });
+    }),
   updateCandidateResume: publicProcedure
     .input(
       z.object({
