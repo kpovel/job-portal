@@ -4,7 +4,7 @@ import { format } from "date-fns";
 
 export function VacancyPreview({ vacancy }: { vacancy: Vacancy }) {
   return (
-    <div className="rounded-md border border-gray-300 p-4">
+    <div className="rounded-md border border-gray-300 p-4 w-full">
       <Link href={`/job/${vacancy.questionnaireId}`}>
         <div className="mb-3 flex items-center">
           <div>
