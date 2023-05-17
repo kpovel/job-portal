@@ -98,7 +98,7 @@ export default function EmployerProfile({
                 onChange={handleUpdateForm}
               />
               <FormInput
-                label="phoneNumber"
+                label="Номер телефону"
                 id="phoneNumber"
                 name="phoneNumber"
                 autoComplete="tel"
@@ -107,7 +107,7 @@ export default function EmployerProfile({
                 onChange={handleUpdateForm}
               />
               <FormInput
-                label="email"
+                label="Електронна пошта"
                 id="email"
                 name="email"
                 autoComplete="email"
@@ -116,7 +116,7 @@ export default function EmployerProfile({
                 onChange={handleUpdateForm}
               />
               <FormInput
-                label="linkedinLink"
+                label="Посилання на LinkedIn"
                 id="linkedinLink"
                 name="linkedinLink"
                 autoComplete="linkedinLink"

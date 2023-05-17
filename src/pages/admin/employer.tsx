@@ -25,7 +25,7 @@ export default function Candidates({
         <title>Job portal - Вакансії</title>
       </Head>
       <Layout>
-        <div className="container mx-auto my-4 flex flex-col items-center space-y-8">
+        <div className="container mx-auto my-4 flex flex-col items-center space-y-8 w-full">
           <AdminNavigationMenu />
           <hr className="w-full border-gray-300" />
           {parseVacancies.map((vacancy) => {

@@ -77,8 +77,8 @@ model Resume {
     specialty        String?
     desiredSalary    String?
     employment       String?
-    updatedAt        DateTime  @updatedAt()
-    response         Response?
+    updatedAt        DateTime   @updatedAt()
+    response         Response[]
 }
 
 model Vacancy {
@@ -115,6 +115,7 @@ model Response {
     vacancy   Vacancy?  @relation(fields: [vacancyId], references: [questionnaireId])
 
     coverLetter    String          @db.MediumText
+    responseBy     ResponseBy
     responseDate   DateTime        @default(now())
     feedbackResult FeedbackResult?
 }
@@ -133,6 +134,11 @@ enum UserType {
     CANDIDATE
     EMPLOYER
     ADMIN
+}
+
+enum ResponseBy {
+    CANDIDATE
+    EMPLOYER
 }
 
 enum ModerationStatus {

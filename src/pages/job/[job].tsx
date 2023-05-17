@@ -3,7 +3,7 @@ import { appRouter } from "~/server/api/root";
 import { prisma } from "~/server/db";
 import type { GetStaticPaths, InferGetStaticPropsType } from "next";
 import superjson from "superjson";
-import type { User, Employer, Vacancy } from "@prisma/client";
+import type { Employer, User, Vacancy } from "@prisma/client";
 import Head from "next/head";
 import React, { useContext } from "react";
 import { format } from "date-fns";
@@ -11,6 +11,7 @@ import { renderQuestionnaireDetail } from "~/component/questionnaire/renderQuest
 import { renderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
 import { AuthContext } from "~/utils/auth/authContext";
 import { ModerateJob } from "~/component/admin/moderation/moderateJob";
+import { VacancyResponse } from "~/component/vacancy/vacancyResponse";
 
 export type JobInformation = {
   vacancy: Vacancy | null;
@@ -22,6 +23,7 @@ export default function Job({
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const authContext = useContext(AuthContext);
   const isAdmin = authContext?.userType === "ADMIN";
+  const isCandidate = authContext?.userType === "CANDIDATE";
 
   const parsedJobInformation: JobInformation = superjson.parse(jobInformation);
 
@@ -103,6 +105,14 @@ export default function Job({
             {isAdmin && <ModerateJob jobInfo={parsedJobInformation} />}
           </div>
         </div>
+        {isCandidate && (
+          <VacancyResponse
+            vacancyId={parsedJobInformation.vacancy?.questionnaireId || ""}
+            employerId={
+              parsedJobInformation.employer?.employer?.employerId || ""
+            }
+          />
+        )}
       </Layout>
     </>
   );
@@ -124,7 +134,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
   return {
     paths,
-    fallback: false,
+    fallback: "blocking",
   };
 };
 
