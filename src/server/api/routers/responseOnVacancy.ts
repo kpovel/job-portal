@@ -1,6 +1,7 @@
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { z } from "zod";
 import { prisma } from "~/server/db";
+import { ResponseResult } from "@prisma/client";
 
 export const responseRouter = createTRPCRouter({
   responseOnVacancy: publicProcedure
@@ -35,6 +36,25 @@ export const responseRouter = createTRPCRouter({
       const { candidateId, vacancyId } = input;
       return prisma.response.findMany({
         where: { candidateId, vacancyId },
+      });
+    }),
+  createFeedbackResult: publicProcedure
+    .input(
+      z.object({
+        responseId: z.string(),
+        responseResult: z.nativeEnum(ResponseResult),
+        feedbackContent: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const { responseId, responseResult, feedbackContent } = input;
+
+      return prisma.feedbackResult.create({
+        data: {
+          responseId,
+          responseResult,
+          response: feedbackContent,
+        },
       });
     }),
 });

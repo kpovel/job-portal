@@ -20,4 +20,25 @@ export const offersRouter = createTRPCRouter({
         },
       });
     }),
+  findEmployeeResponses: publicProcedure
+    .input(
+      z.object({
+        employerId: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const { employerId } = input;
+
+      return prisma.response.findMany({
+        where: { employerId },
+        include: {
+          feedbackResult: true,
+          candidate: {
+            include: {
+              candidate: true,
+            },
+          },
+        },
+      });
+    }),
 });
