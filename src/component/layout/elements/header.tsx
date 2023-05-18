@@ -50,6 +50,7 @@ export function Header() {
                   </Link>
                   <div className="hidden sm:ml-6 sm:block">
                     <div className="flex space-x-4">
+                    {/* todo: here */}
                       {navigation.map((item) => {
                         return (
                           <Link
@@ -78,6 +79,7 @@ export function Header() {
             </div>
             <Disclosure.Panel className="sm:hidden">
               <div className="space-y-1 px-2 pb-3 pt-2">
+              {/*todo: here*/}
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
