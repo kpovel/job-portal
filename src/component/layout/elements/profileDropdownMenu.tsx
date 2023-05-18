@@ -5,7 +5,7 @@ import { classNames } from "~/component/layout/elements/header";
 import { AuthContext } from "~/utils/auth/authContext";
 import Cookie from "js-cookie";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
-import { UserType } from "@prisma/client";
+import type { UserType } from "@prisma/client";
 
 export function ProfileDropdownMenu() {
   const authContext = useContext(AuthContext);
@@ -19,7 +19,9 @@ export function ProfileDropdownMenu() {
     Cookie.set(AUTHORIZATION_TOKEN_KEY, "");
   }
 
-  const navigationsLinks: { [key in UserType]: { name: string; href: string }[] } = {
+  const navigationsLinks: {
+    [key in UserType]: { name: string; href: string }[];
+  } = {
     CANDIDATE: [{ name: "Мій профіль", href: "/my/profile" }],
     EMPLOYER: [
       { name: "Мій профіль", href: "/home/profile" },
@@ -29,7 +31,7 @@ export function ProfileDropdownMenu() {
     ADMIN: [
       { name: "Головна", href: "/admin" },
       { name: "Кандидати", href: "/admin/candidates" },
-      { name: "Вакансії", href: "/admin/vacancies" },
+      { name: "Вакансії", href: "/admin/employer" },
     ],
   };
 
