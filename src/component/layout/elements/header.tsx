@@ -6,11 +6,26 @@ import { ProfileDropdownMenu } from "~/component/layout/elements/profileDropdown
 import { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { CandidateModerationStatus } from "~/component/layout/elements/moderation/candidateModerationStatus";
+import type { UserType } from "@prisma/client";
 
 const navigation: { name: string; href: string }[] = [
   { name: "Пропозиції", href: "/my/offers" },
   { name: "Вакансії", href: "/jobs" },
 ];
+
+const navigationsLinks: {
+  [key in UserType]: { name: string; href: string }[];
+} = {
+  CANDIDATE: [
+    { name: "Вакансії", href: "/jobs" },
+    { name: "Пропозиції", href: "/my/offers" },
+  ],
+  EMPLOYER: [
+    { name: "Кандидати", href: "/candidates" },
+    { name: "Відгуки", href: "/home/inbox" },
+  ],
+  ADMIN: [{ name: "Головна", href: "/admin" }],
+};
 
 export function classNames(...classes: { toString: () => string }[]) {
   return classes.filter(Boolean).join(" ");
@@ -19,7 +34,8 @@ export function classNames(...classes: { toString: () => string }[]) {
 export function Header() {
   const router = useRouter();
   const authContext = useContext(AuthContext);
-  const isCandidate = authContext?.userType === "CANDIDATE";
+  const userType = authContext?.userType as UserType;
+  const isCandidate = userType === "CANDIDATE";
 
   const isActivePage = (currentPage: string) => currentPage === router.pathname;
 
@@ -50,7 +66,7 @@ export function Header() {
                   </Link>
                   <div className="hidden sm:ml-6 sm:block">
                     <div className="flex space-x-4">
-                      {navigation.map((item) => {
+                      {navigationsLinks[userType].map((item) => {
                         return (
                           <Link
                             key={item.name}
