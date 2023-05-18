@@ -48,9 +48,22 @@ export default function Offers({
                 {format(offer.responseDate, "d MMMM yyyy, HH:mm")}
               </p>
               <p>
-                {offer.feedbackResult
-                  ? "Результат відгуку"
-                  : "Роботодавець ще не обробив ваш запит"}
+                {offer.feedbackResult ? (
+                  <div>
+                    <div>
+                      <p>
+                        <strong>Результат відгуку: </strong>
+                        {offer.feedbackResult.responseResult}
+                      </p>
+                      <p className="pt-2">
+                        <strong>Відповідь на відгук: </strong>
+                        {offer.feedbackResult.response}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  "Роботодавець ще не обробив ваш запит"
+                )}
               </p>
             </div>
           ))}

@@ -47,7 +47,16 @@ export function EmployerFeedback({
   return (
     <div>
       {feedbackResult ? (
-        <div>Результат відгуку</div>
+        <div>
+          <p>
+            <strong>Результат відгуку: </strong>
+            {feedbackResult.responseResult}
+          </p>
+          <p className="pt-2">
+            <strong>Відповідь на відгук: </strong>
+            {feedbackResult.response}
+          </p>
+        </div>
       ) : (
         <button
           onClick={() => setIsOpenFeedbackMany(!isOpenFeedbackMenu)}
