@@ -3,16 +3,12 @@ import { appRouter } from "~/server/api/root";
 import { prisma } from "~/server/db";
 import superjson from "superjson";
 import type { GetStaticPaths, InferGetStaticPropsType } from "next";
-import type {
-  User,
-  Candidate,
-  Questionnaire,
-  Resume,
-} from "@prisma/client";
+import type { User, Candidate, Questionnaire, Resume } from "@prisma/client";
 import Head from "next/head";
 import React, { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { CandidateProfileViewer } from "~/component/candidate/candidateProfileViewer";
+import { SendJobOffer } from "~/component/candidate/sendJobOffer";
 
 export type ParsedCandidate =
   | (User & {
@@ -23,7 +19,6 @@ export type ParsedCandidate =
         | null;
     })
   | null;
-
 
 export default function Candidate({
   candidate,
@@ -40,12 +35,13 @@ export default function Candidate({
         </title>
       </Head>
       <Layout>
-        <div className="container mx-auto mt-6 flex space-x-6">
+        <div className="container mx-auto mt-6 flex space-x-4">
           <CandidateProfileViewer
             userType={authorizedUser?.userType}
             candidateData={parsedCandidate}
           />
         </div>
+        {authorizedUser?.userType === "EMPLOYER" && <SendJobOffer />}
       </Layout>
     </>
   );

@@ -106,7 +106,7 @@ export function VacancyResponse({
   }
 
   return (
-    <div className="container mx-auto my-6 flex flex-col rounded-lg border bg-white p-6 shadow-lg">
+    <div className="container mx-auto mt-4 mb-6 flex flex-col rounded-lg border bg-white p-6 shadow-lg">
       <h2 className="mb-6 text-xl font-bold">Надішліть відгук на вакансію</h2>
       <form onSubmit={handleSubmitCoverLetter} className="w-full max-w-md">
         <div className="sm:col-span-2">
