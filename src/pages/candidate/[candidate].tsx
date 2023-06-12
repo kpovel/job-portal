@@ -26,6 +26,9 @@ export default function Candidate({
   const authorizedUser = useContext(AuthContext);
 
   const parsedCandidate: ParsedCandidate = superjson.parse(candidate);
+  const isEmployer = authorizedUser?.userType === "EMPLOYER";
+  const isModeratedCandidate = parsedCandidate?.candidate?.questionnaires?.resume?.moderationStatus === "ACCEPTED";
+  const canSendJobOffer = isEmployer && isModeratedCandidate;
 
   return (
     <>
@@ -41,7 +44,7 @@ export default function Candidate({
             candidateData={parsedCandidate}
           />
         </div>
-        {authorizedUser?.userType === "EMPLOYER" && <SendJobOffer />}
+        {canSendJobOffer && <SendJobOffer candidateId={parsedCandidate?.id} />}
       </Layout>
     </>
   );
