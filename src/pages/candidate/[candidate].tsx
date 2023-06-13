@@ -27,7 +27,9 @@ export default function Candidate({
 
   const parsedCandidate: ParsedCandidate = superjson.parse(candidate);
   const isEmployer = authorizedUser?.userType === "EMPLOYER";
-  const isModeratedCandidate = parsedCandidate?.candidate?.questionnaires?.resume?.moderationStatus === "ACCEPTED";
+  const isModeratedCandidate =
+    parsedCandidate?.candidate?.questionnaires?.resume?.moderationStatus ===
+    "ACCEPTED";
   const canSendJobOffer = isEmployer && isModeratedCandidate;
 
   return (
