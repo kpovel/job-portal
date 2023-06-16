@@ -1,12 +1,14 @@
-import type { Response } from "@prisma/client";
+import type { Response, Vacancy } from "@prisma/client";
 import React, { type FormEvent, useContext, useEffect, useState } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
+import { ChooseVacancyToOffer } from "./chooseVacancyToOffer";
 
 export function SendJobOffer({ candidateId }: { candidateId: string }) {
   const authContext = useContext(AuthContext);
 
   const [offerDescription, setOfferDescription] = useState("");
   const [isSentOffer, setIsSentOffer] = useState<boolean>(false);
+  const [availableVacancies, setAvailableVacancies] = useState<Vacancy[]>([]);
   const isFormFieldOut = offerDescription.length > 100;
 
   async function checkIsSentOffer(candidateId: string, employerId: string) {
@@ -29,18 +31,52 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
 
       type OfferResponse = SuccessResponse | ErrorResponse;
 
-      const offerRespose = (await isSentOffer.json()) as OfferResponse;
-      if ("sentOffer" in offerRespose) {
-        const numberOfOffers = offerRespose.sentOffer.length;
+      const offerResponse = (await isSentOffer.json()) as OfferResponse;
+      if ("sentOffer" in offerResponse) {
+        const numberOfOffers = offerResponse.sentOffer.length;
         setIsSentOffer(!!numberOfOffers);
-      } else if ("error" in offerRespose) {
-        console.error(offerRespose.error);
+      } else if ("error" in offerResponse) {
+        console.error(offerResponse.error);
         setIsSentOffer(true);
       }
     } catch (e) {
       console.log(e);
     }
   }
+
+  async function fetchAvailableVacancies(employerId: string): Promise<void> {
+    try {
+      const response = await fetch("/api/employer/fetchAvailableVacancies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employerId }),
+      });
+
+      type SuccessResponse = {
+        message: string;
+        availableVacancies: Vacancy[];
+      };
+
+      type ErrorResponse = {
+        message: string;
+        error: string;
+      };
+
+      type OfferResponse = SuccessResponse | ErrorResponse;
+      const vacanciesResponse = (await response.json()) as OfferResponse;
+
+      if ("availableVacancies" in vacanciesResponse) {
+        setAvailableVacancies(availableVacancies);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  useEffect(() => {
+    void fetchAvailableVacancies(authContext?.id || "");
+  }, [authContext?.id]);
+
   useEffect(() => {
     void checkIsSentOffer(candidateId, authContext?.id || "");
   }, [authContext?.id, candidateId]);
@@ -58,6 +94,7 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
   return (
     <div className="container mx-auto mb-6 mt-4 basis-2/3 rounded-lg border bg-white p-6 shadow-lg">
       <h2 className="mb-6 text-xl font-bold">Запропонувати вакансію</h2>
+      <ChooseVacancyToOffer vacancies={availableVacancies} />
       <form onSubmit={handleSubmitCoverLetter} className="w-full max-w-md">
         <div className="sm:col-span-2">
           <label
