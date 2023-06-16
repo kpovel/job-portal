@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { appRouter } from "~/server/api/root";
 import { prisma } from "~/server/db";
 
-export default async function updateProfile(
+export default async function reviewJobOffer(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -15,7 +15,6 @@ export default async function updateProfile(
       candidateId,
       employerId
     } = req.body as {candidateId: string, employerId: string};
-    console.log("Req body: ", req.body);
 
     const caller = appRouter.createCaller({ prisma });
     const sentOffer = await caller.sendOffer.isSentOffer({
@@ -23,10 +22,8 @@ export default async function updateProfile(
       employerId
     });
 
-    console.log(sentOffer);
-
     res.status(200).json({
-      message: "Successful created vacancy",
+      message: "Successfully reviewed job offer",
       sentOffer,
     });
   } catch (error) {
