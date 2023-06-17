@@ -66,7 +66,7 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
       const vacanciesResponse = (await response.json()) as OfferResponse;
 
       if ("availableVacancies" in vacanciesResponse) {
-        setAvailableVacancies(availableVacancies);
+        setAvailableVacancies(vacanciesResponse.availableVacancies);
       }
     } catch (e) {
       console.log(e);
