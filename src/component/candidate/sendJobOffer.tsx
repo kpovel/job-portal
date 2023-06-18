@@ -95,9 +95,38 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
     void sendJobOffer();
   }
 
-  function sendJobOffer() {
-    // todo
-    console.log("Send job offer");
+  async function sendJobOffer() {
+    try {
+      const sentOffer = await fetch("/api/employer/sendOffer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employerId: authContext?.id,
+          candidateId,
+          offerDescription,
+          vacancyId: selectedVacancy?.questionnaireId,
+        }),
+      });
+
+      type SuccessSentOffer = {
+        message: string;
+        createdResponse: Response;
+      };
+
+      type ErrorResponse = {
+        message: string;
+        error: string;
+      };
+
+      type OfferResponse = SuccessSentOffer | ErrorResponse;
+      const offerResponse = (await sentOffer.json()) as OfferResponse;
+      if ("createdResponse" in offerResponse) {
+        setIsSentOffer(true);
+        setOfferDescription("");
+      }
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   return (
