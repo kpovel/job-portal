@@ -6,9 +6,21 @@ import {
   ChevronUpIcon,
 } from "@radix-ui/react-icons";
 
-export function ChooseVacancyToOffer({ vacancies }: { vacancies: Vacancy[] }) {
+export function ChooseVacancyToOffer({
+  vacancies,
+  selectedVacancy,
+  selectVacancy
+}: {
+  vacancies: Vacancy[];
+  selectedVacancy: Vacancy | null;
+  selectVacancy: (questionnaireId: string) => void
+
+}) {
   return (
-    <Select.Root>
+    <Select.Root
+      value={selectedVacancy?.questionnaireId}
+      onValueChange={selectVacancy}
+    >
       <Select.Trigger
         className="inline-flex h-9 items-center justify-center gap-2 rounded border bg-white px-[15px] leading-none shadow-xl outline-none hover:bg-gray-50"
         aria-label="вакансії"
@@ -51,9 +63,10 @@ const SelectVacancy = ({ vacancy }: { vacancy: Vacancy }) => {
   return (
     <Select.Item
       className="text-s relative my-1 flex h-7 select-none items-center rounded px-6 data-[disabled]:pointer-events-none data-[highlighted]:bg-violet-500 data-[disabled]:text-gray-400 data-[highlighted]:text-purple-50 data-[highlighted]:outline-none"
-      value={vacancy.specialty}
+      value={vacancy.questionnaireId}
     >
       <Select.ItemText>{vacancy.specialty}</Select.ItemText>
+      {/* todo: add vacancy desctiption*/}
       <Select.ItemIndicator className="absolute left-0 inline-flex w-6 items-center justify-center">
         <CheckIcon />
       </Select.ItemIndicator>
