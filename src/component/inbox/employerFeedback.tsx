@@ -53,7 +53,7 @@ export function EmployerFeedback({
             {feedbackResult.responseResult}
           </p>
           <p className="pt-2">
-            <strong>Відповідь на відгук: </strong>
+            <strong>Відповідь на пропозицію: </strong>
             {feedbackResult.response}
           </p>
         </div>

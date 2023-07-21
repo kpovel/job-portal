@@ -13,10 +13,15 @@ import type { Candidate, FeedbackResult, User, Response } from "@prisma/client";
 import Link from "next/link";
 import { format } from "date-fns";
 import { EmployerFeedback } from "~/component/inbox/employerFeedback";
+import { useContext } from "react";
+import { AuthContext } from "~/utils/auth/authContext";
+import { EmployerApplication } from "~/component/inbox/employerApplication";
 
 export default function Inbox({
   employerResponses,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const authContext = useContext(AuthContext);
+
   type EmployerResponse = Response & {
     candidate: Candidate & { candidate: User };
     feedbackResult: FeedbackResult | null;
@@ -50,10 +55,16 @@ export default function Inbox({
                 <strong>Надіслано:</strong>{" "}
                 {format(response.responseDate, "d MMMM yyyy, HH:mm")}
               </p>
-              <EmployerFeedback
-                feedback={response.feedbackResult}
-                responseId={response.responseId}
-              />
+              {authContext?.userType === response.responseBy ?
+                <EmployerApplication
+                  feedback={response.feedbackResult}
+                 />
+                : (
+                  <EmployerFeedback
+                    feedback={response.feedbackResult}
+                    responseId={response.responseId}
+                  />
+                )}
             </div>
           ))}
         </div>
