@@ -11,7 +11,6 @@ export const sendOfferRouter = createTRPCRouter({
     }))
     .query(async ({input}) => {
       const {candidateId, employerId} = input;
-      // todo: find sent offer
       return prisma.response.findMany({
         where: {candidateId, employerId, responseBy: "EMPLOYER"},
       })

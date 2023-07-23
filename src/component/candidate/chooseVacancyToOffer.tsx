@@ -66,7 +66,6 @@ const SelectVacancy = ({ vacancy }: { vacancy: Vacancy }) => {
       value={vacancy.questionnaireId}
     >
       <Select.ItemText>{vacancy.specialty}</Select.ItemText>
-      {/* todo: add vacancy desctiption*/}
       <Select.ItemIndicator className="absolute left-0 inline-flex w-6 items-center justify-center">
         <CheckIcon />
       </Select.ItemIndicator>
