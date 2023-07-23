@@ -1,10 +1,18 @@
 import type { FeedbackResult } from "@prisma/client";
+import { useContext } from "react";
+import { AuthContext } from "~/utils/auth/authContext";
 
 export function EmployerApplication({
   feedback,
 }: {
   feedback: FeedbackResult | null;
 }) {
+  const authContext = useContext(AuthContext);
+  const noFeedbackMessage =
+    authContext?.userType === "EMPLOYER"
+      ? "Кандидат ще не відповів на вашу пропозицію"
+      : "Роботодавець ще не відповів на ваш відгук";
+
   return (
     <div>
       {feedback ? (
@@ -21,7 +29,7 @@ export function EmployerApplication({
       ) : (
         <p>
           <strong>Результат відгуку: </strong>
-          Кандидат ще не відповів на вашу пропозицію
+          {noFeedbackMessage}
         </p>
       )}
     </div>

@@ -1,5 +1,6 @@
 import type { FeedbackResult, ResponseResult } from "@prisma/client";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useState, useContext } from "react";
+import { AuthContext } from "~/utils/auth/authContext";
 
 export function EmployerFeedback({
   feedback,
@@ -9,20 +10,20 @@ export function EmployerFeedback({
   responseId: string;
 }) {
   const [feedbackResult, setFeedbackResult] = useState<FeedbackResult | null>(
-    feedback
+    feedback,
   );
   const [isOpenFeedbackMenu, setIsOpenFeedbackMany] = useState<boolean>(false);
   const [feedbackContent, setFeedbackContent] = useState<string>("");
   const [responseResult, setResponseResult] = useState<ResponseResult | null>(
-    null
+    null,
   );
+  const authContext = useContext(AuthContext);
 
   function handleSubmitForm(e: FormEvent) {
     e.preventDefault();
     void sendFeedbackResult();
   }
 
-  console.log(feedback);
   async function sendFeedbackResult() {
     try {
       const response = await fetch("/api/response/createFeedbackResult", {
@@ -62,7 +63,8 @@ export function EmployerFeedback({
           onClick={() => setIsOpenFeedbackMany(!isOpenFeedbackMenu)}
           className="mt-2 rounded-md border bg-gray-300 p-2"
         >
-          Відповісти кандидату
+          Відповісти{" "}
+          {authContext?.userType === "EMPLOYER" ? "кандидату" : "роботодавцю"}
         </button>
       )}
       {isOpenFeedbackMenu && !feedbackResult && (
