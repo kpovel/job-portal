@@ -53,9 +53,9 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
     }
   }
 
-  async function fetchAvailableVacancies(employerId: string): Promise<void> {
+  async function getEmployerVacancies(employerId: string): Promise<void> {
     try {
-      const response = await fetch("/api/employer/fetchAvailableVacancies", {
+      const response = await fetch("/api/employer/acceptedVacancies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ employerId }),
@@ -63,7 +63,7 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
 
       type SuccessResponse = {
         message: string;
-        availableVacancies: Vacancy[];
+        acceptedVacancies: Vacancy[];
       };
 
       type ErrorResponse = {
@@ -74,8 +74,8 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
       type OfferResponse = SuccessResponse | ErrorResponse;
       const vacanciesResponse = (await response.json()) as OfferResponse;
 
-      if ("availableVacancies" in vacanciesResponse) {
-        setAvailableVacancies(vacanciesResponse.availableVacancies);
+      if ("acceptedVacancies" in vacanciesResponse) {
+        setAvailableVacancies(vacanciesResponse.acceptedVacancies);
       }
     } catch (e) {
       console.log(e);
@@ -83,7 +83,7 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
   }
 
   useEffect(() => {
-    void fetchAvailableVacancies(authContext?.id || "");
+    void getEmployerVacancies(authContext?.id || "");
   }, [authContext?.id]);
 
   useEffect(() => {
