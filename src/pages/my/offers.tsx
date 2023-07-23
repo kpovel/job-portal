@@ -10,10 +10,16 @@ import type { VerifyToken } from "~/utils/auth/withoutAuth";
 import type { GetServerSidePropsContext } from "next";
 import { format } from "date-fns";
 import Link from "next/link";
+import { useContext } from "react";
+import { AuthContext } from "~/utils/auth/authContext";
+import { EmployerApplication } from "~/component/inbox/employerApplication";
+import { EmployerFeedback } from "~/component/inbox/employerFeedback";
 
 export default function Offers({
   candidateOffers,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const authContext = useContext(AuthContext);
+
   type CandidateOffer = Response & {
     vacancy: Vacancy | null;
     feedbackResult: FeedbackResult | null;
@@ -47,24 +53,14 @@ export default function Offers({
                 <strong>Надіслано:</strong>{" "}
                 {format(offer.responseDate, "d MMMM yyyy, HH:mm")}
               </p>
-              <p>
-                {offer.feedbackResult ? (
-                  <div>
-                    <div>
-                      <p>
-                        <strong>Результат відгуку: </strong>
-                        {offer.feedbackResult.responseResult}
-                      </p>
-                      <p className="pt-2">
-                        <strong>Відповідь на відгук: </strong>
-                        {offer.feedbackResult.response}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  "Роботодавець ще не обробив ваш запит"
-                )}
-              </p>
+              {offer.responseBy === authContext?.userType ? (
+                <EmployerApplication feedback={offer.feedbackResult} />
+              ) : (
+                <EmployerFeedback
+                  feedback={offer.feedbackResult}
+                  responseId={offer.responseId}
+                />
+              )}
             </div>
           ))}
         </div>

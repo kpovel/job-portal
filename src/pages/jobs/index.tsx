@@ -15,19 +15,15 @@ export default function Candidates({
   return (
     <>
       <Head>
-        <title>Job Portal – Список доступних кандидатів</title>
+        <title>Job Portal – Список доступних вакансій</title>
       </Head>
       <Layout>
         <div className="container mx-auto px-4">
-          {parsedVacancies.length ? (
-            <h2 className="py-3 text-2xl font-bold">
-              Список доступних кандидатів
-            </h2>
-          ) : (
-            <h2 className="py-3 text-2xl font-bold">
-              Наразі немає доступних вакансій
-            </h2>
-          )}
+          <h2 className="py-3 text-2xl font-bold">
+            {parsedVacancies.length
+              ? "Список доступних вакансій"
+              : "Наразі немає доступних вакансій"}
+          </h2>
           <div className="grid grid-cols-1 gap-4">
             {parsedVacancies.map((vacancy) => (
               <VacancyPreview key={vacancy.questionnaireId} vacancy={vacancy} />

@@ -6,6 +6,7 @@ datasource db {
     provider     = "mysql"
     url          = env("DATABASE_URL")
     relationMode = "prisma"
+    shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model User {
@@ -104,10 +105,10 @@ model Vacancy {
 model Response {
     responseId String @id @default(cuid())
 
-    candidateId String @unique
-    resumeId    String @unique
-    employerId  String @unique
-    vacancyId   String @unique
+    candidateId String
+    resumeId    String
+    employerId  String
+    vacancyId   String
 
     candidate Candidate @relation(fields: [candidateId], references: [candidateId])
     resume    Resume?   @relation(fields: [resumeId], references: [questionnaireId])
@@ -118,6 +119,11 @@ model Response {
     responseBy     ResponseBy
     responseDate   DateTime        @default(now())
     feedbackResult FeedbackResult?
+
+    @@index([candidateId])
+    @@index([resumeId])
+    @@index([employerId])
+    @@index([vacancyId])
 }
 
 model FeedbackResult {

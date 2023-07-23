@@ -7,9 +7,8 @@ import type { User, Candidate, Questionnaire, Resume } from "@prisma/client";
 import Head from "next/head";
 import React, { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
-import { renderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
-import { renderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
-import { ModerateCandidate } from "~/component/admin/moderation/moderateCandidate";
+import { CandidateProfileViewer } from "~/component/candidate/candidateProfileViewer";
+import { SendJobOffer } from "~/component/candidate/sendJobOffer";
 
 export type ParsedCandidate =
   | (User & {
@@ -25,10 +24,13 @@ export default function Candidate({
   candidate,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const authorizedUser = useContext(AuthContext);
-  const isUserAdmin = authorizedUser?.userType === "ADMIN";
 
   const parsedCandidate: ParsedCandidate = superjson.parse(candidate);
-  const candidatesResume = parsedCandidate?.candidate?.questionnaires?.resume;
+  const isEmployer = authorizedUser?.userType === "EMPLOYER";
+  const isModeratedCandidate =
+    parsedCandidate?.candidate?.questionnaires?.resume?.moderationStatus ===
+    "ACCEPTED";
+  const canSendJobOffer = isEmployer && isModeratedCandidate;
 
   return (
     <>
@@ -38,77 +40,13 @@ export default function Candidate({
         </title>
       </Head>
       <Layout>
-        <div className="container mx-auto mt-6 flex space-x-6">
-          <div className="w-2/3 rounded-lg border bg-white p-6 shadow-lg">
-            <h2 className="mb-6 text-2xl font-bold">
-              {parsedCandidate?.firstName} {parsedCandidate?.lastName}
-              {parsedCandidate?.age ? ` - ${parsedCandidate?.age}` : ""}
-            </h2>
-            <h3 className="mb-4 text-xl font-medium">
-              {candidatesResume?.specialty}
-            </h3>
-            {renderQuestionnaireDetail(
-              "Досвід роботи",
-              candidatesResume?.workExperience
-            )}
-            {renderQuestionnaireDetail("Навички", candidatesResume?.skills)}
-            {renderQuestionnaireDetail("Освіта", candidatesResume?.education)}
-            {renderQuestionnaireDetail(
-              "Іноземні мови",
-              candidatesResume?.foreignLanguages
-            )}
-            {renderQuestionnaireDetail("Інтереси", candidatesResume?.interests)}
-            {renderQuestionnaireDetail(
-              "Досягнення",
-              candidatesResume?.achievements
-            )}
-            {renderQuestionnaireDetail(
-              "Досвід роботи",
-              candidatesResume?.workExperience
-            )}
-          </div>
-          <div className="w-1/3 rounded-lg border bg-white p-6 shadow-lg">
-            <h3 className="mb-4 text-xl font-medium">Контактна інформація</h3>
-            {renderQuestionnaireInfo(
-              "Бажана зарплата",
-              candidatesResume?.desiredSalary
-            )}
-            {renderQuestionnaireInfo(
-              "Бажана зайнятість",
-              candidatesResume?.employment
-            )}
-            {renderQuestionnaireInfo(
-              "Номере телефону",
-              parsedCandidate?.phoneNumber,
-              parsedCandidate?.phoneNumber
-                ? `tel:${parsedCandidate.phoneNumber}`
-                : ""
-            )}
-            {renderQuestionnaireInfo(
-              "Email",
-              parsedCandidate?.email,
-              parsedCandidate?.email ? `mailto:${parsedCandidate.email}` : ""
-            )}
-            {renderQuestionnaireInfo(
-              "Linkedin",
-              parsedCandidate?.linkedinLink,
-              parsedCandidate?.linkedinLink
-            )}
-            {renderQuestionnaireInfo(
-              "Github",
-              parsedCandidate?.githubLink,
-              parsedCandidate?.githubLink
-            )}
-            {renderQuestionnaireInfo(
-              "Telegram",
-              parsedCandidate?.telegramLink,
-              parsedCandidate?.telegramLink
-            )}
-            {isUserAdmin && (
-              <ModerateCandidate candidateData={parsedCandidate} />
-            )}
-          </div>
+        <div className="container mx-auto mt-6 flex space-x-4">
+          <CandidateProfileViewer
+            userType={authorizedUser?.userType}
+            candidateData={parsedCandidate}
+          />
         </div>
+        {canSendJobOffer && <SendJobOffer candidateId={parsedCandidate?.id} />}
       </Layout>
     </>
   );
