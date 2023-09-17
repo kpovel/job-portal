@@ -1,6 +1,7 @@
 import type { FeedbackResult, ResponseResult } from "@prisma/client";
 import { type FormEvent, useState, useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
+import { UserType } from "~/utils/dbSchema/userType";
 
 export function EmployerFeedback({
   feedback,
@@ -64,7 +65,7 @@ export function EmployerFeedback({
           className="mt-2 rounded-md border bg-gray-300 p-2"
         >
           Відповісти{" "}
-          {authContext?.userType === "EMPLOYER" ? "кандидату" : "роботодавцю"}
+          {authContext?.userType === UserType.EMPLOYER ? "кандидату" : "роботодавцю"}
         </button>
       )}
       {isOpenFeedbackMenu && !feedbackResult && (
