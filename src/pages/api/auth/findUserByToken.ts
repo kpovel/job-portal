@@ -18,7 +18,7 @@ export default async function findUserByToken(
       }
 
       const authorizedUser = await dbClient.execute(
-        "select id from User where id = :userId;",
+        "select * from User where id = :userId;",
         {
           userId: verifiedToken?.userId,
         },
@@ -30,7 +30,7 @@ export default async function findUserByToken(
 
       res
         .status(200)
-        .json({ message: "Successful token validation", authorizedUser });
+        .json({ message: "Successful token validation", authorizedUser: authorizedUser.rows[0] });
     } catch (error) {
       res.status(400).json({ message: "Error token validation", error });
     }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { User } from ".prisma/client";
+import type { User } from "../dbSchema/user";
 import Cookie from "js-cookie";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 
