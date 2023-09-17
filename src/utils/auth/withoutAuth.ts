@@ -1,5 +1,4 @@
 import { type GetServerSideProps } from "next";
-import { parse as parseCookies } from "cookie";
 import { type JwtPayload } from "jsonwebtoken";
 import { appRouter } from "~/server/api/root";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
@@ -13,11 +12,14 @@ export type VerifyToken = JwtPayload & {
 export const withoutAuth = (): GetServerSideProps => {
   return async (context) => {
     try {
-      const parsedCookies = parseCookies(context.req.headers.cookie ?? "");
+      const authorizationToken = context.req.cookies[AUTHORIZATION_TOKEN_KEY];
 
-      const authorizationToken = parsedCookies[AUTHORIZATION_TOKEN_KEY] ?? "";
+      if (!authorizationToken) {
+        return { props: {} };
+      }
+
       const verifiedToken = verifyToken(
-        authorizationToken
+        authorizationToken,
       ) as VerifyToken | null;
       const caller = appRouter.createCaller({ prisma });
 
