@@ -1,5 +1,5 @@
+import { Client } from "@planetscale/database";
 import { PrismaClient } from "@prisma/client";
-
 import { env } from "~/env.mjs";
 
 const globalForPrisma = globalThis as unknown as {
@@ -14,3 +14,7 @@ export const prisma =
   });
 
 if (env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+
+export const dbClient = new Client({
+  url: env.DATABASE_URL,
+});
