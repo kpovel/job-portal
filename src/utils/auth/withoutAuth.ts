@@ -1,9 +1,8 @@
 import { type GetServerSideProps } from "next";
 import { type JwtPayload } from "jsonwebtoken";
-import { appRouter } from "~/server/api/root";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { verifyToken } from "~/utils/auth/auth";
-import { prisma } from "~/server/db";
+import { dbClient } from "~/server/db";
 
 export type VerifyToken = JwtPayload & {
   userId: string;
@@ -21,13 +20,15 @@ export const withoutAuth = (): GetServerSideProps => {
       const verifiedToken = verifyToken(
         authorizationToken,
       ) as VerifyToken | null;
-      const caller = appRouter.createCaller({ prisma });
 
-      const isUserAuthorized = await caller.auth.findUserById({
-        id: verifiedToken?.userId ?? "",
-      });
+      const authorizedUser = await dbClient.execute(
+        "select id from User where id = :userId;",
+        {
+          userId: verifiedToken?.userId,
+        },
+      );
 
-      if (!isUserAuthorized) {
+      if (!authorizedUser.rows.length) {
         return { props: {} };
       }
 
