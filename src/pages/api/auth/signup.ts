@@ -49,7 +49,6 @@ export default async function signup(
         token,
       });
     }
-    res.status(400).json({ message: "Error creating user" });
   } catch (error) {
     res.status(400).json({ message: "Error creating user", error });
   }
