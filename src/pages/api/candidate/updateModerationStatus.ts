@@ -1,11 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
-import type { ModerationStatus } from "@prisma/client";
+import { dbClient } from "~/server/db";
+import type { ModerationStatus } from "~/utils/dbSchema/moderationStatus";
 
 export default async function updateProfile(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
     res.status(405).json({ message: "Method not allowed" });
@@ -13,22 +12,19 @@ export default async function updateProfile(
 
   try {
     const { moderationStatus, questionnaireId } = req.body as {
-      moderationStatus: ModerationStatus;
+      moderationStatus: keyof typeof ModerationStatus;
       questionnaireId: string;
     };
 
-    const caller = appRouter.createCaller({ prisma });
-    const updatedCandidateResume =
-      await caller.candidate.updateModerationStatus({
-        moderationStatus,
-        questionnaireId,
-      });
+    await dbClient.execute(
+      "update Resume set moderationStatus = :moderationStatus where questionnaireId = :questionnaireId",
+      { moderationStatus, questionnaireId },
+    );
 
     res.status(200).json({
-      message: "Successfully updated Questionnaire moderation status",
-      updatedCandidateResume,
+      message: "Successfully updated Resume moderation status",
     });
   } catch (error) {
-    res.status(400).json({ message: "Something went wrong", error });
+    res.status(400).json({ message: "Error of updating resume moderation status", error });
   }
 }
