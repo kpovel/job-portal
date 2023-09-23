@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dbClient } from "~/server/db";
-import type { ModerationStatus } from "~/utils/dbSchema/moderationStatus";
+import type { ModerationStatus } from "dbSchema/enums";
 
 export default async function updateProfile(
   req: NextApiRequest,

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { generateToken, hashPassword } from "~/utils/auth/auth";
-import type { UserType } from "dbSchema/userType";
-import type { User } from "dbSchema/user";
+import type { UserType } from "dbSchema/enums";
+import type { User } from "dbSchema/models";
 import { dbClient } from "~/server/db";
 import { createId } from "@paralleldrive/cuid2";
 

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { verifyPassword, generateToken } from "~/utils/auth/auth";
 import { dbClient } from "~/server/db";
-import type { User } from "~/utils/dbSchema/user";
+import type { User } from "dbSchema/models";
 
 export default async function login(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {

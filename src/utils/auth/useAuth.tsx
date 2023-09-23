@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { User } from "../dbSchema/user";
+import type { User } from "dbSchema/models";
 import Cookie from "js-cookie";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 

@@ -1,7 +1,7 @@
 import type { FeedbackResult } from "@prisma/client";
 import { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
-import { UserType } from "../../utils/dbSchema/userType";
+import { UserType } from "dbSchema/enums";
 
 export function EmployerApplication({
   feedback,

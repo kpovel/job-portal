@@ -6,7 +6,7 @@ import { ProfileDropdownMenu } from "~/component/layout/elements/profileDropdown
 import { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { CandidateModerationStatus } from "~/component/layout/elements/moderation/candidateModerationStatus";
-import { UserType } from "~/utils/dbSchema/userType";
+import { UserType } from "dbSchema/enums";
 
 const navigation: { name: string; href: string }[] = [
   { name: "Пропозиції", href: "/my/offers" },
@@ -75,7 +75,7 @@ export function Header() {
                               isActivePage(item.href)
                                 ? "bg-gray-900 text-white"
                                 : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                              "rounded-md px-3 py-2 text-sm font-medium"
+                              "rounded-md px-3 py-2 text-sm font-medium",
                             )}
                             aria-current={
                               isActivePage(item.href) ? "page" : undefined
@@ -102,7 +102,7 @@ export function Header() {
                       isActivePage(item.href)
                         ? "bg-gray-900 text-white"
                         : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                      "block rounded-md px-3 py-2 text-base font-medium"
+                      "block rounded-md px-3 py-2 text-base font-medium",
                     )}
                     aria-current={isActivePage(item.href) ? "page" : undefined}
                   >
