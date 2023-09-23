@@ -1,11 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
-import type { CandidateResumeFormData } from "~/component/candidate/candidateResumeForm";
+import type { CandidateResumeFormData } from "dbSchema/candidateResumeFormData";
+import { dbClient } from "~/server/db";
 
 export default async function updateProfile(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
     res.status(405).json({ message: "Method not allowed" });
@@ -23,10 +22,20 @@ export default async function updateProfile(
       desiredSalary,
       employment,
       candidateId,
-    } = req.body as CandidateResumeFormData & { candidateId: string };
+    } = req.body as CandidateResumeFormData;
 
-    const caller = appRouter.createCaller({ prisma });
-    const updatedCandidateResume = await caller.candidate.updateCandidateResume(
+    await dbClient.execute(
+      `update Resume
+      set workExperience   = :workExperience,
+        skills           = :skills,
+        education        = :education,
+        foreignLanguages = :foreignLanguages,
+        interests        = :interests,
+        achievements     = :achievements,
+        specialty        = :specialty,
+        desiredSalary    = :desiredSalary,
+        employment       = :employment
+      where candidateId = :candidateId`,
       {
         workExperience,
         skills,
@@ -38,14 +47,13 @@ export default async function updateProfile(
         desiredSalary,
         employment,
         candidateId,
-      }
+      },
     );
 
     res.status(200).json({
-      message: "Successful update user profile",
-      updatedCandidateResume,
+      message: "Successfully updated candidate resume",
     });
   } catch (error) {
-    res.status(400).json({ message: "Something went wrong", error });
+    res.status(400).json({ message: "Candidate resume update error", error });
   }
 }
