@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "~/server/db";
+import { dbClient } from "~/server/db";
 
 export default async function getAcceptedVacancies(
   req: NextApiRequest,
@@ -12,13 +12,16 @@ export default async function getAcceptedVacancies(
   try {
     const { employerId } = req.body as { employerId: string };
 
-    const acceptedVacancies = await prisma.vacancy.findMany({
-      where: { employerId, moderationStatus: "ACCEPTED" },
-    });
+    const vacanciesQuery = await dbClient.execute(
+      "select * from Vacancy where employerId = :employerId and moderationStatus = 'ACCEPTED'",
+      {
+        employerId,
+      },
+    );
 
     res.status(200).json({
       message: "Successfully fetched accepted vacancies",
-      acceptedVacancies,
+      acceptedVacancies: vacanciesQuery.rows,
     });
   } catch (error) {
     res.status(400).json({ message: "Something went wrong", error });
