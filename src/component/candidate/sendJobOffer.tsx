@@ -13,7 +13,7 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
 
   function setCurrentVacancy(questionnaireId: string) {
     const selectedVacancy = availableVacancies.find(
-      (vacancy) => vacancy.questionnaireId === questionnaireId
+      (vacancy) => vacancy.questionnaireId === questionnaireId,
     );
     setSelectedVacancy(selectedVacancy || null);
   }
@@ -108,19 +108,7 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
         }),
       });
 
-      type SuccessSentOffer = {
-        message: string;
-        createdResponse: Response;
-      };
-
-      type ErrorResponse = {
-        message: string;
-        error: string;
-      };
-
-      type OfferResponse = SuccessSentOffer | ErrorResponse;
-      const offerResponse = (await sentOffer.json()) as OfferResponse;
-      if ("createdResponse" in offerResponse) {
+      if (sentOffer.ok) {
         setIsSentOffer(true);
         setOfferDescription("");
       }
