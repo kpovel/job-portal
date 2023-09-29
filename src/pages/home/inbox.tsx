@@ -9,13 +9,18 @@ import type { VerifyToken } from "~/utils/auth/withoutAuth";
 import { appRouter } from "~/server/api/root";
 import { prisma } from "~/server/db";
 import superjson from "superjson";
-import type { Candidate, FeedbackResult, User, Response } from "@prisma/client";
 import Link from "next/link";
 import { format } from "date-fns";
 import { EmployerFeedback } from "~/component/inbox/employerFeedback";
 import { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { EmployerApplication } from "~/component/inbox/employerApplication";
+import type {
+  Candidate,
+  FeedbackResult,
+  User,
+  Response,
+} from "~/utils/dbSchema/models";
 
 export default function Inbox({
   employerResponses,
@@ -55,16 +60,14 @@ export default function Inbox({
                 <strong>Надіслано:</strong>{" "}
                 {format(response.responseDate, "d MMMM yyyy, HH:mm")}
               </p>
-              {authContext?.userType === response.responseBy ?
-                <EmployerApplication
+              {authContext?.userType.toString() === response.responseBy ? (
+                <EmployerApplication feedback={response.feedbackResult} />
+              ) : (
+                <EmployerFeedback
                   feedback={response.feedbackResult}
-                 />
-                : (
-                  <EmployerFeedback
-                    feedback={response.feedbackResult}
-                    responseId={response.responseId}
-                  />
-                )}
+                  responseId={response.responseId}
+                />
+              )}
             </div>
           ))}
         </div>

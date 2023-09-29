@@ -1,11 +1,11 @@
+import { createId } from "@paralleldrive/cuid2";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
-import type { ResponseResult } from "@prisma/client";
+import { dbClient } from "~/server/db";
+import type { ResponseResult } from "~/utils/dbSchema/enums";
 
 export default async function createFeedbackResult(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
     res.status(405).json({ message: "Method not allowed" });
@@ -18,16 +18,25 @@ export default async function createFeedbackResult(
       feedbackContent: string;
     };
 
-    const caller = appRouter.createCaller({ prisma });
-    const responsesByCandidate = await caller.response.createFeedbackResult({
-      responseId,
-      responseResult,
-      feedbackContent,
-    });
+    const feedbackResultId = createId();
+    await dbClient.execute(
+      `insert into FeedbackResult (responseId, response, feedbackResultId, responseResult)
+      values (:responseId, :response, :feedbackResultId, :responseResult);`,
+      {
+        responseId,
+        response: feedbackContent,
+        responseResult,
+        feedbackResultId,
+      },
+    );
+    const responseQuery = await dbClient.execute(
+      "select * from FeedbackResult where feedbackResultId = :feedbackResultId",
+      { feedbackResultId },
+    );
 
     res.status(200).json({
       message: "Successfully receive responses",
-      responsesByCandidate,
+      response: responseQuery.rows[0],
     });
   } catch (error) {
     res.status(400).json({ message: "Something went wrong", error });

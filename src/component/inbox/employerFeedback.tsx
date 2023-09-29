@@ -1,7 +1,7 @@
-import type { FeedbackResult, ResponseResult } from "@prisma/client";
 import { type FormEvent, useState, useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
-import { UserType } from "dbSchema/enums";
+import { ResponseResult, UserType } from "dbSchema/enums";
+import type { FeedbackResult } from "~/utils/dbSchema/models";
 
 export function EmployerFeedback({
   feedback,
@@ -36,10 +36,16 @@ export function EmployerFeedback({
           feedbackContent,
         }),
       });
-      const parsedFeedback = (await response.json()) as FeedbackResult;
+
+      type ParsedFeedback = {
+        message: string;
+        response: FeedbackResult;
+      };
+
+      const parsedFeedback = (await response.json()) as ParsedFeedback;
 
       if (response.ok) {
-        setFeedbackResult(parsedFeedback);
+        setFeedbackResult(parsedFeedback.response);
       }
     } catch (e) {
       console.log(e);
@@ -82,14 +88,14 @@ export function EmployerFeedback({
             <button
               type="submit"
               className="rounded-md border bg-red-400 p-2"
-              onClick={() => setResponseResult("REJECTED")}
+              onClick={() => setResponseResult(ResponseResult.REJECTED)}
             >
               Відхилити
             </button>
             <button
               type="submit"
               className="rounded-md border bg-green-400 p-2"
-              onClick={() => setResponseResult("ACCEPTED")}
+              onClick={() => setResponseResult(ResponseResult.ACCEPTED)}
             >
               Прийняти
             </button>
