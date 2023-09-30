@@ -2,17 +2,17 @@ import { type FormEvent, useState, useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { ResponseResult, UserType } from "dbSchema/enums";
 import type { FeedbackResult } from "~/utils/dbSchema/models";
+import type { Nullable } from "~/pages/my/offers";
 
 export function EmployerFeedback({
   feedback,
   responseId,
 }: {
-  feedback: FeedbackResult | null;
+  feedback: Nullable<FeedbackResult>;
   responseId: string;
 }) {
-  const [feedbackResult, setFeedbackResult] = useState<FeedbackResult | null>(
-    feedback,
-  );
+  const [feedbackResult, setFeedbackResult] =
+    useState<Nullable<FeedbackResult>>(feedback);
   const [isOpenFeedbackMenu, setIsOpenFeedbackMany] = useState<boolean>(false);
   const [feedbackContent, setFeedbackContent] = useState<string>("");
   const [responseResult, setResponseResult] = useState<ResponseResult | null>(
@@ -39,13 +39,13 @@ export function EmployerFeedback({
 
       type ParsedFeedback = {
         message: string;
-        response: FeedbackResult;
+        responsesByCandidate: FeedbackResult;
       };
 
       const parsedFeedback = (await response.json()) as ParsedFeedback;
 
       if (response.ok) {
-        setFeedbackResult(parsedFeedback.response);
+        setFeedbackResult(parsedFeedback.responsesByCandidate);
       }
     } catch (e) {
       console.log(e);
