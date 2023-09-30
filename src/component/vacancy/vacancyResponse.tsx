@@ -1,8 +1,6 @@
 import React, { type FormEvent, useContext, useEffect, useState } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
-import type { Response } from "@prisma/client";
-import type { ModerationStatus } from "@prisma/client";
-import { api } from "~/utils/api";
+import { ModerationStatus } from "~/utils/dbSchema/enums";
 
 export function VacancyResponse({
   vacancyId,
@@ -15,20 +13,10 @@ export function VacancyResponse({
 
   const [coverLetter, setCoverLetter] = useState("");
   const [isSentResponse, setIsSentResponse] = useState<boolean>(false);
-  const [moderationStatus, setModerationStatus] =
-    useState<ModerationStatus>("PENDING");
+  const [resumeModerationStatus, setResumeModerationStatus] =
+    useState<ModerationStatus>(ModerationStatus.PENDING);
+
   const isFormFieldOut = coverLetter.length > 100;
-
-  const { data: candidatesQuestionnaire } =
-    api.candidate.findQuestionnaireByCandidateId.useQuery({
-      candidateId: authContext?.id || "",
-    });
-
-  useEffect(() => {
-    if (candidatesQuestionnaire) {
-      setModerationStatus(candidatesQuestionnaire.moderationStatus);
-    }
-  }, [candidatesQuestionnaire]);
 
   useEffect(() => {
     void checkIsSentResponse();
@@ -45,22 +33,19 @@ export function VacancyResponse({
             candidateId: authContext?.id,
             vacancyId,
           }),
-        }
+        },
       );
 
-      const parsedResponses = (await responsesByCandidate.json()) as {
-        responsesByCandidate: Response[];
-        message: string;
-      };
+      if (responsesByCandidate.ok) {
+        const parsedResponses = (await responsesByCandidate.json()) as {
+          isSentResponse: boolean;
+          resumeModerationStatus: ModerationStatus;
+          message: string;
+        };
 
-      const isExistResponseOnTheVacancy =
-        parsedResponses.responsesByCandidate.find(
-          (element) =>
-            element.vacancyId === vacancyId &&
-            element.candidateId === authContext?.id
-        );
-
-      setIsSentResponse(!!isExistResponseOnTheVacancy);
+        setIsSentResponse(parsedResponses.isSentResponse);
+        setResumeModerationStatus(parsedResponses.resumeModerationStatus);
+      }
     } catch (e) {
       console.log(e);
     }
@@ -98,7 +83,7 @@ export function VacancyResponse({
       return "Ви вже відправили відгук на цю вакансію";
     }
 
-    if (moderationStatus === "PENDING") {
+    if (resumeModerationStatus === ModerationStatus.PENDING) {
       return "Почекайте допоки адміністратор не підтвердить вашу анкету";
     }
 
@@ -106,7 +91,7 @@ export function VacancyResponse({
   }
 
   return (
-    <div className="container mx-auto mt-4 mb-6 flex flex-col rounded-lg border bg-white p-6 shadow-lg">
+    <div className="container mx-auto mb-6 mt-4 flex flex-col rounded-lg border bg-white p-6 shadow-lg">
       <h2 className="mb-6 text-xl font-bold">Надішліть відгук на вакансію</h2>
       <form onSubmit={handleSubmitCoverLetter} className="w-full max-w-md">
         <div className="sm:col-span-2">
@@ -128,10 +113,15 @@ export function VacancyResponse({
           </div>
           <button
             type="submit"
+            disabled={
+              isSentResponse ||
+              !isFormFieldOut ||
+              resumeModerationStatus === ModerationStatus.PENDING
+            }
             className={`mt-6 block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
               isSentResponse ||
               !isFormFieldOut ||
-              moderationStatus === "PENDING"
+              resumeModerationStatus === ModerationStatus.PENDING
                 ? "cursor-not-allowed opacity-50"
                 : ""
             }`}
