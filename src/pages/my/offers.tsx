@@ -21,7 +21,7 @@ export type Nullable<T> = {
 
 type CandidateOffer = Response & {
   vacancySpeciality: string | null;
-  feedbackResultresponseDate: Date | null;
+  feedbackResultResponseDate: Date | null;
   feedbackResult: Nullable<FeedbackResult>;
 };
 
@@ -111,7 +111,7 @@ export const getServerSideProps = async ({
   const candidateOffersQuery = await dbClient.execute(
     `select Response.*,
         FeedbackResult.*,
-        FeedbackResult.responseDate as feedbackResultresponseDate,
+        FeedbackResult.responseDate as feedbackResultResponseDate,
         Response.responseDate as responseDate,
         Vacancy.specialty as vacancySpeciality
     from Response
@@ -126,7 +126,7 @@ export const getServerSideProps = async ({
   const candidateOffers = candidateOffersQuery.rows as (Response &
     Nullable<FeedbackResult> & {
       vacancySpeciality: string;
-      feedbackResultresponseDate: Date | null;
+      feedbackResultResponseDate: Date | null;
     })[];
 
   console.log(candidateOffers);
@@ -141,7 +141,7 @@ export const getServerSideProps = async ({
     responseDate: value.responseDate,
     responseBy: value.responseBy,
     coverLetter: value.coverLetter,
-    feedbackResultresponseDate: value.feedbackResultresponseDate,
+    feedbackResultResponseDate: value.feedbackResultResponseDate,
     feedbackResult: {
       feedbackResultId: value.feedbackResultId,
       responseId: value.responseId,
