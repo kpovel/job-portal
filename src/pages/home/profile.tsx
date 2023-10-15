@@ -4,13 +4,21 @@ import type {
   InferGetServerSidePropsType,
 } from "next";
 import superjson from "superjson";
-import type { Employer, Questionnaire, User, Vacancy } from "@prisma/client";
+import type {
+  Employer,
+  Questionnaire,
+  User,
+  Vacancy,
+} from "~/utils/dbSchema/models";
 import React, { type ChangeEvent, type FormEvent, useState } from "react";
 import { FormInput } from "~/component/profileForm/formInput";
 import type { CandidateFields as UserFields } from "~/component/candidate/candidateAccountForm";
 import { EmployerNavigationMenu } from "~/component/employer/employerNavigationMenu";
 import Head from "next/head";
-import { getEmployerData } from "~/utils/getEmployerData/getEmployerData";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+import type { VerifyToken } from "~/utils/auth/withoutAuth";
+import { verifyToken } from "~/utils/auth/auth";
+import { dbClient } from "~/server/db";
 
 export type EmployerData =
   | User & {
@@ -20,10 +28,22 @@ export type EmployerData =
           };
     };
 
+type EmployerProfile = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  age: string;
+  phoneNumber: string;
+  email: string;
+  linkedinLink: string;
+  githubLink: string;
+  telegramLink: string;
+};
+
 export default function EmployerProfile({
-  employer,
+  employerProfile: employer,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const parsedEmployerData: EmployerData = superjson.parse(employer);
+  const parsedEmployerData: EmployerProfile = superjson.parse(employer);
 
   type FormData = {
     [key: string]: string | number;
@@ -138,8 +158,42 @@ export default function EmployerProfile({
   );
 }
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  return await getEmployerData(context);
+export const getServerSideProps = async ({
+  req,
+}: GetServerSidePropsContext) => {
+  const authToken = req?.cookies[AUTHORIZATION_TOKEN_KEY];
+  if (!authToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const verifiedToken = verifyToken(authToken) as VerifyToken | null;
+  if (!verifiedToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const employerProfile = await dbClient.execute(
+    `select id, firstName, lastName, age, phoneNumber, email, linkedinLink, githubLink, telegramLink
+      from User
+      left join Employer on User.id = Employer.employerId
+      where id = :employerId;`,
+    { employerId: verifiedToken.userId },
+  );
+
+  const serializedEmployerProfile = superjson.stringify(employerProfile.rows[0]);
+
+  return {
+    props: {
+      employerProfile: serializedEmployerProfile,
+    },
+  };
 };

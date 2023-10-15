@@ -7,12 +7,29 @@ import type { VerifyToken } from "~/utils/auth/withoutAuth";
 import { verifyToken } from "~/utils/auth/auth";
 
 export async function getEmployerData(context: GetServerSidePropsContext) {
-  const authToken = context.req?.cookies[AUTHORIZATION_TOKEN_KEY] ?? "";
+  const authToken = context.req?.cookies[AUTHORIZATION_TOKEN_KEY];
+  if (!authToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
   const verifiedToken = verifyToken(authToken) as VerifyToken | null;
+  if (!verifiedToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
 
   const caller = appRouter.createCaller({ prisma });
   const employerData = await caller.employer.findEmployeeById({
-    employerId: verifiedToken?.userId ?? "",
+    employerId: verifiedToken.userId,
   });
 
   const isUserEmployer = employerData?.userType === "EMPLOYER";
