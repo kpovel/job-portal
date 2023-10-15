@@ -7,7 +7,7 @@ import type { Nullable } from "~/pages/my/offers";
 export function EmployerApplication({
   feedback,
 }: {
-  feedback: Nullable<FeedbackResult>;
+  feedback: Nullable<FeedbackResult> | null;
 }) {
   const authContext = useContext(AuthContext);
   const noFeedbackMessage =
@@ -17,7 +17,7 @@ export function EmployerApplication({
 
   return (
     <div>
-      {feedback.responseDate ? (
+      {feedback?.responseDate ? (
         <div>
           <p>
             <strong>Результат відгуку: </strong>

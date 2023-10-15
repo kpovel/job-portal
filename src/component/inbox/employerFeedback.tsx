@@ -8,11 +8,11 @@ export function EmployerFeedback({
   feedback,
   responseId,
 }: {
-  feedback: Nullable<FeedbackResult>;
+  feedback: Nullable<FeedbackResult> | null;
   responseId: string;
 }) {
   const [feedbackResult, setFeedbackResult] =
-    useState<Nullable<FeedbackResult>>(feedback);
+    useState<Nullable<FeedbackResult> | null>(feedback);
   const [isOpenFeedbackMenu, setIsOpenFeedbackMany] = useState<boolean>(false);
   const [feedbackContent, setFeedbackContent] = useState<string>("");
   const [responseResult, setResponseResult] = useState<ResponseResult | null>(
