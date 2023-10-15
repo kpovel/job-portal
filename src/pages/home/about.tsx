@@ -8,13 +8,21 @@ import type {
   InferGetServerSidePropsType,
 } from "next";
 import superjson from "superjson";
-import type { EmployerData } from "~/pages/home/profile";
-import { getEmployerData } from "~/utils/getEmployerData/getEmployerData";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+import { dbClient } from "~/server/db";
+import { verifyToken } from "~/utils/auth/auth";
+import type { VerifyToken } from "~/utils/auth/withoutAuth";
+
+type AboutEmployer = {
+  id: string;
+  companyName: string | null;
+  companyAddress: string | null;
+};
 
 export default function About({
-  employer,
+  aboutEmployer,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const parsedEmployerData: EmployerData = superjson.parse(employer);
+  const parsedEmployerData: AboutEmployer = superjson.parse(aboutEmployer);
 
   type FormData = {
     [key: string]: string | number;
@@ -23,8 +31,8 @@ export default function About({
   };
 
   const [formData, setFormData] = useState<FormData>({
-    companyName: parsedEmployerData?.employer?.companyName ?? "",
-    companyAddress: parsedEmployerData?.employer.companyAddress ?? "",
+    companyName: parsedEmployerData.companyName ?? "",
+    companyAddress: parsedEmployerData.companyAddress ?? "",
   });
 
   function handleUpdateForm(event: ChangeEvent<HTMLInputElement>) {
@@ -100,8 +108,42 @@ export default function About({
   );
 }
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  return await getEmployerData(context);
+export const getServerSideProps = async ({
+  req,
+}: GetServerSidePropsContext) => {
+  const authToken = req?.cookies[AUTHORIZATION_TOKEN_KEY];
+  if (!authToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const verifiedToken = verifyToken(authToken) as VerifyToken | null;
+  if (!verifiedToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const aboutEmployer = await dbClient.execute(
+    `select id, companyAddress, companyName
+      from User
+      left join Employer on User.id = Employer.employerId
+      where id = :employerId;`,
+    { employerId: verifiedToken.userId },
+  );
+
+  const serializedEmployer = superjson.stringify(aboutEmployer.rows[0]);
+
+  return {
+    props: {
+      aboutEmployer: serializedEmployer,
+    },
+  };
 };
