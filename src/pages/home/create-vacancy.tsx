@@ -6,11 +6,14 @@ import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
 } from "next";
-import { getEmployerData } from "~/utils/getEmployerData/getEmployerData";
-import type { EmployerData } from "~/pages/home/profile";
 import superjson from "superjson";
 import { useRouter } from "next/router";
 import { VacancyInputField } from "~/component/employer/vacancyInputField";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+import { verifyToken } from "~/utils/auth/auth";
+import type { VerifyToken } from "~/utils/auth/withoutAuth";
+import { dbClient } from "~/server/db";
+import { UserType } from "~/utils/dbSchema/enums";
 
 export type VacancyFields = {
   specialty: string;
@@ -22,11 +25,16 @@ export type VacancyFields = {
   employment: string;
 };
 
+type Employer = {
+  id: string;
+  userType: UserType;
+};
+
 export default function CreateVacancy({
   employer,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const router = useRouter();
-  const parsedEmployerData: EmployerData = superjson.parse(employer);
+  const parsedEmployerData: Employer = superjson.parse(employer);
 
   type FormData = {
     [key: string]: string | number;
@@ -102,8 +110,50 @@ export default function CreateVacancy({
   );
 }
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  return await getEmployerData(context);
+export const getServerSideProps = async ({
+  req,
+}: GetServerSidePropsContext) => {
+  const authToken = req?.cookies[AUTHORIZATION_TOKEN_KEY];
+  if (!authToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const verifiedToken = verifyToken(authToken) as VerifyToken | null;
+  if (!verifiedToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const employerQuery = await dbClient.execute(
+    `select id, userType from User where id = :employerId;`,
+    { employerId: verifiedToken.userId },
+  );
+
+  const employer = employerQuery.rows[0] as Employer;
+
+  if (employer.userType !== UserType.EMPLOYER) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const serializedEmployer = superjson.stringify(employer);
+
+  return {
+    props: {
+      employer: serializedEmployer,
+    },
+  };
 };
