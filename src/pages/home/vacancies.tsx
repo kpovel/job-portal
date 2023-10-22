@@ -6,17 +6,28 @@ import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
 } from "next";
-import { getEmployerData } from "~/utils/getEmployerData/getEmployerData";
-import type { EmployerData } from "~/pages/home/profile";
 import superjson from "superjson";
 import Link from "next/link";
 import { ModerationLabel } from "~/component/layout/elements/moderation/moderationLabel";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+import { verifyToken } from "~/utils/auth/auth";
+import type { VerifyToken } from "~/utils/auth/withoutAuth";
+import { dbClient } from "~/server/db";
+import type { ModerationStatus } from "~/utils/dbSchema/enums";
+
+type EmployerVacancy = {
+  questionnaireId: string;
+  specialty: string;
+  moderationStatus: ModerationStatus;
+  salary: string;
+  requirements: string | null;
+  conditions: string | null;
+};
 
 export default function Vacancies({
-  employer,
+  vacancies,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const parsedEmployerData: EmployerData = superjson.parse(employer);
-  const employerVacancies = parsedEmployerData.employer.questionnaires;
+  const employerVacancies: EmployerVacancy[] = superjson.parse(vacancies);
 
   return (
     <>
@@ -30,40 +41,36 @@ export default function Vacancies({
           <div className="flex gap-5">
             <div>
               {employerVacancies.length ? (
-                employerVacancies.map((questionnaire) => (
+                employerVacancies.map((vacancy) => (
                   <div
-                    key={questionnaire.questionnaireId}
+                    key={vacancy.questionnaireId}
                     className="mb-4 rounded-lg bg-white p-6 shadow-lg"
                   >
                     <div className="mb-4 flex items-center align-top">
                       <h2 className="grow text-xl font-bold text-gray-800">
                         <Link
-                          href={`/home/edit-vacancy/${questionnaire.questionnaireId}`}
+                          href={`/home/edit-vacancy/${vacancy.questionnaireId}`}
                           className="text-blue-600  hover:text-blue-800"
                         >
-                          {questionnaire.vacancy.specialty}
+                          {vacancy.specialty}
                         </Link>
                       </h2>
                       <div className="mr-3">
                         <ModerationLabel
-                          moderationStatus={
-                            questionnaire.vacancy.moderationStatus
-                          }
+                          moderationStatus={vacancy.moderationStatus}
                         />
                       </div>
-                      {questionnaire.vacancy.salary && (
+                      {vacancy.salary && (
                         <p className="font-semibold text-gray-700">
-                          ${questionnaire.vacancy.salary}
+                          ${vacancy.salary}
                         </p>
                       )}
                     </div>
                     <div>
                       <p className="mb-2 text-gray-600">
-                        {questionnaire.vacancy.requirements}
+                        {vacancy.requirements}
                       </p>
-                      <p className="text-gray-600">
-                        {questionnaire.vacancy.conditions}
-                      </p>
+                      <p className="text-gray-600">{vacancy.conditions}</p>
                     </div>
                   </div>
                 ))
@@ -86,8 +93,41 @@ export default function Vacancies({
   );
 }
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  return await getEmployerData(context);
+export const getServerSideProps = async ({
+  req,
+}: GetServerSidePropsContext) => {
+  const authToken = req?.cookies[AUTHORIZATION_TOKEN_KEY];
+  if (!authToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const verifiedToken = verifyToken(authToken) as VerifyToken | null;
+  if (!verifiedToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const employerVacancies = await dbClient.execute(
+      `select questionnaireId, specialty, moderationStatus, salary, requirements, conditions
+      from Vacancy
+      where employerId = :employerId;`,
+    { employerId: verifiedToken.userId },
+  );
+
+  const serializedVacancies = superjson.stringify(employerVacancies.rows);
+
+  return {
+    props: {
+      vacancies: serializedVacancies,
+    },
+  };
 };
