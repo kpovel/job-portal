@@ -7,23 +7,22 @@ import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
 } from "next";
-import superjson from "superjson";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { dbClient } from "~/server/db";
 import { verifyToken } from "~/utils/auth/auth";
 import type { VerifyToken } from "~/utils/auth/withoutAuth";
+import { UserType } from "~/utils/dbSchema/enums";
 
 type AboutEmployer = {
   id: string;
+  userType: UserType;
   companyName: string | null;
   companyAddress: string | null;
 };
 
 export default function About({
-  aboutEmployer,
+   employerCompany,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const parsedEmployerData: AboutEmployer = superjson.parse(aboutEmployer);
-
   type FormData = {
     [key: string]: string | number;
     companyName: string;
@@ -31,8 +30,8 @@ export default function About({
   };
 
   const [formData, setFormData] = useState<FormData>({
-    companyName: parsedEmployerData.companyName ?? "",
-    companyAddress: parsedEmployerData.companyAddress ?? "",
+    companyName: employerCompany.companyName ?? "",
+    companyAddress: employerCompany.companyAddress ?? "",
   });
 
   function handleUpdateForm(event: ChangeEvent<HTMLInputElement>) {
@@ -55,7 +54,7 @@ export default function About({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          employerId: parsedEmployerData?.id,
+          employerId: employerCompany.id,
         }),
       });
     } catch (e) {
@@ -131,19 +130,28 @@ export const getServerSideProps = async ({
     };
   }
 
-  const aboutEmployer = await dbClient.execute(
-    `select id, companyAddress, companyName
+  const aboutEmployerQuery = await dbClient.execute(
+    `select id, userType, companyAddress, companyName
       from User
       left join Employer on User.id = Employer.employerId
       where id = :employerId;`,
     { employerId: verifiedToken.userId },
   );
 
-  const serializedEmployer = superjson.stringify(aboutEmployer.rows[0]);
+  const employerCompany = aboutEmployerQuery.rows[0] as AboutEmployer;
+
+  if (employerCompany.userType !== UserType.EMPLOYER) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
 
   return {
     props: {
-      aboutEmployer: serializedEmployer,
+      employerCompany
     },
   };
 };

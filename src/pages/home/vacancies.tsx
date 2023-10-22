@@ -6,7 +6,6 @@ import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
 } from "next";
-import superjson from "superjson";
 import Link from "next/link";
 import { ModerationLabel } from "~/component/layout/elements/moderation/moderationLabel";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
@@ -14,6 +13,7 @@ import { verifyToken } from "~/utils/auth/auth";
 import type { VerifyToken } from "~/utils/auth/withoutAuth";
 import { dbClient } from "~/server/db";
 import type { ModerationStatus } from "~/utils/dbSchema/enums";
+import { UserType } from "~/utils/dbSchema/enums";
 
 type EmployerVacancy = {
   questionnaireId: string;
@@ -25,10 +25,8 @@ type EmployerVacancy = {
 };
 
 export default function Vacancies({
-  vacancies,
+  employerVacancies,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const employerVacancies: EmployerVacancy[] = superjson.parse(vacancies);
-
   return (
     <>
       <Head>
@@ -116,18 +114,31 @@ export const getServerSideProps = async ({
     };
   }
 
+  const userQuery = await dbClient.execute(
+    "select userType from User where id = :id;",
+    { id: verifiedToken.userId },
+  );
+  const user = userQuery.rows[0] as { userType: UserType };
+  if (user.userType !== UserType.EMPLOYER) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
   const employerVacancies = await dbClient.execute(
       `select questionnaireId, specialty, moderationStatus, salary, requirements, conditions
       from Vacancy
-      where employerId = :employerId;`,
+      where employerId = :employerId
+      order by dateOfPublication desc, questionnaireId desc;`,
     { employerId: verifiedToken.userId },
   );
 
-  const serializedVacancies = superjson.stringify(employerVacancies.rows);
-
   return {
     props: {
-      vacancies: serializedVacancies,
+      employerVacancies: employerVacancies.rows as EmployerVacancy[],
     },
   };
 };
