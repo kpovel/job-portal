@@ -21,6 +21,7 @@ import type {
   User,
   Response,
 } from "~/utils/dbSchema/models";
+import Head from "next/head";
 
 export default function Inbox({
   employerResponses,
@@ -36,43 +37,50 @@ export default function Inbox({
     superjson.parse(employerResponses);
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4">
-        <h2 className="py-3 text-2xl font-bold">
-          {parsedResponses.length ? "Відгуки" : "У вас поки що немає відгуків"}
-        </h2>
-        <div className="grid grid-cols-1 gap-4">
-          {parsedResponses.map((response) => (
-            <div
-              key={response.responseId}
-              className="flex w-full flex-col gap-2 rounded-md border border-gray-300 p-4"
-            >
-              <Link href={`/candidate/${response.candidate.candidateId}`}>
-                <div className="font-bold text-blue-600 hover:text-blue-800">
-                  {response.candidate.candidate.firstName}{" "}
-                  {response.candidate.candidate.lastName}
-                </div>
-              </Link>
-              <p>
-                <strong>Супровідний лист:</strong> {response.coverLetter}
-              </p>
-              <p>
-                <strong>Надіслано:</strong>{" "}
-                {format(response.responseDate, "d MMMM yyyy, HH:mm")}
-              </p>
-              {authContext?.userType.toString() === response.responseBy ? (
-                <EmployerApplication feedback={response.feedbackResult} />
-              ) : (
-                <EmployerFeedback
-                  feedback={response.feedbackResult}
-                  responseId={response.responseId}
-                />
-              )}
-            </div>
-          ))}
+    <>
+      <Head>
+        <title>Job Portal – Відгуки</title>
+      </Head>
+      <Layout>
+        <div className="container mx-auto px-4">
+          <h2 className="py-3 text-2xl font-bold">
+            {parsedResponses.length
+              ? "Відгуки"
+              : "У вас поки що немає відгуків"}
+          </h2>
+          <div className="grid grid-cols-1 gap-4">
+            {parsedResponses.map((response) => (
+              <div
+                key={response.responseId}
+                className="flex w-full flex-col gap-2 rounded-md border border-gray-300 p-4"
+              >
+                <Link href={`/candidate/${response.candidate.candidateId}`}>
+                  <div className="font-bold text-blue-600 hover:text-blue-800">
+                    {response.candidate.candidate.firstName}{" "}
+                    {response.candidate.candidate.lastName}
+                  </div>
+                </Link>
+                <p>
+                  <strong>Супровідний лист:</strong> {response.coverLetter}
+                </p>
+                <p>
+                  <strong>Надіслано:</strong>{" "}
+                  {format(response.responseDate, "d MMMM yyyy, HH:mm")}
+                </p>
+                {authContext?.userType.toString() === response.responseBy ? (
+                  <EmployerApplication feedback={response.feedbackResult} />
+                ) : (
+                  <EmployerFeedback
+                    feedback={response.feedbackResult}
+                    responseId={response.responseId}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </Layout>
+      </Layout>
+    </>
   );
 }
 
