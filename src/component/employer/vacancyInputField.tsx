@@ -1,5 +1,4 @@
 import type { VacancyFields } from "~/pages/home/create-vacancy";
-import React from "react";
 import { FormInput } from "~/component/profileForm/formInput";
 
 export function VacancyInputField(props: {
