@@ -2,21 +2,24 @@ import { type FormEvent, useState, useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { ResponseResult, UserType } from "dbSchema/enums";
 import type { FeedbackResult } from "~/utils/dbSchema/models";
-import type { Nullable } from "~/pages/my/offers";
 
 export function EmployerFeedback({
-  feedback,
+  response,
+  responseresult,
   responseId,
 }: {
-  feedback: Nullable<FeedbackResult> | null;
+  response: string | null;
+  responseresult: ResponseResult | null;
   responseId: string;
 }) {
-  const [feedbackResult, setFeedbackResult] =
-    useState<Nullable<FeedbackResult> | null>(feedback);
+  const [feedbackResult, setFeedbackResult] = useState<string | null>(
+    response
+  );
+  console.log("feedback", feedbackResult);
   const [isOpenFeedbackMenu, setIsOpenFeedbackMany] = useState<boolean>(false);
   const [feedbackContent, setFeedbackContent] = useState<string>("");
   const [responseResult, setResponseResult] = useState<ResponseResult | null>(
-    null,
+    responseresult,
   );
   const authContext = useContext(AuthContext);
 
@@ -58,11 +61,11 @@ export function EmployerFeedback({
         <div>
           <p>
             <strong>Результат відгуку: </strong>
-            {feedbackResult.responseResult}
+            {responseResult}
           </p>
           <p className="pt-2">
             <strong>Відповідь на пропозицію: </strong>
-            {feedbackResult.response}
+            {response}
           </p>
         </div>
       ) : (

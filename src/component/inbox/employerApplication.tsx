@@ -1,13 +1,13 @@
-import type { FeedbackResult } from "@prisma/client";
 import { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
-import { UserType } from "dbSchema/enums";
-import type { Nullable } from "~/pages/my/offers";
+import { type ResponseResult, UserType } from "dbSchema/enums";
 
 export function EmployerApplication({
-  feedback,
+  response,
+  responseResult
 }: {
-  feedback: Nullable<FeedbackResult> | null;
+  responseResult: ResponseResult | null;
+  response: string | null
 }) {
   const authContext = useContext(AuthContext);
   const noFeedbackMessage =
@@ -17,15 +17,15 @@ export function EmployerApplication({
 
   return (
     <div>
-      {feedback?.responseDate ? (
+      {responseResult ? (
         <div>
           <p>
             <strong>Результат відгуку: </strong>
-            {feedback.responseResult}
+            {responseResult}
           </p>
           <p className="pt-2">
             <strong>Відповідь на пропозицію: </strong>
-            {feedback.response}
+            {response}
           </p>
         </div>
       ) : (
