@@ -15,12 +15,14 @@ export default async function findUserByToken(
 
       if (!verifiedToken) {
         res.status(401).json({ message: "Invalid token key" });
+        return
       }
 
       const authorizedUser = await dbClient.execute(
-        "select * from User where id = :userId;",
+        `select id, userType, lastName, firstName, middleName, age, phoneNumber, email, linkedinLink, githubLink, telegramLink, login
+        from User where id = :userId;`,
         {
-          userId: verifiedToken?.userId,
+          userId: verifiedToken.userId,
         },
       );
 

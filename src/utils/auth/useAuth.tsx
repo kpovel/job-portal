@@ -13,12 +13,8 @@ type ErrorResponse = {
 };
 
 const useCurrentUser = (authToken: string | undefined) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<Omit<User, "password"> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setIsLoading(true);
-  }, []);
 
   useEffect(() => {
     const fetchAuthUser = async () => {
