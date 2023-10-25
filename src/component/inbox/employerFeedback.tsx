@@ -1,7 +1,6 @@
 import { type FormEvent, useState, useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { ResponseResult, UserType } from "dbSchema/enums";
-import type { FeedbackResult } from "~/utils/dbSchema/models";
 
 export function EmployerFeedback({
   response,
@@ -12,10 +11,6 @@ export function EmployerFeedback({
   responseresult: ResponseResult | null;
   responseId: string;
 }) {
-  const [feedbackResult, setFeedbackResult] = useState<string | null>(
-    response
-  );
-  console.log("feedback", feedbackResult);
   const [isOpenFeedbackMenu, setIsOpenFeedbackMany] = useState<boolean>(false);
   const [feedbackContent, setFeedbackContent] = useState<string>("");
   const [responseResult, setResponseResult] = useState<ResponseResult | null>(
@@ -30,7 +25,8 @@ export function EmployerFeedback({
 
   async function sendFeedbackResult() {
     try {
-      const response = await fetch("/api/response/createFeedbackResult", {
+      // should I handle the request?
+      await fetch("/api/response/createFeedbackResult", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -39,17 +35,6 @@ export function EmployerFeedback({
           feedbackContent,
         }),
       });
-
-      type ParsedFeedback = {
-        message: string;
-        responsesByCandidate: FeedbackResult;
-      };
-
-      const parsedFeedback = (await response.json()) as ParsedFeedback;
-
-      if (response.ok) {
-        setFeedbackResult(parsedFeedback.responsesByCandidate);
-      }
     } catch (e) {
       console.log(e);
     }
@@ -57,7 +42,7 @@ export function EmployerFeedback({
 
   return (
     <div>
-      {feedbackResult ? (
+      {responseResult ? (
         <div>
           <p>
             <strong>Результат відгуку: </strong>
@@ -79,7 +64,7 @@ export function EmployerFeedback({
             : "роботодавцю"}
         </button>
       )}
-      {isOpenFeedbackMenu && !feedbackResult && (
+      {isOpenFeedbackMenu && !responseResult && (
         <form className="container my-6 max-w-md" onSubmit={handleSubmitForm}>
           <textarea
             className="my-6 block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"

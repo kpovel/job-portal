@@ -1,6 +1,5 @@
 import { Layout } from "~/component/layout/layout";
 import { dbClient } from "~/server/db";
-import superjson from "superjson";
 import type { InferGetServerSidePropsType } from "next";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { verifyToken } from "~/utils/auth/auth";
@@ -12,17 +11,17 @@ import { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { EmployerApplication } from "~/component/inbox/employerApplication";
 import { EmployerFeedback } from "~/component/inbox/employerFeedback";
-import { UserType } from "~/utils/dbSchema/enums";
-import type { FeedbackResult, Response } from "~/utils/dbSchema/models";
+import type { ResponseBy, ResponseResult } from "~/utils/dbSchema/enums";
 
-export type Nullable<T> = {
-  [P in keyof T]: T[P] | null;
-};
-
-type CandidateOffer = Response & {
-  vacancySpeciality: string | null;
-  feedbackResultResponseDate: Date | null;
-  feedbackResult: Nullable<FeedbackResult>;
+type CandidateOffer = {
+  responseId: string;
+  vacancyId: string;
+  response: string | null;
+  specialty: string;
+  responseResult: ResponseResult | null;
+  coverLetter: string;
+  responseDate: Date;
+  responseBy: ResponseBy;
 };
 
 export default function Offers({
@@ -30,42 +29,45 @@ export default function Offers({
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const authContext = useContext(AuthContext);
 
-  const parsedOffers: CandidateOffer[] = superjson.parse(candidateOffers);
-
   return (
     <Layout>
       <div className="container mx-auto px-4">
         <h2 className="py-3 text-2xl font-bold">
-          {parsedOffers.length
+          {candidateOffers.length
             ? "Список пропозицій"
             : "Ви ще не маєте пропозицій"}
         </h2>
         <div className="grid grid-cols-1 gap-4">
-          {parsedOffers.map((offer) => (
-              <div
-                  key={offer.vacancyId}
-                  className="flex w-full flex-col gap-2 rounded-md border border-gray-300 p-4"
-              >
-                  <Link href={`/job/${offer.vacancyId}`}>
-                      <div className="font-bold text-blue-600 hover:text-blue-800">
-                          {offer.vacancySpeciality}
-                      </div>
-                  </Link>
-                  <p>
-                      <strong>Супровідний лист:</strong> {offer.coverLetter}
-                  </p>
-                  <p>
-                      <strong>Надіслано: </strong>
-                      {format(new Date(offer.responseDate), "d MMMM yyyy, HH:mm")}
-                  </p>
-                  {offer.responseBy.toString() === authContext?.userType ? (
-                      <EmployerApplication feedback={offer.feedbackResult} />
-                  ) : (
-                      <EmployerFeedback
-                          feedback={offer.feedbackResult}
-                          responseId={offer.responseId} />
-                  )}
-              </div>
+          {candidateOffers.map((offer) => (
+            <div
+              key={offer.responseId}
+              className="flex w-full flex-col gap-2 rounded-md border border-gray-300 p-4"
+            >
+              <Link href={`/job/${offer.vacancyId}`}>
+                <div className="font-bold text-blue-600 hover:text-blue-800">
+                  {offer.specialty}
+                </div>
+              </Link>
+              <p>
+                <strong>Супровідний лист:</strong> {offer.coverLetter}
+              </p>
+              <p>
+                <strong>Надіслано: </strong>
+                {format(new Date(offer.responseDate), "d MMMM yyyy, HH:mm")}
+              </p>
+              {offer.responseBy.toString() === authContext?.userType ? (
+                <EmployerApplication
+                  response={offer.response}
+                  responseResult={offer.responseResult}
+                />
+              ) : (
+                <EmployerFeedback
+                  response={offer.response}
+                  responseresult={offer.responseResult}
+                  responseId={offer.responseId}
+                />
+              )}
+            </div>
           ))}
         </div>
       </div>
@@ -89,17 +91,13 @@ export const getServerSideProps = async ({
   }
 
   const candidateQuery = await dbClient.execute(
-    "select userType from User where id = :id",
+    "select candidateId from Candidate where candidateId = :candidateId;",
     {
-      id: verifiedToken.userId,
+      candidateId: verifiedToken.userId,
     },
   );
 
-  const candidateData = candidateQuery.rows[0] as {
-    userType: UserType;
-  };
-
-  if (candidateData.userType !== UserType.CANDIDATE) {
+  if (!candidateQuery.rows.length) {
     return {
       redirect: {
         destination: "/",
@@ -109,53 +107,20 @@ export const getServerSideProps = async ({
   }
 
   const candidateOffersQuery = await dbClient.execute(
-    `select Response.*,
-        FeedbackResult.*,
-        FeedbackResult.responseDate as feedbackResultResponseDate,
-        Response.responseDate as responseDate,
-        Vacancy.specialty as vacancySpeciality
-    from Response
-        left join FeedbackResult on FeedbackResult.responseId = Response.responseId
-        left join Vacancy on Vacancy.questionnaireId = Response.vacancyId
-     where candidateId = :candidateId;`,
+    `select r.responseId, r.vacancyId, v.specialty, fr.response, fr.responseResult, coverLetter, r.responseDate, r.responseBy
+    from Response as r
+    left join FeedbackResult fr on fr.responseId = r.responseId
+    left join Vacancy v on v.questionnaireId = r.responseId
+    where candidateId = :candidateId;`,
     {
       candidateId: verifiedToken.userId,
     },
   );
-
-  const candidateOffers = candidateOffersQuery.rows as (Response &
-    Nullable<FeedbackResult> & {
-      vacancySpeciality: string;
-      feedbackResultResponseDate: Date | null;
-    })[];
-
-  console.log(candidateOffers);
-
-  const formattedOffers: CandidateOffer[] = candidateOffers.map((value) => ({
-    vacancySpeciality: value.vacancySpeciality,
-    responseId: value.responseId,
-    vacancyId: value.vacancyId,
-    resumeId: value.resumeId,
-    employerId: value.employerId,
-    candidateId: value.candidateId,
-    responseDate: value.responseDate,
-    responseBy: value.responseBy,
-    coverLetter: value.coverLetter,
-    feedbackResultResponseDate: value.feedbackResultResponseDate,
-    feedbackResult: {
-      feedbackResultId: value.feedbackResultId,
-      responseId: value.responseId,
-      responseDate: value.responseDate,
-      response: value.response,
-      responseResult: value.responseResult,
-    },
-  }));
-
-  const serializedOffers = superjson.stringify(formattedOffers);
+  const candidateOffers = candidateOffersQuery.rows as CandidateOffer[];
 
   return {
     props: {
-      candidateOffers: serializedOffers,
+      candidateOffers,
     },
   };
 };
