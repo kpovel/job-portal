@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dbClient } from "~/server/db";
-import type { ModerationStatus } from "@prisma/client";
+import type { ModerationStatus } from "~/utils/dbSchema/enums";
 
 export default async function updateModerationStatus(
   req: NextApiRequest,
