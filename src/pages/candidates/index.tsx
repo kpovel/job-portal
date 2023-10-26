@@ -1,25 +1,13 @@
 import { Layout } from "~/component/layout/layout";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
-import superjson from "superjson";
+import { dbClient } from "~/server/db";
 import Head from "next/head";
 import type { InferGetStaticPropsType } from "next";
-import type { User, Candidate, Questionnaire, Resume } from "@prisma/client";
 import { CandidateResumePreview } from "~/component/candidate/resumePreview";
-
-export type ParsedCandidate = User & {
-  candidate:
-    | (Candidate & {
-        questionnaires: (Questionnaire & { resume: Resume | null }) | null;
-      })
-    | null;
-};
+import type { Resume } from "~/utils/dbSchema/models";
 
 export default function Candidates({
-  candidates,
+  acceptedResumes,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
-  const parsedCandidates: ParsedCandidate[] = superjson.parse(candidates);
-
   return (
     <>
       <Head>
@@ -27,20 +15,16 @@ export default function Candidates({
       </Head>
       <Layout>
         <div className="container mx-auto px-4">
-          {parsedCandidates.length ? (
-            <h2 className="py-3 text-2xl font-bold">
-              Список доступних кандидатів
-            </h2>
-          ) : (
-            <h2 className="py-3 text-2xl font-bold">
-              Нарізі ніхто з кандидатів не шукає роботу
-            </h2>
-          )}
+          <h2 className="py-3 text-2xl font-bold">
+            {acceptedResumes.length
+              ? "Список доступних кандидатів"
+              : "Наразі ніхто з кандидатів не шукає роботу"}
+          </h2>
           <div className="grid grid-cols-1 gap-4">
-            {parsedCandidates.map((candidate) => (
+            {acceptedResumes.map((resume) => (
               <CandidateResumePreview
-                key={candidate.id}
-                candidate={candidate}
+                key={resume.questionnaireId}
+                resume={resume}
               />
             ))}
           </div>
@@ -50,15 +34,22 @@ export default function Candidates({
   );
 }
 
-export const getStaticProps = async () => {
-  const caller = appRouter.createCaller({ prisma });
-  const candidates = await caller.candidate.fetchAvailableCandidates();
-  const serializedCandidates = superjson.stringify(candidates);
+export async function getStaticProps() {
+  const acceptedResumeQuery = await dbClient.execute(`
+      select questionnaireId, workExperience, skills, education, foreignLanguages, interests, achievements, specialty, desiredSalary, employment, updatedAt, candidateId, firstName, lastName
+      from Resume
+      inner join User on User.id = Resume.candidateId
+      where moderationStatus = 'ACCEPTED';`);
+
+  const acceptedResumes = acceptedResumeQuery.rows as (Omit<
+    Resume,
+    "moderationStation"
+  > & { firstName: string; lastName: string })[];
 
   return {
     props: {
-      candidates: serializedCandidates,
+      acceptedResumes,
     },
     revalidate: 20,
   };
-};
+}

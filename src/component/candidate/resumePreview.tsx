@@ -1,60 +1,55 @@
 import Link from "next/link";
-import type { ParsedCandidate } from "~/pages/candidates";
+import type { Resume } from "~/utils/dbSchema/models";
 
 export function CandidateResumePreview({
-  candidate,
+  resume,
 }: {
-  candidate: ParsedCandidate;
+  resume: Omit<Resume, "moderationStation"> & {
+    firstName: string;
+    lastName: string;
+  };
 }) {
   return (
-    <div className="rounded-md border border-gray-300 p-4" key={candidate.id}>
+    <div className="rounded-md border border-gray-300 p-4">
       <Link
-        href={`/candidate/${candidate.id}`}
+        href={`/candidate/${resume.candidateId}`}
         className="mb-3 flex items-center"
       >
         <div>
           <div className="font-bold text-blue-600  hover:text-blue-800">
-            {candidate.firstName} {candidate.lastName}
+            {resume.firstName} {resume.lastName}
           </div>
-          <div className="text-sm text-gray-500">
-            {candidate.candidate?.questionnaires?.resume?.specialty}
-          </div>
+          <div className="text-sm text-gray-500">{resume.specialty}</div>
         </div>
       </Link>
-      {candidate.candidate?.questionnaires?.resume?.workExperience && (
+      {resume.workExperience && (
         <div className="mb-2">
-          <strong>Work Experience:</strong>{" "}
-          {candidate.candidate.questionnaires.resume.workExperience}
+          <strong>Work Experience:</strong> {resume.workExperience}
         </div>
       )}
-      {candidate.candidate?.questionnaires?.resume?.skills && (
+      {resume.skills && (
         <div className="mb-2">
-          <strong>Skills:</strong>{" "}
-          {candidate.candidate.questionnaires.resume.skills}
+          <strong>Skills:</strong> {resume.skills}
         </div>
       )}
-      {candidate.candidate?.questionnaires?.resume?.education && (
+      {resume.education && (
         <div className="mb-2">
-          <strong>Education:</strong>{" "}
-          {candidate.candidate.questionnaires.resume.education}
+          <strong>Education:</strong> {resume.education}
         </div>
       )}
-      {candidate.candidate?.questionnaires?.resume?.foreignLanguages && (
+      {resume.foreignLanguages && (
         <div className="mb-2">
-          <strong>Foreign Languages:</strong>{" "}
-          {candidate.candidate.questionnaires.resume.foreignLanguages}
+          <strong>Foreign Languages:</strong> {resume.foreignLanguages}
         </div>
       )}
-      {candidate.candidate?.questionnaires?.resume?.interests && (
+      {resume.interests && (
         <div className="mb-2">
-          <strong>Interests:</strong>{" "}
-          {candidate.candidate.questionnaires.resume.interests}
+          <strong>Interests:</strong> {resume.interests}
         </div>
       )}
-      {candidate.candidate?.questionnaires?.resume?.achievements && (
+      {resume.achievements && (
         <div className="mb-2">
-          <strong>Achievements:</strong>{" "}
-          {candidate.candidate.questionnaires.resume.achievements}
+          <strong>Achievements:</strong> {resume.achievements}
         </div>
       )}
     </div>
