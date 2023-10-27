@@ -1,52 +1,59 @@
 import { Layout } from "~/component/layout/layout";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
-import superjson from "superjson";
+import { dbClient } from "~/server/db";
 import type { GetStaticPaths, InferGetStaticPropsType } from "next";
-import type { User, Candidate, Questionnaire, Resume } from "@prisma/client";
 import Head from "next/head";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { CandidateProfileViewer } from "~/component/candidate/candidateProfileViewer";
 import { SendJobOffer } from "~/component/candidate/sendJobOffer";
+import type { ModerationStatus } from "~/utils/dbSchema/enums";
 
-export type ParsedCandidate =
-  | (User & {
-      candidate:
-        | (Candidate & {
-            questionnaires: (Questionnaire & { resume: Resume | null }) | null;
-          })
-        | null;
-    })
-  | null;
+export type ResumePreview = {
+  id: string;
+  questionnaireId: string;
+  firstName: string;
+  lastName: string | null;
+  age: string | null;
+  specialty: string | null;
+  workExperience: string | null;
+  skills: string | null;
+  education: string | null;
+  foreignLanguages: string | null;
+  interests: string | null;
+  achievements: string | null;
+  desiredSalary: string | null;
+  employment: string | null;
+  phoneNumber: string | null;
+  email: string | null;
+  linkedinLink: string | null;
+  githubLink: string | null;
+  telegramLink: string | null;
+  moderationStatus: ModerationStatus;
+} | null;
 
 export default function Candidate({
-  candidate,
+  candidateResume,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const authorizedUser = useContext(AuthContext);
-
-  const parsedCandidate: ParsedCandidate = superjson.parse(candidate);
   const isEmployer = authorizedUser?.userType === "EMPLOYER";
-  const isModeratedCandidate =
-    parsedCandidate?.candidate?.questionnaires?.resume?.moderationStatus ===
-    "ACCEPTED";
+  const isModeratedCandidate = candidateResume?.moderationStatus === "ACCEPTED";
   const canSendJobOffer = isEmployer && isModeratedCandidate;
 
   return (
     <>
       <Head>
         <title>
-          Job Portal – {parsedCandidate?.firstName} {parsedCandidate?.lastName}
+          Job Portal – {candidateResume?.firstName} {candidateResume?.lastName}
         </title>
       </Head>
       <Layout>
         <div className="container mx-auto mt-6 flex space-x-4">
           <CandidateProfileViewer
             userType={authorizedUser?.userType}
-            candidateData={parsedCandidate}
+            candidateResume={candidateResume}
           />
         </div>
-        {canSendJobOffer && <SendJobOffer candidateId={parsedCandidate?.id} />}
+        {canSendJobOffer && <SendJobOffer candidateId={candidateResume.id} />}
       </Layout>
     </>
   );
@@ -59,11 +66,16 @@ type StaticPaths = {
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const caller = appRouter.createCaller({ prisma });
-  const candidates = await caller.candidate.fetchAllCandidates();
+  const availableCandidatesQuery = await dbClient.execute(
+    "select candidateId from Resume where moderationStatus = 'ACCEPTED';",
+  );
+
+  const candidates = availableCandidatesQuery.rows as {
+    candidateId: string;
+  }[];
 
   const paths: StaticPaths[] = candidates.map((candidate) => ({
-    params: { candidate: candidate.id },
+    params: { candidate: candidate.candidateId },
   }));
 
   return {
@@ -73,15 +85,40 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 export const getStaticProps = async ({ params }: StaticPaths) => {
-  const caller = appRouter.createCaller({ prisma });
-  const candidate = await caller.candidate.findCandidateById({
-    id: params.candidate,
-  });
-  const serializedCandidate = superjson.stringify(candidate);
+  const candidateResumeQuery = await dbClient.execute(
+    `select id,
+        questionnaireId,
+        firstName,
+        lastName,
+        age,
+        specialty,
+        workExperience,
+        skills,
+        education,
+        foreignLanguages,
+        interests,
+        achievements,
+        desiredSalary,
+        employment,
+        phoneNumber,
+        email,
+        linkedinLink,
+        githubLink,
+        telegramLink,
+        moderationStatus
+      from User
+        inner join Resume on User.id = Resume.candidateId
+      where id = :candidateId;`,
+    {
+      candidateId: params.candidate,
+    },
+  );
+
+  const candidateResume = candidateResumeQuery.rows[0] as ResumePreview;
 
   return {
     props: {
-      candidate: serializedCandidate,
+      candidateResume,
     },
     revalidate: 20,
   };
