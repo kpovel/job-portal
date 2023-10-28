@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import type { CandidateFields } from "~/component/candidate/candidateAccountForm";
+import type { NestedCandidateProfile } from "~/pages/my/profile";
 import { dbClient } from "~/server/db";
 
 export default async function updateProfile(
@@ -21,7 +21,7 @@ export default async function updateProfile(
       telegramLink,
       phoneNumber,
       email,
-    } = req.body as CandidateFields & { id: string };
+    } = req.body as NestedCandidateProfile["candidate"];
 
     await dbClient.execute(
       `update User

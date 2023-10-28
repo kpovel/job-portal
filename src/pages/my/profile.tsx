@@ -7,29 +7,56 @@ import type {
   InferGetServerSidePropsType,
 } from "next";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
 import { verifyToken } from "~/utils/auth/auth";
 import type { VerifyToken } from "~/utils/auth/withoutAuth";
-import superjson from "superjson";
-import type { User, Candidate, Questionnaire, Resume } from "@prisma/client";
+import { dbClient } from "~/server/db";
 
-export type ParsedCandidateData =
-  | (User & {
-      candidate:
-        | (Candidate & {
-            questionnaires: (Questionnaire & { resume: Resume | null }) | null;
-          })
-        | null;
-    })
-  | null;
+export type CandidateDetails = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  age: string | null;
+  phoneNumber: string | null;
+  email: string | null;
+  linkedinLink: string | null;
+  githubLink: string | null;
+  telegramLink: string | null;
+  workExperience: string | null;
+  skills: string | null;
+  education: string | null;
+  foreignLanguages: string | null;
+  interests: string | null;
+  achievements: string | null;
+  specialty: string | null;
+  desiredSalary: string | null;
+  employment: string | null;
+};
+
+type CandidateProfileKeys =
+  | "id"
+  | "firstName"
+  | "lastName"
+  | "age"
+  | "phoneNumber"
+  | "email"
+  | "linkedinLink"
+  | "githubLink"
+  | "telegramLink";
+type CandidateResumeKeys = Exclude<
+  keyof CandidateDetails,
+  CandidateProfileKeys
+>;
+
+type PickByKeys<T, K extends keyof T> = Pick<T, K>;
+
+export type NestedCandidateProfile = {
+  candidate: PickByKeys<CandidateDetails, CandidateProfileKeys>;
+  resume: PickByKeys<CandidateDetails, CandidateResumeKeys>;
+};
 
 export default function Profile({
-  candidateData,
+  nestedCandidateProfile,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const parsedCandidateData: ParsedCandidateData =
-    superjson.parse(candidateData);
-
   return (
     <Layout>
       <div className="isolate px-6 lg:px-8">
@@ -72,13 +99,18 @@ export default function Profile({
                 className="rounded-b-md bg-white p-5 outline-none"
                 value="tab1"
               >
-                <CandidateAccountForm candidateData={parsedCandidateData} />
+                <CandidateAccountForm
+                  candidateData={nestedCandidateProfile.candidate}
+                />
               </Tabs.Content>
               <Tabs.Content
                 value="tab2"
                 className="rounded-b-md bg-white p-5 outline-none"
               >
-                <CandidateResumeForm candidateData={parsedCandidateData} />
+                <CandidateResumeForm
+                  candidateResume={nestedCandidateProfile.resume}
+                  candidateId={nestedCandidateProfile.candidate.id}
+                />
               </Tabs.Content>
             </Tabs.Root>
           </div>
@@ -94,14 +126,7 @@ export const getServerSideProps = async ({
   const authToken = req.cookies[AUTHORIZATION_TOKEN_KEY] ?? "";
   const verifiedToken = verifyToken(authToken) as VerifyToken | null;
 
-  const caller = appRouter.createCaller({ prisma });
-  const candidateData = await caller.candidate.findCandidateById({
-    id: verifiedToken?.userId ?? "",
-  });
-
-  const isUserCandidate = candidateData?.userType === "CANDIDATE";
-
-  if (!verifiedToken || !isUserCandidate) {
+  if (!verifiedToken) {
     return {
       redirect: {
         destination: "/",
@@ -110,12 +135,72 @@ export const getServerSideProps = async ({
     };
   }
 
-  const serializedCandidateData = superjson.stringify(candidateData);
+  const candidateProfileQuery = await dbClient.execute(
+    `select id,
+       firstName,
+       lastName,
+       age,
+       phoneNumber,
+       email,
+       linkedinLink,
+       githubLink,
+       telegramLink,
+       workExperience,
+       skills,
+       education,
+       foreignLanguages,
+       interests,
+       achievements,
+       specialty,
+       desiredSalary,
+       employment
+    from User
+         inner join Resume on Resume.candidateId = User.id
+    where id = :candidateId
+       and userType = 'CANDIDATE';`,
+    { candidateId: verifiedToken.userId },
+  );
+
+  const candidateProfile = candidateProfileQuery
+    .rows[0] as CandidateDetails | null;
+
+  if (!candidateProfile) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const nestedCandidateProfile: NestedCandidateProfile = {
+    candidate: {
+      id: candidateProfile.id,
+      firstName: candidateProfile.firstName,
+      lastName: candidateProfile.lastName,
+      age: candidateProfile.age,
+      phoneNumber: candidateProfile.phoneNumber,
+      email: candidateProfile.email,
+      linkedinLink: candidateProfile.linkedinLink,
+      githubLink: candidateProfile.githubLink,
+      telegramLink: candidateProfile.telegramLink,
+    },
+    resume: {
+      workExperience: candidateProfile.workExperience,
+      skills: candidateProfile.skills,
+      education: candidateProfile.education,
+      foreignLanguages: candidateProfile.foreignLanguages,
+      interests: candidateProfile.interests,
+      achievements: candidateProfile.achievements,
+      specialty: candidateProfile.specialty,
+      desiredSalary: candidateProfile.desiredSalary,
+      employment: candidateProfile.employment,
+    },
+  };
 
   return {
     props: {
-      candidateData: serializedCandidateData,
+      nestedCandidateProfile,
     },
   };
 };
-
