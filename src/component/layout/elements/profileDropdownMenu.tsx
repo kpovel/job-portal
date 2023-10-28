@@ -5,7 +5,7 @@ import { classNames } from "~/component/layout/elements/header";
 import { AuthContext } from "~/utils/auth/authContext";
 import Cookie from "js-cookie";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
-import type { UserType } from "@prisma/client";
+import type { UserType } from "~/utils/dbSchema/enums";
 
 export function ProfileDropdownMenu() {
   const authContext = useContext(AuthContext);

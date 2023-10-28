@@ -1,7 +1,7 @@
-import type { Response, Vacancy } from "@prisma/client";
-import React, { type FormEvent, useContext, useEffect, useState } from "react";
+import { type FormEvent, useContext, useEffect, useState } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { ChooseVacancyToOffer } from "./chooseVacancyToOffer";
+import type { Vacancy } from "~/utils/dbSchema/models";
 
 export function SendJobOffer({ candidateId }: { candidateId: string }) {
   const authContext = useContext(AuthContext);

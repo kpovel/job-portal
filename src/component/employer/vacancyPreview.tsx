@@ -1,6 +1,6 @@
-import type { Vacancy } from "@prisma/client";
 import Link from "next/link";
 import { format } from "date-fns";
+import type { Vacancy } from "~/utils/dbSchema/models";
 
 export function VacancyPreview({
   vacancy,
