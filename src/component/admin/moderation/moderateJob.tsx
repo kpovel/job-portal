@@ -1,12 +1,14 @@
 import { SelectModerationStatus } from "~/component/admin/moderation/selectModerationStatus";
-import React, { useState } from "react";
-import type { ModerationStatus } from "@prisma/client";
-import type { JobInformation } from "~/pages/job/[job]";
+import { useState } from "react";
+import type { ModerationStatus } from "~/utils/dbSchema/enums";
 
-export function ModerateJob({ jobInfo }: { jobInfo: JobInformation }) {
-  const moderationStatus = jobInfo.vacancy?.moderationStatus ?? "PENDING";
-  const questionnaireId = jobInfo.vacancy?.questionnaireId;
-
+export function ModerateJob({
+  questionnaireId,
+  moderationStatus,
+}: {
+  questionnaireId: string;
+  moderationStatus: ModerationStatus;
+}) {
   const [selectedStatus, setSelectedStatus] =
     useState<ModerationStatus>(moderationStatus);
 
@@ -15,7 +17,7 @@ export function ModerateJob({ jobInfo }: { jobInfo: JobInformation }) {
   }
 
   async function updateModerationStatus(
-    moderationStatus: ModerationStatus
+    moderationStatus: ModerationStatus,
   ): Promise<void> {
     try {
       const response = await fetch("/api/employer/updateModerationStatus", {

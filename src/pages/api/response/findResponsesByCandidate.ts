@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
+import { dbClient } from "~/server/db";
+import type { ModerationStatus } from "~/utils/dbSchema/enums";
 
 export default async function findResponsesByCandidate(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
     res.status(405).json({ message: "Method not allowed" });
@@ -16,19 +16,30 @@ export default async function findResponsesByCandidate(
       vacancyId: string;
     };
 
-    const caller = appRouter.createCaller({ prisma });
-    const responsesByCandidate = await caller.response.findResponsesByCandidate(
+    const responsesQuery = await dbClient.execute(
+      "select * from Response where candidateId = :candidateId and vacancyId = :vacancyId;",
+      { candidateId, vacancyId },
+    );
+
+    const resumeQuery = await dbClient.execute(
+      "select moderationStatus from Resume where candidateId = :candidateId;",
       {
         candidateId,
-        vacancyId,
-      }
+      },
     );
+
+    const { moderationStatus } = resumeQuery.rows[0] as {
+      moderationStatus: ModerationStatus;
+    };
 
     res.status(200).json({
       message: "Successfully receive responses",
-      responsesByCandidate,
+      isSentResponse: !!responsesQuery.rows.length,
+      resumeModerationStatus: moderationStatus,
     });
   } catch (error) {
-    res.status(400).json({ message: "Something went wrong", error });
+    res
+      .status(400)
+      .json({ message: "Failed to find candidate response", error });
   }
 }

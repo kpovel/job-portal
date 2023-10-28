@@ -1,10 +1,10 @@
-import type { Vacancy } from "@prisma/client";
 import * as Select from "@radix-ui/react-select";
 import {
   CheckIcon,
   ChevronDownIcon,
   ChevronUpIcon,
 } from "@radix-ui/react-icons";
+import type { Vacancy } from "~/utils/dbSchema/models";
 
 export function ChooseVacancyToOffer({
   vacancies,

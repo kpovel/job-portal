@@ -1,4 +1,4 @@
-import type { ModerationStatus } from "@prisma/client";
+import type { ModerationStatus } from "~/utils/dbSchema/enums";
 
 export function ModerationLabel({
   moderationStatus,

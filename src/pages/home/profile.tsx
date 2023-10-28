@@ -3,14 +3,21 @@ import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
 } from "next";
-import superjson from "superjson";
-import type { Employer, Questionnaire, User, Vacancy } from "@prisma/client";
-import React, { type ChangeEvent, type FormEvent, useState } from "react";
+import type {
+  Employer,
+  Questionnaire,
+  User,
+  Vacancy,
+} from "~/utils/dbSchema/models";
+import { type ChangeEvent, type FormEvent, useState } from "react";
 import { FormInput } from "~/component/profileForm/formInput";
-import type { CandidateFields as UserFields } from "~/component/candidate/candidateAccountForm";
 import { EmployerNavigationMenu } from "~/component/employer/employerNavigationMenu";
 import Head from "next/head";
-import { getEmployerData } from "~/utils/getEmployerData/getEmployerData";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+import type { VerifyToken } from "~/utils/auth/withoutAuth";
+import { verifyToken } from "~/utils/auth/auth";
+import { dbClient } from "~/server/db";
+import { UserType } from "~/utils/dbSchema/enums";
 
 export type EmployerData =
   | User & {
@@ -20,24 +27,33 @@ export type EmployerData =
           };
     };
 
+type EmployerProfile = {
+  id: string;
+  userType: UserType;
+  firstName: string | null;
+  lastName: string | null;
+  phoneNumber: string | null;
+  email: string | null;
+  linkedinLink: string | null;
+};
+
+type FormData = Omit<EmployerProfile, "id" | "userType">;
+
+type NonNullableKeys<T> = {
+  [K in keyof T]: NonNullable<T[K]>;
+};
+
+type NonNullableFormData = NonNullableKeys<FormData>;
+
 export default function EmployerProfile({
-  employer,
+  employerProfile,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const parsedEmployerData: EmployerData = superjson.parse(employer);
-
-  type FormData = {
-    [key: string]: string | number;
-  } & UserFields;
-
-  const [formData, setFormData] = useState<FormData>({
-    firstName: parsedEmployerData?.firstName ?? "",
-    lastName: parsedEmployerData?.lastName ?? "",
-    age: parsedEmployerData?.age ?? "",
-    phoneNumber: parsedEmployerData?.phoneNumber ?? "",
-    email: parsedEmployerData?.email ?? "",
-    linkedinLink: parsedEmployerData?.linkedinLink ?? "",
-    githubLink: parsedEmployerData?.githubLink ?? "",
-    telegramLink: parsedEmployerData?.telegramLink ?? "",
+  const [formData, setFormData] = useState<NonNullableFormData>({
+    firstName: employerProfile.firstName ?? "",
+    lastName: employerProfile.lastName ?? "",
+    phoneNumber: employerProfile.phoneNumber ?? "",
+    email: employerProfile.email ?? "",
+    linkedinLink: employerProfile.linkedinLink ?? "",
   });
 
   function handleUpdateForm(event: ChangeEvent<HTMLInputElement>) {
@@ -58,7 +74,7 @@ export default function EmployerProfile({
       await fetch("/api/user/updateProfile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, id: parsedEmployerData?.id }),
+        body: JSON.stringify({ ...formData, id: employerProfile.id }),
       });
     } catch (e) {
       console.log(e);
@@ -138,8 +154,51 @@ export default function EmployerProfile({
   );
 }
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  return await getEmployerData(context);
+export const getServerSideProps = async ({
+  req,
+}: GetServerSidePropsContext) => {
+  const authToken = req?.cookies[AUTHORIZATION_TOKEN_KEY];
+  if (!authToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const verifiedToken = verifyToken(authToken) as VerifyToken | null;
+  if (!verifiedToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const employerProfileQuery = await dbClient.execute(
+    `select id, userType, firstName, lastName, phoneNumber, email, linkedinLink
+      from User
+      left join Employer on User.id = Employer.employerId
+      where id = :employerId;`,
+    { employerId: verifiedToken.userId },
+  );
+
+  const employerProfile = employerProfileQuery.rows[0] as EmployerProfile;
+
+  if (employerProfile.userType !== UserType.EMPLOYER) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {
+      employerProfile,
+    },
+  };
 };

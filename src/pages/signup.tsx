@@ -6,8 +6,8 @@ import { AuthLayout } from "~/component/auth/authLayout";
 import Link from "next/link";
 import { AuthForm } from "~/component/auth/authForm";
 import { Layout } from "~/component/layout/layout";
-import { type User } from ".prisma/client";
 import { withoutAuth } from "~/utils/auth/withoutAuth";
+import type { User } from "~/utils/dbSchema/models";
 
 const Signup = () => {
   const router = useRouter();

@@ -1,21 +1,20 @@
-import type { FeedbackResult, ResponseResult } from "@prisma/client";
 import { type FormEvent, useState, useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
+import { ResponseResult, UserType } from "dbSchema/enums";
 
 export function EmployerFeedback({
-  feedback,
+  response,
+  responseresult,
   responseId,
 }: {
-  feedback: FeedbackResult | null;
+  response: string | null;
+  responseresult: ResponseResult | null;
   responseId: string;
 }) {
-  const [feedbackResult, setFeedbackResult] = useState<FeedbackResult | null>(
-    feedback,
-  );
   const [isOpenFeedbackMenu, setIsOpenFeedbackMany] = useState<boolean>(false);
   const [feedbackContent, setFeedbackContent] = useState<string>("");
   const [responseResult, setResponseResult] = useState<ResponseResult | null>(
-    null,
+    responseresult,
   );
   const authContext = useContext(AuthContext);
 
@@ -26,7 +25,8 @@ export function EmployerFeedback({
 
   async function sendFeedbackResult() {
     try {
-      const response = await fetch("/api/response/createFeedbackResult", {
+      // should I handle the request?
+      await fetch("/api/response/createFeedbackResult", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -35,11 +35,6 @@ export function EmployerFeedback({
           feedbackContent,
         }),
       });
-      const parsedFeedback = (await response.json()) as FeedbackResult;
-
-      if (response.ok) {
-        setFeedbackResult(parsedFeedback);
-      }
     } catch (e) {
       console.log(e);
     }
@@ -47,15 +42,15 @@ export function EmployerFeedback({
 
   return (
     <div>
-      {feedbackResult ? (
+      {responseResult ? (
         <div>
           <p>
             <strong>Результат відгуку: </strong>
-            {feedbackResult.responseResult}
+            {responseResult}
           </p>
           <p className="pt-2">
             <strong>Відповідь на пропозицію: </strong>
-            {feedbackResult.response}
+            {response}
           </p>
         </div>
       ) : (
@@ -64,10 +59,12 @@ export function EmployerFeedback({
           className="mt-2 rounded-md border bg-gray-300 p-2"
         >
           Відповісти{" "}
-          {authContext?.userType === "EMPLOYER" ? "кандидату" : "роботодавцю"}
+          {authContext?.userType === UserType.EMPLOYER
+            ? "кандидату"
+            : "роботодавцю"}
         </button>
       )}
-      {isOpenFeedbackMenu && !feedbackResult && (
+      {isOpenFeedbackMenu && !responseResult && (
         <form className="container my-6 max-w-md" onSubmit={handleSubmitForm}>
           <textarea
             className="my-6 block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
@@ -79,14 +76,14 @@ export function EmployerFeedback({
             <button
               type="submit"
               className="rounded-md border bg-red-400 p-2"
-              onClick={() => setResponseResult("REJECTED")}
+              onClick={() => setResponseResult(ResponseResult.REJECTED)}
             >
               Відхилити
             </button>
             <button
               type="submit"
               className="rounded-md border bg-green-400 p-2"
-              onClick={() => setResponseResult("ACCEPTED")}
+              onClick={() => setResponseResult(ResponseResult.ACCEPTED)}
             >
               Прийняти
             </button>

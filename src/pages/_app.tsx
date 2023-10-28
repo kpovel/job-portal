@@ -1,5 +1,4 @@
 import { type AppType } from "next/app";
-import { api } from "~/utils/api";
 import { AuthContext } from "~/utils/auth/authContext";
 import useAuth from "~/utils/auth/useAuth";
 import "~/styles/globals.css";
@@ -17,4 +16,4 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
   );
 };
 
-export default api.withTRPC(MyApp);
+export default MyApp;

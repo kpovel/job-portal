@@ -1,10 +1,8 @@
 import { type GetServerSideProps } from "next";
-import { parse as parseCookies } from "cookie";
 import { type JwtPayload } from "jsonwebtoken";
-import { appRouter } from "~/server/api/root";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { verifyToken } from "~/utils/auth/auth";
-import { prisma } from "~/server/db";
+import { dbClient } from "~/server/db";
 
 export type VerifyToken = JwtPayload & {
   userId: string;
@@ -13,19 +11,24 @@ export type VerifyToken = JwtPayload & {
 export const withoutAuth = (): GetServerSideProps => {
   return async (context) => {
     try {
-      const parsedCookies = parseCookies(context.req.headers.cookie ?? "");
+      const authorizationToken = context.req.cookies[AUTHORIZATION_TOKEN_KEY];
 
-      const authorizationToken = parsedCookies[AUTHORIZATION_TOKEN_KEY] ?? "";
+      if (!authorizationToken) {
+        return { props: {} };
+      }
+
       const verifiedToken = verifyToken(
-        authorizationToken
+        authorizationToken,
       ) as VerifyToken | null;
-      const caller = appRouter.createCaller({ prisma });
 
-      const isUserAuthorized = await caller.auth.findUserById({
-        id: verifiedToken?.userId ?? "",
-      });
+      const authorizedUser = await dbClient.execute(
+        "select id from User where id = :userId;",
+        {
+          userId: verifiedToken?.userId,
+        },
+      );
 
-      if (!isUserAuthorized) {
+      if (!authorizedUser.rows.length) {
         return { props: {} };
       }
 

@@ -1,6 +1,6 @@
-import React, { type ChangeEvent, type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useState } from "react";
 import { FormInput } from "~/component/profileForm/formInput";
-import type { ParsedCandidateData } from "~/pages/my/profile";
+import type { NestedCandidateProfile } from "~/pages/my/profile";
 
 export type FormInputConfig = {
   label: string;
@@ -69,15 +69,6 @@ const formInputs: FormInputConfig[] = [
   },
 ];
 
-/**
- * CandidateAccountForm component for rendering a form that allows candidates to update their account data.
- *
- * @prop {Function} onFormSubmit - A function that handles form submission.
- */
-type CandidateAccountFormProps = {
-  candidateData: ParsedCandidateData;
-};
-
 export type CandidateFields = {
   firstName: string;
   lastName: string;
@@ -91,20 +82,25 @@ export type CandidateFields = {
 
 type FormData = {
   [key: string]: string;
-} & CandidateFields;
+} & Omit<NestedCandidateProfile["candidate"], "id">;
 
+/**
+ * CandidateAccountForm component for rendering a form that allows candidates to update their account data.
+ */
 export function CandidateAccountForm({
   candidateData,
-}: CandidateAccountFormProps) {
+}: {
+  candidateData: NestedCandidateProfile["candidate"];
+}) {
   const [formData, setFormData] = useState<FormData>({
-    firstName: candidateData?.firstName ?? "",
-    lastName: candidateData?.lastName ?? "",
-    age: candidateData?.age ?? "",
-    phoneNumber: candidateData?.phoneNumber ?? "",
-    email: candidateData?.email ?? "",
-    linkedinLink: candidateData?.linkedinLink ?? "",
-    githubLink: candidateData?.githubLink ?? "",
-    telegramLink: candidateData?.telegramLink ?? "",
+    firstName: candidateData.firstName ?? "",
+    lastName: candidateData.lastName ?? "",
+    age: candidateData.age ?? "",
+    phoneNumber: candidateData.phoneNumber ?? "",
+    email: candidateData.email ?? "",
+    linkedinLink: candidateData.linkedinLink ?? "",
+    githubLink: candidateData.githubLink ?? "",
+    telegramLink: candidateData.telegramLink ?? "",
   });
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {

@@ -1,72 +1,54 @@
 import { Layout } from "~/component/layout/layout";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
+import { dbClient } from "~/server/db";
 import type { GetStaticPaths, InferGetStaticPropsType } from "next";
-import superjson from "superjson";
-import type { Employer, User, Vacancy } from "@prisma/client";
 import Head from "next/head";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { format } from "date-fns";
 import { renderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
 import { renderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
 import { AuthContext } from "~/utils/auth/authContext";
 import { ModerateJob } from "~/component/admin/moderation/moderateJob";
 import { VacancyResponse } from "~/component/vacancy/vacancyResponse";
+import type { Vacancy } from "~/utils/dbSchema/models";
 
-export type JobInformation = {
-  vacancy: Vacancy | null;
-  employer: (User & { employer: Employer | null }) | null;
+type VacancyPreview = Vacancy & {
+  companyName: string | null;
+  companyAddress: string | null;
+  phoneNumber: string | null;
+  email: string | null;
+  linkedinLink: string | null;
 };
 
 export default function Job({
-  jobInformation,
+  vacancy,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const authContext = useContext(AuthContext);
   const isAdmin = authContext?.userType === "ADMIN";
   const isCandidate = authContext?.userType === "CANDIDATE";
 
-  const parsedJobInformation: JobInformation = superjson.parse(jobInformation);
-
   return (
     <>
       <Head>
-        <title>Job Portal – {parsedJobInformation.vacancy?.specialty}</title>
+        <title>Job Portal – {vacancy.specialty}</title>
       </Head>
       <Layout>
         <div className="container mx-auto mt-6 flex flex-row gap-4">
           <div className="basis-2/3 rounded-lg border bg-white p-6 shadow-lg">
-            <h2 className="mb-6 text-2xl font-bold">
-              {parsedJobInformation.vacancy?.specialty}
-            </h2>
-            {renderQuestionnaireDetail(
-              "Обов'язки",
-              parsedJobInformation.vacancy?.duties
-            )}
-            {renderQuestionnaireDetail(
-              "Вимоги",
-              parsedJobInformation.vacancy?.requirements
-            )}
-            {renderQuestionnaireDetail(
-              "Умови",
-              parsedJobInformation.vacancy?.conditions
-            )}
-            {renderQuestionnaireDetail(
-              "Графік роботи",
-              parsedJobInformation.vacancy?.workSchedule
-            )}
-            {renderQuestionnaireDetail(
-              "Тип зайнятості",
-              parsedJobInformation.vacancy?.employment
-            )}
+            <h2 className="mb-6 text-2xl font-bold">{vacancy.specialty}</h2>
+            {renderQuestionnaireDetail("Обов'язки", vacancy.duties)}
+            {renderQuestionnaireDetail("Вимоги", vacancy.requirements)}
+            {renderQuestionnaireDetail("Умови", vacancy.conditions)}
+            {renderQuestionnaireDetail("Графік роботи", vacancy.workSchedule)}
+            {renderQuestionnaireDetail("Тип зайнятості", vacancy.employment)}
             <div className="mb-4">
               <strong className="text-lg font-semibold">
                 Дата публікації:
               </strong>
               <p className="mt-2 text-gray-700">
-                {parsedJobInformation.vacancy?.dateOfPublication &&
+                {vacancy.dateOfPublication &&
                   format(
-                    parsedJobInformation.vacancy.dateOfPublication,
-                    "d MMMM yyyy, HH:mm"
+                    new Date(vacancy.dateOfPublication),
+                    "d MMMM yyyy, HH:mm",
                   )}
               </p>
             </div>
@@ -74,43 +56,37 @@ export default function Job({
           <div className="w-28 basis-1/3 rounded-lg border bg-white p-6 shadow-lg">
             {renderQuestionnaireInfo(
               "Salary",
-              parsedJobInformation.vacancy?.salary &&
-                `$${parsedJobInformation.vacancy.salary}`
+              vacancy.salary && `$${vacancy.salary}`,
             )}
-            {renderQuestionnaireInfo(
-              "Company name",
-              parsedJobInformation.employer?.employer?.companyName
-            )}
-            {renderQuestionnaireInfo(
-              "Company address",
-              parsedJobInformation.employer?.employer?.companyAddress
-            )}
+            {renderQuestionnaireInfo("Company name", vacancy.companyName)}
+            {renderQuestionnaireInfo("Company address", vacancy.companyAddress)}
             {renderQuestionnaireInfo(
               "Phone number",
-              parsedJobInformation.employer?.phoneNumber,
-              parsedJobInformation.employer?.phoneNumber &&
-                `tel:${parsedJobInformation.employer.phoneNumber}`
+              vacancy.phoneNumber,
+              vacancy.phoneNumber && `tel:${vacancy.phoneNumber}`,
             )}
             {renderQuestionnaireInfo(
               "Email",
-              parsedJobInformation.employer?.email,
-              parsedJobInformation.employer?.email &&
-                `mailto:${parsedJobInformation.employer.email}`
+              vacancy.email,
+              vacancy.email && `mailto:${vacancy.email}`,
             )}
             {renderQuestionnaireInfo(
               "Linkedin link",
-              parsedJobInformation.employer?.linkedinLink,
-              parsedJobInformation.employer?.linkedinLink
+              vacancy.linkedinLink,
+              vacancy.linkedinLink,
             )}
-            {isAdmin && <ModerateJob jobInfo={parsedJobInformation} />}
+            {isAdmin && (
+              <ModerateJob
+                moderationStatus={vacancy.moderationStatus}
+                questionnaireId={vacancy.questionnaireId}
+              />
+            )}
           </div>
         </div>
         {isCandidate && (
           <VacancyResponse
-            vacancyId={parsedJobInformation.vacancy?.questionnaireId || ""}
-            employerId={
-              parsedJobInformation.employer?.employer?.employerId || ""
-            }
+            vacancyId={vacancy.questionnaireId}
+            employerId={vacancy.employerId}
           />
         )}
       </Layout>
@@ -125,10 +101,12 @@ type StaticPath = {
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const caller = appRouter.createCaller({ prisma });
-  const jobs = await caller.employer.fetchAllVacancies();
+  const vacancyQuery = await dbClient.execute(
+    "select questionnaireId from Vacancy;",
+  );
+  const vacancies = vacancyQuery.rows as { questionnaireId: string }[];
 
-  const paths: StaticPath[] = jobs.map((job) => ({
+  const paths: StaticPath[] = vacancies.map((job) => ({
     params: { job: job.questionnaireId },
   }));
 
@@ -139,16 +117,25 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 export const getStaticProps = async ({ params }: StaticPath) => {
-  const caller = appRouter.createCaller({ prisma });
-  const jobInformation = await caller.employer.informationAboutVacancy({
-    vacancyId: params.job,
-  });
+  const vacancyQuery = await dbClient.execute(
+    `select Vacancy.*,
+       companyName,
+       companyAddress,
+       phoneNumber,
+       email,
+       linkedinLink
+    from Vacancy
+         inner join Employer on Employer.employerId = Vacancy.employerId
+         inner join User on User.id = Vacancy.employerId
+    where questionnaireId = :questionnaireId;`,
+    { questionnaireId: params.job },
+  );
 
-  const serializedJob = superjson.stringify(jobInformation);
+  const vacancy = vacancyQuery.rows[0] as VacancyPreview;
 
   return {
     props: {
-      jobInformation: serializedJob,
+      vacancy,
     },
     revalidate: 20,
   };

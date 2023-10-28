@@ -1,7 +1,6 @@
-import React, { type ChangeEvent, type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useState } from "react";
 import { FormInput } from "~/component/profileForm/formInput";
-import type { ParsedCandidateData } from "~/pages/my/profile";
-import type { Resume } from "@prisma/client";
+import type { NestedCandidateProfile } from "~/pages/my/profile";
 
 type ResumeInput = {
   label: string;
@@ -67,51 +66,27 @@ const resumeInputs: ResumeInput[] = [
   },
 ];
 
-type CandidateResumeFormProps = {
-  candidateData: ParsedCandidateData;
-};
-
-export type CandidateResumeFormData = {
-  workExperience: string;
-  skills: string;
-  education: string;
-  foreignLanguages: string;
-  interests: string;
-  achievements: string;
-  specialty: string;
-  desiredSalary: string;
-  employment: string;
-};
-
 type FormData = {
   [key: string]: string;
-} & CandidateResumeFormData;
+} & NestedCandidateProfile["resume"];
 
 export function CandidateResumeForm({
-  candidateData,
-}: CandidateResumeFormProps) {
-  const {
-    workExperience,
-    skills,
-    education,
-    foreignLanguages,
-    interests,
-    achievements,
-    specialty,
-    desiredSalary,
-    employment,
-  } = candidateData?.candidate?.questionnaires?.resume as Resume;
-
+  candidateResume,
+  candidateId,
+}: {
+  candidateResume: NestedCandidateProfile["resume"];
+  candidateId: string
+}) {
   const [formData, setFormData] = useState<FormData>({
-    workExperience: workExperience ?? "",
-    skills: skills ?? "",
-    education: education ?? "",
-    foreignLanguages: foreignLanguages ?? "",
-    interests: interests ?? "",
-    achievements: achievements ?? "",
-    specialty: specialty ?? "",
-    desiredSalary: desiredSalary ?? "",
-    employment: employment ?? "",
+    workExperience: candidateResume.workExperience ?? "",
+    skills: candidateResume.skills ?? "",
+    education: candidateResume.education ?? "",
+    foreignLanguages: candidateResume.foreignLanguages ?? "",
+    interests: candidateResume.interests ?? "",
+    achievements: candidateResume.achievements ?? "",
+    specialty: candidateResume.specialty ?? "",
+    desiredSalary: candidateResume.desiredSalary ?? "",
+    employment: candidateResume.employment ?? "",
   });
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -130,7 +105,7 @@ export function CandidateResumeForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...formData,
-        candidateId: candidateData?.candidate?.candidateId,
+        candidateId
       }),
     });
   }

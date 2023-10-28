@@ -1,13 +1,7 @@
 import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
-import type { ModerationStatus } from "@prisma/client";
-
-const moderationStatuses: ModerationStatus[] = [
-  "ACCEPTED",
-  "PENDING",
-  "REJECTED",
-];
+import { ModerationStatus } from "~/utils/dbSchema/enums";
 
 export function SelectModerationStatus({
   moderationStatus,
@@ -35,7 +29,7 @@ export function SelectModerationStatus({
           leaveTo="opacity-0"
         >
           <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-            {moderationStatuses.map((moderationStatus, moderationId) => (
+            {Object.values(ModerationStatus).map((moderationStatus, moderationId) => (
               <Listbox.Option
                 key={moderationId}
                 className={({ active }) =>

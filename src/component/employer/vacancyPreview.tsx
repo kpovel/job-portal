@@ -1,16 +1,18 @@
-import type { Vacancy } from "@prisma/client";
 import Link from "next/link";
 import { format } from "date-fns";
+import type { Vacancy } from "~/utils/dbSchema/models";
 
-export function VacancyPreview({ vacancy }: { vacancy: Vacancy }) {
+export function VacancyPreview({
+  vacancy,
+}: {
+  vacancy: Omit<Vacancy, "employerId" | "moderationStatus">;
+}) {
   return (
-    <div className="rounded-md border border-gray-300 p-4 w-full">
+    <div className="w-full rounded-md border border-gray-300 p-4">
       <Link href={`/job/${vacancy.questionnaireId}`}>
         <div className="mb-3 flex items-center">
-          <div>
-            <div className="font-bold text-blue-600 hover:text-blue-800">
-              {vacancy.specialty}
-            </div>
+          <div className="font-bold text-blue-600 hover:text-blue-800">
+            {vacancy.specialty}
           </div>
         </div>
       </Link>
@@ -46,7 +48,7 @@ export function VacancyPreview({ vacancy }: { vacancy: Vacancy }) {
       )}
       <div className="mb-2">
         <strong>Опубліковано:</strong>{" "}
-        {format(vacancy.dateOfPublication, "d MMMM yyyy, HH:mm")}
+        {format(new Date(vacancy.dateOfPublication), "d MMMM yyyy, HH:mm")}
       </div>
     </div>
   );

@@ -1,39 +1,40 @@
 import Head from "next/head";
 import { Layout } from "~/component/layout/layout";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
+import { dbClient } from "~/server/db";
 import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
 } from "next";
-import { getEmployerData } from "~/utils/getEmployerData/getEmployerData";
-import superjson from "superjson";
-import type { EmployerData } from "~/pages/home/profile";
 import { EmployerNavigationMenu } from "~/component/employer/employerNavigationMenu";
-import React, { type FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import type { VacancyFields } from "~/pages/home/create-vacancy";
-import type { Questionnaire, Vacancy } from "@prisma/client";
 import { VacancyInputField } from "~/component/employer/vacancyInputField";
+import { verifyToken } from "~/utils/auth/auth";
+import type { VerifyToken } from "~/utils/auth/withoutAuth";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+
+type Vacancy = {
+  questionnaireId: string;
+  specialty: string;
+  salary: string | null;
+  duties: string | null;
+  requirements: string | null;
+  conditions: string | null;
+  workSchedule: string | null;
+  employment: string | null;
+};
 
 export default function EditVacancy({
   vacancy,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const parsedVacancy: Questionnaire & {
-    vacancy: Vacancy;
-  } = superjson.parse(vacancy || "");
-
-  type FormData = {
-    [key: string]: string | number;
-  } & VacancyFields;
-
-  const [formData, setFormData] = useState<FormData>({
-    specialty: parsedVacancy.vacancy.specialty || "",
-    salary: parsedVacancy.vacancy.salary || "",
-    duties: parsedVacancy.vacancy.duties || "",
-    requirements: parsedVacancy.vacancy.requirements || "",
-    conditions: parsedVacancy.vacancy.conditions || "",
-    workSchedule: parsedVacancy.vacancy.workSchedule || "",
-    employment: parsedVacancy.vacancy.employment || "",
+  const [formData, setFormData] = useState<VacancyFields>({
+    specialty: vacancy.specialty,
+    salary: vacancy.salary || "",
+    duties: vacancy.duties || "",
+    requirements: vacancy.requirements || "",
+    conditions: vacancy.conditions || "",
+    workSchedule: vacancy.workSchedule || "",
+    employment: vacancy.employment || "",
   });
 
   function handleUpdateForm(event: React.ChangeEvent<HTMLInputElement>) {
@@ -58,7 +59,7 @@ export default function EditVacancy({
         },
         body: JSON.stringify({
           ...formData,
-          questionnaireId: parsedVacancy.vacancy.questionnaireId,
+          questionnaireId: vacancy.questionnaireId,
         }),
       });
     } catch (error) {
@@ -96,26 +97,46 @@ export default function EditVacancy({
   );
 }
 
-export const getServerSideProps = async (
+export async function getServerSideProps(
   context: GetServerSidePropsContext & {
     params: { vacancy: string };
-  }
-) => {
-  const vacancyId = context.params.vacancy;
-  const employer = await getEmployerData(context);
-  const employerSerialized = employer?.props?.employer as string;
-  const employerData: EmployerData = superjson.parse(employerSerialized);
-
-  const caller = appRouter.createCaller({ prisma });
-  const vacancy = await caller.employer.getQuestionnaireById({
-    questionnaireId: vacancyId,
-  });
-
-  if (employerData.id !== vacancy?.employerId) {
+  },
+) {
+  const authToken = context.req?.cookies[AUTHORIZATION_TOKEN_KEY];
+  if (!authToken) {
     return {
-      props: {},
       redirect: {
-        destination: "/jobs",
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const verifiedToken = verifyToken(authToken) as VerifyToken | null;
+  if (!verifiedToken) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  const vacancyQuery = await dbClient.execute(
+    `select questionnaireId, specialty, salary, duties, requirements, conditions, workSchedule, employment
+    from Vacancy where questionnaireId = :questionnaireId and employerId = :employerId;`,
+    {
+      questionnaireId: context.params.vacancy,
+      employerId: verifiedToken.userId,
+    },
+  );
+
+  const vacancy = vacancyQuery.rows[0] as Vacancy | undefined;
+
+  if (!vacancy) {
+    return {
+      redirect: {
+        destination: "/home/vacancies",
         permanent: false,
       },
     };
@@ -123,7 +144,7 @@ export const getServerSideProps = async (
 
   return {
     props: {
-      vacancy: superjson.stringify(vacancy),
+      vacancy,
     },
   };
-};
+}

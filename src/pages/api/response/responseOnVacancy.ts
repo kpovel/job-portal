@@ -1,10 +1,10 @@
+import { randomUUID } from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
+import { dbClient } from "~/server/db";
 
 export default async function responseOnVacancy(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
     res.status(405).json({ message: "Method not allowed" });
@@ -18,17 +18,32 @@ export default async function responseOnVacancy(
       employerId: string;
     };
 
-    const caller = appRouter.createCaller({ prisma });
-    const createdVacancy = await caller.response.responseOnVacancy({
-      candidateId,
-      vacancyId,
-      employerId,
-      coverLetter,
-    });
+    const candidateQuestionaireQuery = await dbClient.execute(
+      "select questionnaireId from Questionnaire where candidateId = :candidateId;",
+      {
+        candidateId,
+      },
+    );
+
+    const candidateQuestionaire = candidateQuestionaireQuery.rows[0] as {
+      questionnaireId: string;
+    };
+
+    await dbClient.execute(
+      `insert into Response (responseId, vacancyId, candidateId, employerId, resumeId, coverLetter, responseBy)
+      values (:responseId, :vacancyId, :candidateId, :employerId, :resumeId, :coverLetter, 'CANDIDATE');`,
+      {
+        responseId: randomUUID(),
+        vacancyId,
+        candidateId,
+        employerId,
+        resumeId: candidateQuestionaire.questionnaireId,
+        coverLetter,
+      },
+    );
 
     res.status(200).json({
       message: "Successfully sent response",
-      createdVacancy,
     });
   } catch (error) {
     res.status(400).json({ message: "Something went wrong", error });

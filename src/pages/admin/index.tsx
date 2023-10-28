@@ -1,20 +1,10 @@
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
-import type {
-  GetServerSidePropsContext,
-  InferGetServerSidePropsType,
-} from "next";
-import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
-import { verifyToken } from "~/utils/auth/auth";
-import type { VerifyToken } from "~/utils/auth/withoutAuth";
+import type { GetServerSidePropsContext } from "next";
 import { Layout } from "~/component/layout/layout";
 import { AdminNavigationMenu } from "~/component/admin/adminNavigationMenu";
-import React from "react";
 import Head from "next/head";
+import { adminOnlyAccess } from "~/utils/admin/adminOnlyAccess";
 
-export default function Admin({}: InferGetServerSidePropsType<
-  typeof getServerSideProps
->) {
+export default function Admin() {
   return (
     <>
       <Head>
@@ -31,32 +21,11 @@ export default function Admin({}: InferGetServerSidePropsType<
   );
 }
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  const authToken = context.req.cookies[AUTHORIZATION_TOKEN_KEY] || "";
-  const verifiedToken = verifyToken(authToken) as VerifyToken | null;
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const isAdmin = await adminOnlyAccess(context);
 
-  if (!verifiedToken) {
+  if (!isAdmin) {
     return {
-      props: {},
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-
-  const caller = appRouter.createCaller({ prisma });
-  const admin = await caller.admin.findAdminById({
-    adminId: verifiedToken.userId,
-  });
-
-  const isValidAdmin = admin && admin.userType === "ADMIN";
-
-  if (!isValidAdmin) {
-    return {
-      props: {},
       redirect: {
         destination: "/",
         permanent: false,
@@ -65,6 +34,6 @@ export const getServerSideProps = async (
   }
 
   return {
-    props: { admin },
+    props: {},
   };
-};
+}

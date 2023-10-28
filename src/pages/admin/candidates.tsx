@@ -1,25 +1,18 @@
 import { Layout } from "~/component/layout/layout";
 import { AdminNavigationMenu } from "~/component/admin/adminNavigationMenu";
-import React from "react";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
-import superjson from "superjson";
 import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
 } from "next";
 import Head from "next/head";
 import { CandidateResumePreview } from "~/component/candidate/resumePreview";
-import type { ParsedCandidate } from "~/pages/candidates";
 import { adminOnlyAccess } from "~/utils/admin/adminOnlyAccess";
+import type { Resume } from "~/utils/dbSchema/models";
+import { dbClient } from "~/server/db";
 
 export default function Candidates({
   unmoderatedCandidates,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const parsedCandidates: ParsedCandidate[] = superjson.parse(
-    unmoderatedCandidates
-  );
-
   return (
     <>
       <Head>
@@ -29,11 +22,11 @@ export default function Candidates({
         <div className="container mx-auto my-4 flex flex-col items-center space-y-8">
           <AdminNavigationMenu />
           <hr className="w-full border-gray-300" />
-          {parsedCandidates.map((candidate) => {
+          {unmoderatedCandidates.map((candidate) => {
             return (
               <CandidateResumePreview
-                candidate={candidate}
-                key={candidate.id}
+                resume={candidate}
+                key={candidate.questionnaireId}
               />
             );
           })}
@@ -43,9 +36,7 @@ export default function Candidates({
   );
 }
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const isAdmin = await adminOnlyAccess(context);
 
   if (!isAdmin) {
@@ -57,16 +48,20 @@ export const getServerSideProps = async (
     };
   }
 
-  const caller = appRouter.createCaller({ prisma });
-  const candidatesWithUnmoderatedResumes =
-    await caller.admin.fetchUnmoderatedCandidates();
-  const serializedCandidates = superjson.stringify(
-    candidatesWithUnmoderatedResumes
-  );
+  const unmoderatedCandidatesQuery = await dbClient.execute(`
+      select questionnaireId, workExperience, skills, education, foreignLanguages, interests, achievements, specialty, desiredSalary, employment, updatedAt, candidateId, firstName, lastName
+      from Resume
+      inner join User on User.id = Resume.candidateId
+      where moderationStatus != 'ACCEPTED';`);
+
+  const unmoderatedCandidates = unmoderatedCandidatesQuery.rows as (Omit<
+    Resume,
+    "moderationStation"
+  > & { firstName: string; lastName: string })[];
 
   return {
     props: {
-      unmoderatedCandidates: serializedCandidates,
+      unmoderatedCandidates,
     },
   };
-};
+}

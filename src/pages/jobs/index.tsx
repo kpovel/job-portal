@@ -1,17 +1,13 @@
 import { Layout } from "~/component/layout/layout";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
-import superjson from "superjson";
 import Head from "next/head";
 import type { InferGetStaticPropsType } from "next";
-import type { Vacancy } from "@prisma/client";
 import { VacancyPreview } from "~/component/employer/vacancyPreview";
+import { dbClient } from "~/server/db";
+import type { Vacancy } from "~/utils/dbSchema/models";
 
 export default function Candidates({
   vacancies,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
-  const parsedVacancies: Vacancy[] = superjson.parse(vacancies);
-
   return (
     <>
       <Head>
@@ -20,12 +16,12 @@ export default function Candidates({
       <Layout>
         <div className="container mx-auto px-4">
           <h2 className="py-3 text-2xl font-bold">
-            {parsedVacancies.length
+            {vacancies.length
               ? "Список доступних вакансій"
               : "Наразі немає доступних вакансій"}
           </h2>
           <div className="grid grid-cols-1 gap-4">
-            {parsedVacancies.map((vacancy) => (
+            {vacancies.map((vacancy) => (
               <VacancyPreview key={vacancy.questionnaireId} vacancy={vacancy} />
             ))}
           </div>
@@ -36,13 +32,18 @@ export default function Candidates({
 }
 
 export const getStaticProps = async () => {
-  const caller = appRouter.createCaller({ prisma });
-  const vacancies = await caller.employer.fetchAvailableVacancies();
-  const serializedVacancies = superjson.stringify(vacancies);
+  const vacanciesQuery = await dbClient.execute(
+    `select questionnaireId, specialty, salary, duties, requirements, conditions, workSchedule, employment, dateOfPublication
+    from Vacancy where moderationStatus = 'ACCEPTED';`,
+  );
+  const vacancies = vacanciesQuery.rows as Omit<
+    Vacancy,
+    "employerId" | "moderationStatus"
+  >[];
 
   return {
     props: {
-      vacancies: serializedVacancies,
+      vacancies,
     },
     revalidate: 20,
   };
