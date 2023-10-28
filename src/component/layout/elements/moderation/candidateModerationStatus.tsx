@@ -1,24 +1,30 @@
-import type { ModerationStatus } from "@prisma/client";
 import { useContext, useEffect, useState } from "react";
-import { api } from "~/utils/api";
 import { AuthContext } from "~/utils/auth/authContext";
 import { ModerationLabel } from "~/component/layout/elements/moderation/moderationLabel";
+import { ModerationStatus } from "~/utils/dbSchema/enums";
 
 export function CandidateModerationStatus() {
   const authContext = useContext(AuthContext);
-  const [moderationStatus, setModerationStatus] =
-    useState<ModerationStatus>("PENDING");
-
-  const { data: candidatesQuestionnaire } =
-    api.candidate.findQuestionnaireByCandidateId.useQuery({
-      candidateId: authContext?.id || "",
-    });
+  const [moderationStatus, setModerationStatus] = useState<ModerationStatus>(
+    ModerationStatus.PENDING,
+  );
 
   useEffect(() => {
-    if (candidatesQuestionnaire) {
-      setModerationStatus(candidatesQuestionnaire.moderationStatus);
-    }
-  }, [candidatesQuestionnaire]);
+    void (async () => {
+      const response = await fetch("/api/candidate/moderationStatus", {
+        method: "POST",
+        body: JSON.stringify({ candidateId: authContext?.id }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const json = (await response.json()) as {
+        moderationStatus: ModerationStatus;
+      };
+      setModerationStatus(json.moderationStatus);
+    })();
+  }, [authContext?.id]);
 
   return <ModerationLabel moderationStatus={moderationStatus} />;
 }
