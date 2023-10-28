@@ -6,7 +6,6 @@ import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
 } from "next";
-import superjson from "superjson";
 import { useRouter } from "next/router";
 import { VacancyInputField } from "~/component/employer/vacancyInputField";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
@@ -34,7 +33,6 @@ export default function CreateVacancy({
   employer,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const router = useRouter();
-  const parsedEmployerData: Employer = superjson.parse(employer);
 
   type FormData = {
     [key: string]: string | number;
@@ -70,7 +68,7 @@ export default function CreateVacancy({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          employerId: parsedEmployerData?.id,
+          employerId: employer.id,
         }),
       });
       if (!createdVacancy.ok) throw new Error("Error creating vacancy");
@@ -149,11 +147,9 @@ export const getServerSideProps = async ({
     };
   }
 
-  const serializedEmployer = superjson.stringify(employer);
-
   return {
     props: {
-      employer: serializedEmployer,
+      employer
     },
   };
 };
