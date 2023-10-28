@@ -1,5 +1,4 @@
 import { Layout } from "~/component/layout/layout";
-import React from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { CandidateAccountForm } from "~/component/candidate/candidateAccountForm";
 import { CandidateResumeForm } from "~/component/candidate/candidateResumeForm";
@@ -25,7 +24,7 @@ export type ParsedCandidateData =
     })
   | null;
 
-function Profile({
+export default function Profile({
   candidateData,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const parsedCandidateData: ParsedCandidateData =
@@ -120,4 +119,3 @@ export const getServerSideProps = async ({
   };
 };
 
-export default Profile;

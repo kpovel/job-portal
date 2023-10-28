@@ -1,19 +1,14 @@
 import { SelectModerationStatus } from "~/component/admin/moderation/selectModerationStatus";
 import React, { useState } from "react";
-import type { ModerationStatus } from "@prisma/client";
-import type { ParsedCandidate } from "~/pages/candidate/[candidate]";
+import type { ModerationStatus } from "~/utils/dbSchema/enums";
 
 export function ModerateCandidate({
-  candidateData,
+  moderationStatus,
+  questionnaireId
 }: {
-  candidateData: ParsedCandidate;
+  moderationStatus: ModerationStatus,
+  questionnaireId: string
 }) {
-  const moderationStatus: ModerationStatus =
-    candidateData?.candidate?.questionnaires?.resume?.moderationStatus ||
-    "PENDING";
-  const questionnaireId =
-    candidateData?.candidate?.questionnaires?.questionnaireId;
-
   const [selectedStatus, setSelectedStatus] =
     useState<ModerationStatus>(moderationStatus);
 
