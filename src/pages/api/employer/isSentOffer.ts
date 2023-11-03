@@ -16,13 +16,18 @@ export default async function reviewJobOffer(
     };
 
     const sentOfferQuery = await dbClient.execute(
-      "select * from Response where candidateId = :candidateId and employerId = :employerId and responseBy = 'EMPLOYER'",
+      `select count(*)
+        from Response
+        where candidateId = :candidateId
+      and employerId = :employerId
+      and responseBy = 'EMPLOYER';`,
       { candidateId, employerId },
     );
+    const sentOffers = sentOfferQuery.rows[0] as {"count(*)": number};
 
     res.status(200).json({
       message: "Successfully reviewed job offer",
-      sentOffer: sentOfferQuery.rows,
+      isSentOffer: !!sentOffers,
     });
   } catch (error) {
     res.status(400).json({ message: "Something went wrong", error });

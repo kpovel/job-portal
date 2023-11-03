@@ -30,7 +30,7 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
 
       type SuccessResponse = {
         message: string;
-        sentOffer: Response[];
+        isSentOffer: boolean;
       };
 
       type ErrorResponse = {
@@ -41,9 +41,8 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
       type OfferResponse = SuccessResponse | ErrorResponse;
 
       const offerResponse = (await isSentOffer.json()) as OfferResponse;
-      if ("sentOffer" in offerResponse) {
-        const numberOfOffers = offerResponse.sentOffer.length;
-        setIsSentOffer(!!numberOfOffers);
+      if ("isSentOffer" in offerResponse) {
+        setIsSentOffer(offerResponse.isSentOffer);
       } else if ("error" in offerResponse) {
         console.error(offerResponse.error);
         setIsSentOffer(true);
@@ -87,7 +86,9 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
   }, [authContext?.id]);
 
   useEffect(() => {
-    void checkIsSentOffer(candidateId, authContext?.id || "");
+    if (authContext?.id) {
+      void checkIsSentOffer(candidateId, authContext.id);
+    }
   }, [authContext?.id, candidateId]);
 
   function handleSubmitCoverLetter(e: FormEvent) {
