@@ -1,40 +1,57 @@
+import Cookies from "js-cookie";
+import { useRouter } from "next/router";
 import { type FormEvent, useState } from "react";
-import { SelectUserType, type UserType } from "~/component/auth/selectUserType";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 
-export interface AuthFormProps {
-  handleFormSubmit: (
-    login: string,
-    password: string,
-    userType?: string
-  ) => Promise<void>;
-  authorizationType: "Log in" | "Sign up";
-}
+type AuthorizationResponse = {
+  message: string;
+  token: string;
+};
 
-// todo: separate this component into 2.
-// SignUp and LogIn
+type AuthorizationFailed = {
+  message: string;
+};
 
-export function AuthForm({
-  handleFormSubmit,
-  authorizationType,
-}: AuthFormProps) {
+export function LogInForm() {
+  const router = useRouter();
   const [login, setLogin] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [selectedUserType, setSelectedUserType] = useState<
-    UserType | undefined
-  >();
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const isFilledForm = login && password;
+
+  async function handleLogIn(login: string, password: string) {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ login, password }),
+      });
+      setIsLoading(false);
+
+      if (response.ok) {
+        const data = (await response.json()) as AuthorizationResponse;
+        Cookies.set(AUTHORIZATION_TOKEN_KEY, data.token, {
+          expires: 30,
+          path: "/",
+        });
+        await router.push("/jobs");
+        return;
+      }
+
+      const errorData = (await response.json()) as AuthorizationFailed;
+      setErrorMessage(errorData.message);
+    } catch (error) {
+      console.error("Network error:", error);
+    }
+  }
 
   function submitForm(e: FormEvent) {
     e.preventDefault();
 
-    authorizationType === "Sign up"
-      ? void handleFormSubmit(login, password, selectedUserType?.type)
-      : void handleFormSubmit(login, password);
+    void handleLogIn(login, password);
   }
-
-  const isFilledForm = {
-    "Log in": login && password,
-    "Sign up": login && password && selectedUserType,
-  };
 
   return (
     <form className="space-y-6" onSubmit={submitForm}>
@@ -80,23 +97,16 @@ export function AuthForm({
           />
         </div>
       </div>
-      {authorizationType !== "Sign up" || (
-        <SelectUserType
-          userType={selectedUserType}
-          onUserTypeChange={setSelectedUserType}
-        />
-      )}
       <button
         type="submit"
-        aria-disabled={!isFilledForm[authorizationType]}
+        disabled={isLoading || !isFilledForm}
         className={`flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
-          !isFilledForm[authorizationType]
-            ? "cursor-not-allowed opacity-50"
-            : ""
+          isLoading || !isFilledForm ? "cursor-not-allowed opacity-50" : ""
         }`}
       >
-        {authorizationType}
+        Log in
       </button>
+      <p className="text-red-500">{errorMessage}</p>
     </form>
   );
 }
