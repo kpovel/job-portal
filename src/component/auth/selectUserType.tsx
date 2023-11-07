@@ -1,17 +1,18 @@
 import { RadioGroup } from "@headlessui/react";
+import { UserType } from "~/utils/dbSchema/enums";
 
-export type UserType = {
-  type: "EMPLOYER" | "CANDIDATE";
+export type UserTypeDescription = {
+  type: UserType.CANDIDATE | UserType.EMPLOYER;
   description: string;
 };
 
-const userTypes: UserType[] = [
+const userTypes: UserTypeDescription[] = [
   {
-    type: "EMPLOYER",
+    type: UserType.EMPLOYER,
     description: "Я роботодавець - шукаю розробників",
   },
   {
-    type: "CANDIDATE",
+    type: UserType.CANDIDATE,
     description: "Я кандидат - шукаю пропозиції",
   },
 ];
@@ -20,14 +21,14 @@ export function SelectUserType({
   userType,
   onUserTypeChange,
 }: {
-  userType: UserType | undefined;
-  onUserTypeChange: (value: UserType) => void;
+  userType: UserTypeDescription | undefined;
+  onUserTypeChange: (value: UserTypeDescription) => void;
 }) {
   return (
     <div className="mx-auto w-full text-sm font-medium leading-6 text-gray-900">
       Оберіть тип користувача:
       <RadioGroup
-        value={userType || { type: "", description: "" }}
+        value={userType || ""}
         onChange={onUserTypeChange}
         className="mt-2"
       >
