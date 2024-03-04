@@ -17,13 +17,11 @@ create table User (
 
     last_name     varchar(191),
     first_name    varchar(191),
-    middle_name   varchar(191), -- delete?
     age           varchar(191),
     phone_number  varchar(191),
     email         varchar(191) unique,
     linkedin_link varchar(191),
-    github_link   varchar(191),
-    telegram_link varchar(191)
+    github_link   varchar(191)
 );
 
 create table Candidate (
@@ -99,7 +97,7 @@ create table Response (
 create table FeedbackResult (
     id                   int unsigned primary key auto_increment,
     feedback_result_uuid char(36) unique              not null,
-    response_id          int unsigned              not null,
+    response_id          int unsigned                 not null,
 
     response             mediumtext                   not null,
     responseDate         datetime                     not null default current_timestamp,
