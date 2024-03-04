@@ -66,9 +66,9 @@ create table Vacancy (
     specialty         varchar(191)                           not null,
     salary            varchar(191),
     duties            varchar(191),
-    requirements      mediumtext,
-    conditions        mediumtext,
-    workSchedule      mediumtext,
+    requirements      text,
+    conditions        text,
+    workSchedule      text,
     employment        varchar(191),
     dateOfPublication datetime                               not null default current_timestamp,
     moderationStatus  enum ('PENDING','ACCEPTED','REJECTED') not null default 'PENDING',
@@ -85,7 +85,7 @@ create table Response (
     vacancy_id    int unsigned                  not null,
     response_by   enum ('CANDIDATE','EMPLOYER') not null,
 
-    cover_letter  mediumtext                    not null,
+    cover_letter  text                          not null,
     response_date datetime                      not null default current_timestamp,
 
     foreign key (candidate_id) references Candidate (candidate_id),
@@ -99,7 +99,7 @@ create table FeedbackResult (
     feedback_result_uuid char(36) unique              not null,
     response_id          int unsigned                 not null,
 
-    response             mediumtext                   not null,
+    response             text                   not null,
     responseDate         datetime                     not null default current_timestamp,
     responseResult       enum ('ACCEPTED','REJECTED') not null,
 
