@@ -1,13 +1,3 @@
-drop table if exists FeedbackResult;
-drop table if exists Response;
-drop table if exists Vacancy;
-drop table if exists Resume;
-drop table if exists Candidate;
-drop table if exists Employer;
-drop table if exists User;
-
--- uuid - 36
-
 create table User (
     id            int unsigned primary key auto_increment,
     user_uuid     char(36)                              not null,
@@ -25,9 +15,7 @@ create table User (
 );
 
 create table Candidate (
-    candidate_id int unsigned primary key,
-
-    foreign key (candidate_id) references User (id)
+    candidate_id int unsigned primary key
 );
 
 create table Resume (
@@ -45,17 +33,13 @@ create table Resume (
     specialty         varchar(191),
     desired_salary    varchar(191),
     employment        varchar(191),
-    updated_at        datetime                               not null default now() on update current_timestamp,
-
-    foreign key (candidate_id) references Candidate (candidate_id)
+    updated_at        datetime                               not null default now() on update current_timestamp
 );
 
 create table Employer (
     employer_id     int unsigned primary key,
     company_name    varchar(191),
-    company_address varchar(191),
-
-    foreign key (employer_id) references User (id)
+    company_address varchar(191)
 );
 
 create table Vacancy (
@@ -71,9 +55,7 @@ create table Vacancy (
     workSchedule      text,
     employment        varchar(191),
     dateOfPublication datetime                               not null default current_timestamp,
-    moderationStatus  enum ('PENDING','ACCEPTED','REJECTED') not null default 'PENDING',
-
-    foreign key (employer_id) references Employer (employer_id)
+    moderationStatus  enum ('PENDING','ACCEPTED','REJECTED') not null default 'PENDING'
 );
 
 create table Response (
@@ -86,11 +68,7 @@ create table Response (
     response_by   enum ('CANDIDATE','EMPLOYER') not null,
 
     cover_letter  text                          not null,
-    response_date datetime                      not null default current_timestamp,
-
-    foreign key (candidate_id) references Candidate (candidate_id),
-    foreign key (employer_id) references Employer (employer_id),
-    foreign key (vacancy_id) references Vacancy (id)
+    response_date datetime                      not null default current_timestamp
 );
 
 
@@ -99,9 +77,7 @@ create table FeedbackResult (
     feedback_result_uuid char(36) unique              not null,
     response_id          int unsigned                 not null,
 
-    response             text                   not null,
+    response             text                         not null,
     responseDate         datetime                     not null default current_timestamp,
-    responseResult       enum ('ACCEPTED','REJECTED') not null,
-
-    foreign key (response_id) references Response (id)
+    responseResult       enum ('ACCEPTED','REJECTED') not null
 );
