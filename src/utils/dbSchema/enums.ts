@@ -10,11 +10,6 @@ export enum ModerationStatus {
   REJECTED = "REJECTED",
 }
 
-export enum QuestionnaireType {
-  RESUME = "RESUME",
-  VACANCY = "VACANCY",
-}
-
 export enum ResponseBy {
   CANDIDATE = "CANDIDATE",
   EMPLOYER = "EMPLOYER",

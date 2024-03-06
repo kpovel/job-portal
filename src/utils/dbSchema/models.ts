@@ -1,89 +1,86 @@
 import type {
+  UserType,
   ModerationStatus,
-  QuestionnaireType,
   ResponseBy,
   ResponseResult,
-  UserType,
 } from "./enums";
 
 export type User = {
-  id: string;
-  userType: UserType;
-  lastName: string | null;
-  firstName: string | null;
-  middleName: string | null;
-  age: string | null;
-  phoneNumber: string | null;
-  email: string | null;
-  linkedinLink: string | null;
-  githubLink: string | null;
-  telegramLink: string | null;
+  id: number;
+  user_uuid: string;
+  user_type: UserType;
   login: string;
   password: string;
+  last_name: string | null;
+  first_name: string | null;
+  age: number | null;
+  phone_number: string | null;
+  email: string | null;
+  linkedin_link: string | null;
+  github_link: string | null;
 };
 
 export type Candidate = {
-  candidateId: string;
+  candidate_id: number;
 };
 
 export type Employer = {
-  employerId: string;
-  companyName: string | null;
-  companyAddress: string | null;
-};
-
-export type Questionnaire = {
-  questionnaireId: string;
-  questionnaireType: QuestionnaireType;
-  candidateId: string | null;
-  employerId: string | null;
+  employer_id: number;
+  company_name: string | null;
+  company_address: string | null;
 };
 
 export type Resume = {
-  questionnaireId: string;
-  candidateId: string;
-  moderationStatus: ModerationStatus;
-  workExperience: string | null;
+  id: number;
+  resume_uuid: string;
+  candidate_id: number;
+  moderation_status: ModerationStatus;
+  work_experience: string | null;
   skills: string | null;
   education: string | null;
-  foreignLanguages: string | null;
+  foreign_languages: string | null;
   interests: string | null;
   achievements: string | null;
   specialty: string | null;
-  desiredSalary: string | null;
+  desired_salary: string | null;
   employment: string | null;
-  updatedAt: Date;
+  updated_at: Date;
 };
 
 export type Vacancy = {
-  questionnaireId: string;
-  employerId: string;
-  moderationStatus: ModerationStatus;
+  id: number;
+  vacancy_uuid: string;
+  employer_id: number;
+
   specialty: string;
   salary: string | null;
   duties: string | null;
   requirements: string | null;
   conditions: string | null;
-  workSchedule: string | null;
+  work_schedule: string | null;
   employment: string | null;
-  dateOfPublication: Date;
+  publication_date: Date;
+  moderation_status: ModerationStatus;
 };
 
 export type Response = {
-  responseId: string;
-  candidateId: string;
-  resumeId: string;
-  employerId: string;
-  vacancyId: string;
-  coverLetter: string;
-  responseBy: ResponseBy;
-  responseDate: Date;
+  id: number;
+  response_uuid: string;
+  candidate_id: number;
+  employer_id: number;
+  vacancy_id: number;
+  response_by: ResponseBy;
+
+  cover_letter: string;
+  response_date: Date;
 };
 
 export type FeedbackResult = {
-  feedbackResultId: string;
-  responseId: string;
+  id: number;
+  feedback_result_uuid: string;
+  response_id: number;
+
   response: string;
-  responseResult: ResponseResult;
-  responseDate: Date;
+  response_date: Date;
+  response_result: ResponseResult;
 };
