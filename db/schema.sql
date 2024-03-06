@@ -7,9 +7,9 @@ create table User (
 
     last_name     varchar(191),
     first_name    varchar(191),
-    age           varchar(191),
-    phone_number  varchar(191),
-    email         varchar(191) unique,
+    age           tinyint unique,
+    phone_number  varchar(15),
+    email         varchar(50) unique,
     linkedin_link varchar(191),
     github_link   varchar(191)
 );
