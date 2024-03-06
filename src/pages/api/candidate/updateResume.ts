@@ -1,6 +1,19 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import type { CandidateResumeFormData } from "dbSchema/candidateResumeFormData";
 import { dbClient } from "~/server/db";
+
+// todo: update this type
+type CandidateResumeFormData = {
+  workExperience: string;
+  skills: string;
+  education: string;
+  foreignLanguages: string;
+  interests: string;
+  achievements: string;
+  specialty: string;
+  desiredSalary: string;
+  employment: string;
+  candidateId: string
+};
 
 export default async function updateProfile(
   req: NextApiRequest,
