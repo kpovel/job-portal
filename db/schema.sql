@@ -52,10 +52,10 @@ create table Vacancy (
     duties            varchar(191),
     requirements      text,
     conditions        text,
-    workSchedule      text,
+    work_schedule     text,
     employment        varchar(191),
-    dateOfPublication datetime                               not null default current_timestamp,
-    moderationStatus  enum ('PENDING','ACCEPTED','REJECTED') not null default 'PENDING'
+    publication_date  datetime                               not null default current_timestamp,
+    moderation_status enum ('PENDING','ACCEPTED','REJECTED') not null default 'PENDING'
 );
 
 create table Response (
@@ -78,6 +78,6 @@ create table FeedbackResult (
     response_id          int unsigned                 not null,
 
     response             text                         not null,
-    responseDate         datetime                     not null default current_timestamp,
-    responseResult       enum ('ACCEPTED','REJECTED') not null
+    response_date        datetime                     not null default current_timestamp,
+    response_result      enum ('ACCEPTED','REJECTED') not null
 );
