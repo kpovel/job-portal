@@ -1,83 +1,120 @@
-create table User (
-    id            int unsigned primary key auto_increment,
-    user_uuid     char(36)                              not null,
-    user_type     enum ('CANDIDATE','EMPLOYER','ADMIN') not null,
-    login         varchar(191) unique                   not null,
-    password      varchar(191)                          not null,
+create table UserType (
+    id   integer primary key autoincrement,
+    type text unique not null
+);
 
-    last_name     varchar(191),
-    first_name    varchar(191),
+create table User (
+    id            integer primary key autoincrement,
+    user_uuid     text    not null,
+    user_type_id  integer not null,
+
+    login         text    not null unique,
+    password      text    not null,
+
+    last_name     text,
+    first_name    text,
     age           tinyint unique,
-    phone_number  varchar(15),
-    email         varchar(50) unique,
-    linkedin_link varchar(191),
-    github_link   varchar(191)
+    phone_number  text,
+    email         text unique,
+    linkedin_link text,
+    github_link   text,
+
+    foreign key (user_type_id) references UserType (id)
 );
 
 create table Candidate (
-    candidate_id int unsigned primary key
+    id integer primary key,
+
+    foreign key (id) references User (id)
+);
+
+-- enum('PENDING', 'ACCEPTED', 'REJECTED' )
+create table ModerationStatus (
+    id     integer primary key autoincrement,
+    status text unique not null
 );
 
 create table Resume (
-    id                int unsigned primary key auto_increment,
-    resume_uuid       char(36)                               not null,
-    candidate_id      int unsigned                           not null,
+    id                   integer primary key autoincrement,
+    resume_uuid          text    not null,
+    candidate_id         integer not null,
 
-    moderation_status enum ('PENDING','ACCEPTED','REJECTED') not null default 'PENDING',
-    work_experience   varchar(191),
-    skills            varchar(191),
-    education         varchar(191),
-    foreign_languages varchar(191),
-    interests         varchar(191),
-    achievements      varchar(191),
-    specialty         varchar(191),
-    desired_salary    varchar(191),
-    employment        varchar(191),
-    updated_at        datetime                               not null default now() on update current_timestamp
+    moderation_status_id integer not null,
+    work_experience      text,
+    skills               text,
+    education            text,
+    foreign_languages    text,
+    interests            text,
+    achievements         text,
+    specialty            text,
+    desired_salary       text,
+    employment           text,
+    updated_at           timestamp default current_timestamp,
+--     on update current_timestamp,
+
+    foreign key (moderation_status_id) references ModerationStatus (id)
 );
 
+
 create table Employer (
-    employer_id     int unsigned primary key,
-    company_name    varchar(191),
-    company_address varchar(191)
+    id              integer primary key,
+    company_name    text,
+    company_address text,
+
+    foreign key (id) references User (id)
 );
 
 create table Vacancy (
-    id                int unsigned primary key auto_increment,
-    vacancy_uuid      char(36)                               not null,
-    employer_id       int unsigned                           not null,
+    id                   integer primary key autoincrement,
+    vacancy_uuid         text         not null,
+    employer_id          int unsigned not null,
 
-    specialty         varchar(191)                           not null,
-    salary            varchar(191),
-    duties            varchar(191),
-    requirements      text,
-    conditions        text,
-    work_schedule     text,
-    employment        varchar(191),
-    publication_date  datetime                               not null default current_timestamp,
-    moderation_status enum ('PENDING','ACCEPTED','REJECTED') not null default 'PENDING'
+    specialty            text         not null,
+    salary               text,
+    duties               text,
+    requirements         text,
+    conditions           text,
+    work_schedule        text,
+    employment           text,
+    publication_date     timestamp    not null default current_timestamp,
+    moderation_status_id integer      not null,
+
+    foreign key (moderation_status_id) references ModerationStatus (id)
 );
 
+-- split this column
 create table Response (
-    id            int unsigned primary key auto_increment,
-    response_uuid char(36)                      not null,
+    id                       integer primary key autoincrement,
+    response_uuid            text      not null,
 
-    candidate_id  int unsigned                  not null,
-    employer_id   int unsigned                  not null,
-    vacancy_id    int unsigned                  not null,
-    response_by   enum ('CANDIDATE','EMPLOYER') not null,
+    candidate_id             integer   not null,
+    employer_id              integer   not null,
+    vacancy_id               integer   not null,
+    response_by_user_type_id integer   not null,
 
-    cover_letter  text                          not null,
-    response_date datetime                      not null default current_timestamp
+    cover_letter             text      not null,
+    response_date            timestamp not null default current_timestamp,
+
+    foreign key (candidate_id) references Candidate (id),
+    foreign key (employer_id) references Employer (id),
+    foreign key (vacancy_id) references Vacancy (id)
 );
 
+-- enum('ACCEPTED', 'REJECTED')
+create table FeedbackResultStatus (
+    id     integer primary key autoincrement,
+    status text unique not null
+);
 
 create table FeedbackResult (
-    id                   int unsigned primary key auto_increment,
-    feedback_result_uuid char(36) unique              not null,
-    response_id          int unsigned                 not null,
+    id                        integer primary key autoincrement,
+    feedback_result_uuid      text unique not null,
+    response_id               integer     not null,
 
-    response             text                         not null,
-    response_date        datetime                     not null default current_timestamp,
-    response_result      enum ('ACCEPTED','REJECTED') not null
+    response                  text        not null,
+    response_date             timestamp   not null default current_timestamp,
+    feedback_result_status_id integer     not null,
+
+    foreign key (response_id) references Response (id),
+    foreign key (feedback_result_status_id) references FeedbackResultStatus(id)
 );
