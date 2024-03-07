@@ -1,42 +1,15 @@
-import { useRouter } from "next/router";
-import Cookie from "js-cookie";
 import { type GetServerSideProps } from "next";
-import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { AuthLayout } from "~/component/auth/authLayout";
 import Link from "next/link";
 import { AuthForm } from "~/component/auth/authForm";
 import { Layout } from "~/component/layout/layout";
 import { withoutAuth } from "~/utils/auth/withoutAuth";
-import type { User } from "~/utils/dbSchema/models";
 
-const Signup = () => {
-  const router = useRouter();
-  type SignupResponse = {
-    message: string;
-    token: string;
-    user: User;
-  };
-
-  const switchToPageAfterSignup = async (
-    signupResponse: SignupResponse
-  ): Promise<void> => {
-    switch (signupResponse.user.userType) {
-      case "EMPLOYER":
-        await router.push("/home/profile");
-        break;
-      case "CANDIDATE":
-        await router.push("/my/profile");
-        break;
-      case "ADMIN":
-        await router.push("/admin");
-        break;
-    }
-  };
-
+export default function Signup() {
   async function createAccount(
     login: string,
     password: string,
-    userType: string | undefined
+    userType: string | undefined,
   ) {
     try {
       const response = await fetch("/api/auth/signup", {
@@ -45,19 +18,8 @@ const Signup = () => {
         body: JSON.stringify({ login, password, userType }),
       });
 
-      if (response.ok) {
-        const data = (await response.json()) as SignupResponse;
-
-        Cookie.set(AUTHORIZATION_TOKEN_KEY, data.token, {
-          expires: 30,
-          path: "/",
-        });
-
-        void switchToPageAfterSignup(data);
-      } else {
-        const errorData = (await response.json()) as SignupResponse;
-        console.error(errorData.message);
-      }
+      const errorData = await response.text();
+      console.error(errorData);
     } catch (error) {
       console.error("Network error:", error);
     }
@@ -82,8 +44,6 @@ const Signup = () => {
       </AuthLayout>
     </Layout>
   );
-};
-
-export default Signup;
+}
 
 export const getServerSideProps: GetServerSideProps = withoutAuth();

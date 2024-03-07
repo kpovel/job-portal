@@ -3,7 +3,8 @@ import { generateToken, hashPassword } from "~/utils/auth/auth";
 import type { UserType } from "dbSchema/enums";
 import type { User } from "dbSchema/models";
 import { dbClient } from "~/server/db";
-import { createId } from "@paralleldrive/cuid2";
+import { randomUUID } from "crypto";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 
 export default async function signup(
   req: NextApiRequest,
@@ -28,9 +29,11 @@ export default async function signup(
     );
 
     if (query.rows.length) {
-      res.status(409).json({
-        message: `User with login "${login}" already exists. Consider using a different login`,
-      });
+      res
+        .status(409)
+        .send(
+          `User with login "${login}" already exists. Consider using a different login`,
+        );
     }
 
     const hashedPassword = await hashPassword(password);
@@ -40,17 +43,30 @@ export default async function signup(
       hashedPassword,
     );
 
-    if (createdUser) {
-      const token = generateToken(createdUser.id);
-
-      res.status(201).json({
-        message: "User created successfully",
-        user: createdUser,
-        token,
-      });
+    if (!createdUser) {
+      return res.status(401).send("Failed to create a user, please try again");
     }
+
+    const token = generateToken(createdUser.id);
+    res.setHeader(
+      "Set-Cookie",
+      `${AUTHORIZATION_TOKEN_KEY}=${token}; Max-Age=${60 * 60 * 24 * 30}; Path=/`,
+    );
+
+    res.redirect(redirectLocation(userType));
   } catch (error) {
-    res.status(400).json({ message: "Error creating user", error });
+    res.status(400).send("Error creating user");
+  }
+}
+
+function redirectLocation(userType: keyof typeof UserType) {
+  switch (userType) {
+    case "EMPLOYER":
+      return "/home/profile";
+    case "CANDIDATE":
+      return "/my/profile";
+    case "ADMIN":
+      return "/admin";
   }
 }
 
@@ -58,65 +74,123 @@ async function createUser(
   userType: UserType,
   login: string,
   password: string,
-): Promise<User | undefined> {
+): Promise<Pick<User, "id"> | undefined> {
   try {
-    const userId = createId();
-    const questionnaireId = createId();
+    const user_uuid = randomUUID();
+    const resume_uuid = randomUUID();
 
     switch (userType) {
       case "CANDIDATE":
-        const createCandidateQuery = await dbClient.transaction(async (tx) => {
-          const queries = [
-            await tx.execute(
-              `insert into User (id, login, password, userType) values ('${userId}', '${login}', '${password}', 'CANDIDATE');`,
-            ),
-            await tx.execute(
-              `insert into Candidate (candidateId) values ('${userId}');`,
-            ),
-            await tx.execute(
-              `insert into Questionnaire (questionnaireId, questionnaireType, candidateId) values ('${questionnaireId}', 'RESUME', '${userId}');`,
-            ),
-            await tx.execute(
-              `insert into Resume (questionnaireId, candidateId) values ('${questionnaireId}', '${userId}');`,
-            ),
-            await tx.execute(`select * from User where id = '${userId}'`),
-          ];
-
-          return await Promise.all(queries);
-        });
-
-        return createCandidateQuery[4]?.rows[0] as User;
+        return await createCandidateTransaction(
+          login,
+          password,
+          user_uuid,
+          resume_uuid,
+        );
       case "EMPLOYER":
-        const createEmployerQuery = await dbClient.transaction(async (tx) => {
-          const queries = [
-            await tx.execute(
-              `insert into User (id, login, password, userType) values ('${userId}', '${login}', '${password}', 'EMPLOYER');`,
-            ),
-            await tx.execute(
-              `insert into Employer (employerId) values ('${userId}');`,
-            ),
-            await tx.execute(`select * from User where id = '${userId}'`),
-          ];
-
-          return await Promise.all(queries);
-        });
-
-        return createEmployerQuery[2]?.rows[0] as User;
+        return await createEmployerTransaction(login, password, user_uuid);
       case "ADMIN":
-        const createAdminQuery = await dbClient.transaction(async (tx) => {
-          const queries = [
-            await tx.execute(
-              `insert into User (id, login, password, userType) values ('${userId}', '${login}', '${password}', 'ADMIN');`,
-            ),
-            await tx.execute(`select * from User where id = '${userId}'`),
-          ];
-
-          return await Promise.all(queries);
-        });
-
-        return createAdminQuery[1]?.rows[0] as User;
+        return await createAdminTransaction(login, password, user_uuid);
     }
   } catch (e) {
     console.log(e);
   }
+}
+
+async function createCandidateTransaction(
+  login: string,
+  password: string,
+  user_uuid: string,
+  resume_uuid: string,
+) {
+  const createCandidateQuery = await dbClient.transaction(async (tx) => {
+    const queries = [
+      await tx.execute(
+        "insert into User (user_uuid, login, password, user_type) values (:user_uuid, :login, :password, 'CANDIDATE');",
+        {
+          user_uuid,
+          login,
+          password,
+        },
+      ),
+      await tx.execute(
+        `\
+insert into Candidate (candidate_id)\
+select id as candidate_id from User where user_uuid = :user_uuid`,
+        {
+          user_uuid,
+        },
+      ),
+      await tx.execute(
+        `\
+insert into Resume (candidate_id, resume_uuid)\
+values ((select id as candidate_id from User where user_uuid = :user_uuid), :resume_uuid);`,
+        {
+          user_uuid,
+          resume_uuid,
+        },
+      ),
+      await tx.execute("select id from User where user_uuid = :user_uuid;", {
+        user_uuid,
+      }),
+    ];
+
+    return await Promise.all(queries);
+  });
+
+  return createCandidateQuery[3]?.rows[0] as Pick<User, "id">;
+}
+
+async function createEmployerTransaction(
+  login: string,
+  password: string,
+  user_uuid: string,
+) {
+  const createEmployerQuery = await dbClient.transaction(async (tx) => {
+    const queries = [
+      await tx.execute(
+        "insert into User (user_uuid, login, password, user_type) values (:user_uuid, :login, :password, 'EMPLOYER');",
+        {
+          user_uuid,
+          login,
+          password,
+        },
+      ),
+      await tx.execute(
+        "insert into Employer (employer_id) select id as employer_id from User where user_uuid = :user_uuid;",
+        {
+          user_uuid,
+        },
+      ),
+      await tx.execute(`select id from User where id = '${user_uuid}'`),
+    ];
+
+    return await Promise.all(queries);
+  });
+
+  return createEmployerQuery[2]?.rows[0] as Pick<User, "id">;
+}
+
+async function createAdminTransaction(
+  login: string,
+  password: string,
+  user_uuid: string,
+) {
+  const createEmployerQuery = await dbClient.transaction(async (tx) => {
+    const queries = [
+      await tx.execute(
+        "insert into User (user_uuid, login, password, user_type) values (:user_uuid, :login, :password, 'EMPLOYER');",
+        {
+          user_uuid,
+          login,
+          password,
+        },
+      ),
+      await tx.execute(`select id from User where id = '${user_uuid}'`),
+    ];
+
+    return await Promise.all(queries);
+  });
+
+  return createEmployerQuery[1]?.rows[0] as Pick<User, "id">;
 }
