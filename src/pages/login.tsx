@@ -24,7 +24,8 @@ export default function Login() {
       const errorData = await res.text();
       return errorData;
     } catch (error) {
-      console.error("Network error:", error);
+      console.error(error);
+      return "Network error";
     }
   }
 

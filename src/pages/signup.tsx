@@ -25,10 +25,10 @@ export default function Signup() {
         await router.push(redirectLocation);
       }
 
-      const errorData = await res.text();
-      console.error(errorData);
+      return await res.text();
     } catch (error) {
-      console.error("Network error:", error);
+      console.error(error);
+      return "Network error";
     }
   }
 
