@@ -53,7 +53,7 @@ export default async function signup(
       `${AUTHORIZATION_TOKEN_KEY}=${token}; Max-Age=${60 * 60 * 24 * 30}; Path=/`,
     );
 
-    res.redirect(redirectLocation(userType));
+    res.status(200).send(redirectLocation(userType));
   } catch (error) {
     res.status(400).send("Error creating user");
   }

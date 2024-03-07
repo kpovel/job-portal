@@ -4,21 +4,29 @@ import Link from "next/link";
 import { AuthForm } from "~/component/auth/authForm";
 import { Layout } from "~/component/layout/layout";
 import { withoutAuth } from "~/utils/auth/withoutAuth";
+import { useRouter } from "next/router";
 
 export default function Signup() {
+  const router = useRouter();
+
   async function createAccount(
     login: string,
     password: string,
     userType: string | undefined,
   ) {
     try {
-      const response = await fetch("/api/auth/signup", {
+      const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ login, password, userType }),
       });
 
-      const errorData = await response.text();
+      if (res.status === 200) {
+        const redirectLocation = await res.text()
+        await router.push(redirectLocation);
+      }
+
+      const errorData = await res.text();
       console.error(errorData);
     } catch (error) {
       console.error("Network error:", error);
