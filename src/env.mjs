@@ -6,6 +6,7 @@ import { z } from "zod";
  */
 const server = z.object({
   DATABASE_URL: z.string().url(),
+  DATABASE_TOKEN: z.string(),
   NODE_ENV: z.enum(["development", "test", "production"]),
   JWT_SECRET: z.string()
 });
@@ -30,6 +31,7 @@ const client = z.object(
  */
 const processEnv = {
   DATABASE_URL: process.env.DATABASE_URL,
+  DATABASE_TOKEN: process.env.DATABASE_TOKEN,
   NODE_ENV: process.env.NODE_ENV,
   JWT_SECRET: process.env.JWT_SECRET
 };
