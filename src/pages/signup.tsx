@@ -2,7 +2,6 @@ import { type GetServerSideProps } from "next";
 import { AuthLayout } from "~/component/auth/authLayout";
 import Link from "next/link";
 import { AuthForm } from "~/component/auth/authForm";
-import { Layout } from "~/component/layout/layout";
 import { withoutAuth } from "~/utils/auth/withoutAuth";
 import { useRouter } from "next/router";
 
@@ -22,7 +21,7 @@ export default function Signup() {
       });
 
       if (res.status === 200) {
-        const redirectLocation = await res.text()
+        const redirectLocation = await res.text();
         await router.push(redirectLocation);
       }
 
@@ -34,23 +33,18 @@ export default function Signup() {
   }
 
   return (
-    <Layout>
-      <AuthLayout authorizationType="Sign up">
-        <AuthForm
-          handleFormSubmit={createAccount}
-          authorizationType="Sign up"
-        />
-        <p className="mt-10 text-center text-sm text-gray-500">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500"
-          >
-            Log in instead
-          </Link>
-        </p>
-      </AuthLayout>
-    </Layout>
+    <AuthLayout authorizationType="Sign up">
+      <AuthForm handleFormSubmit={createAccount} authorizationType="Sign up" />
+      <p className="mt-10 text-center text-sm text-gray-500">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500"
+        >
+          Log in instead
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }
 
