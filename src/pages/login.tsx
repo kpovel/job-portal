@@ -1,40 +1,29 @@
 import { Layout } from "~/component/layout/layout";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import Cookie from "js-cookie";
 import { type GetServerSideProps } from "next";
 import { AuthForm } from "~/component/auth/authForm";
-import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { AuthLayout } from "~/component/auth/authLayout";
 import { withoutAuth } from "~/utils/auth/withoutAuth";
+import { useRouter } from "next/router";
 
-const Login = () => {
+export default function Login() {
   const router = useRouter();
 
   async function verifyLogin(login: string, password: string) {
     try {
-      const response = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ login, password }),
       });
 
-      type AuthorizationResponse = {
-        message: string;
-        token: string;
-      };
-
-      if (response.ok) {
-        const data = (await response.json()) as AuthorizationResponse;
-        Cookie.set(AUTHORIZATION_TOKEN_KEY, data.token, {
-          expires: 30,
-          path: "/",
-        });
-        await router.push("/jobs");
-      } else {
-        const errorData = (await response.json()) as AuthorizationResponse;
-        console.error(errorData.message);
+      if (res.status === 200) {
+        const redirectLocation = await res.text()
+        await router.push(redirectLocation);
       }
+
+      const errorData = await res.text();
+      return errorData;
     } catch (error) {
       console.error("Network error:", error);
     }
@@ -56,8 +45,6 @@ const Login = () => {
       </AuthLayout>
     </Layout>
   );
-};
+}
 
 export const getServerSideProps: GetServerSideProps = withoutAuth();
-
-export default Login;
