@@ -1,31 +1,39 @@
 import { randomUUID } from "crypto";
-import type { UserType } from "~/utils/dbSchema/enums";
-import type { User } from "~/utils/dbSchema/models";
+import type { User, UserType } from "./types/schema";
+import { dbClient } from ".";
+import type { Result } from "~/utils/result";
 
 export async function createUser(
-  userType: UserType,
+  userType: Exclude<UserType["type"], "ADMIN">,
   login: string,
   password: string,
-): Promise<Pick<User, "id"> | undefined> {
+): Promise<Result<Pick<User, "id">, string>> {
   try {
     const user_uuid = randomUUID();
     const resume_uuid = randomUUID();
 
-    switch (userType) {
-      case "CANDIDATE":
-        return await createCandidateTransaction(
-          login,
-          password,
-          user_uuid,
-          resume_uuid,
-        );
-      case "EMPLOYER":
-        return await createEmployerTransaction(login, password, user_uuid);
-      case "ADMIN":
-        return await createAdminTransaction(login, password, user_uuid);
+    if (userType === "CANDIDATE") {
+      return await createCandidateTransaction(
+        login,
+        password,
+        user_uuid,
+        resume_uuid,
+      );
     }
+
+    if (userType === "EMPLOYER") {
+      return await createEmployerTransaction(login, password, user_uuid);
+    }
+
+    return {
+      err: "Wront user type",
+      ok: null,
+    };
   } catch (e) {
-    console.log(e);
+    return {
+      err: "Catched an error, I don't care",
+      ok: null,
+    };
   }
 }
 
@@ -34,95 +42,163 @@ async function createCandidateTransaction(
   password: string,
   user_uuid: string,
   resume_uuid: string,
-) {
-  const createCandidateQuery = await dbClient.transaction(async (tx) => {
-    const queries = [
-      await tx.execute(
-        "insert into User (user_uuid, login, password, user_type) values (:user_uuid, :login, :password, 'CANDIDATE');",
-        {
+): Promise<Result<Pick<User, "id">, string>> {
+  const userTypeQuery = await dbClient.execute(
+    "select id from user_type where type = 'CANDIDATE';",
+  );
+  const userType = userTypeQuery.rows[0] as { id: UserType["id"] } | undefined;
+
+  if (!userType) {
+    return {
+      ok: null,
+      err: "Cannot find CANDIDATE user type",
+    };
+  }
+
+  const moderationStatus = await defaultModerationStatus();
+  if (moderationStatus.err !== null) {
+    return {
+      ok: null,
+      err: moderationStatus.err,
+    };
+  }
+
+  const createCandidateQuery = await dbClient.batch(
+    [
+      {
+        sql: `\
+insert into user (user_uuid, login, password, user_type_id)\
+values (:user_uuid, :login, :password, :user_type_id);`,
+        args: {
           user_uuid,
           login,
           password,
+          user_type_id: userType.id,
         },
-      ),
-      await tx.execute(
-        `\
-insert into Candidate (candidate_id)\
-select id as candidate_id from User where user_uuid = :user_uuid`,
-        {
-          user_uuid,
-        },
-      ),
-      await tx.execute(
-        `\
-insert into Resume (candidate_id, resume_uuid)\
-values ((select id as candidate_id from User where user_uuid = :user_uuid), :resume_uuid);`,
-        {
+      },
+      {
+        sql: `\
+insert into Candidate (id)\
+select id from User where user_uuid = :user_uuid;`,
+        args: { user_uuid },
+      },
+      {
+        sql: `\
+insert into Resume (candidate_id, resume_uuid, moderation_status_id)\
+values ((select id as candidate_id from User where user_uuid = :user_uuid), :resume_uuid, :moderation_status_id);`,
+        args: {
           user_uuid,
           resume_uuid,
+          moderation_status_id: moderationStatus.ok,
         },
-      ),
-      await tx.execute("select id from User where user_uuid = :user_uuid;", {
-        user_uuid,
-      }),
-    ];
+      },
+      {
+        sql: "select id from User where user_uuid = :user_uuid;",
+        args: { user_uuid },
+      },
+    ],
+    "write",
+  );
 
-    return await Promise.all(queries);
-  });
+  const insertedId = createCandidateQuery[3]?.rows[0] as
+    | Pick<User, "id">
+    | undefined;
 
-  return createCandidateQuery[3]?.rows[0] as Pick<User, "id">;
+  if (!insertedId) {
+    return {
+      ok: null,
+      err: "Something went wrong, user id is not inserted",
+    };
+  }
+
+  return {
+    ok: {
+      id: insertedId.id,
+    },
+    err: null,
+  };
 }
 
 async function createEmployerTransaction(
   login: string,
   password: string,
   user_uuid: string,
-) {
-  const createEmployerQuery = await dbClient.transaction(async (tx) => {
-    const queries = [
-      await tx.execute(
-        "insert into User (user_uuid, login, password, user_type) values (:user_uuid, :login, :password, 'EMPLOYER');",
-        {
+): Promise<Result<Pick<User, "id">, string>> {
+  const userTypeQuery = await dbClient.execute(
+    "select id from user_type where type = 'EMPLOYER';",
+  );
+
+  const userType = userTypeQuery.rows[0] as { id: UserType["id"] } | undefined;
+  if (!userType) {
+    return {
+      ok: null,
+      err: "Cannot find CANDIDATE user type",
+    };
+  }
+
+  const createEmployerQuery = await dbClient.batch(
+    [
+      {
+        sql: "\
+insert into User (user_uuid, login, password, user_type_id)\
+values (:user_uuid, :login, :password, :user_type_id);",
+        args: {
           user_uuid,
           login,
           password,
+          user_type_id: userType.id,
         },
-      ),
-      await tx.execute(
-        "insert into Employer (employer_id) select id as employer_id from User where user_uuid = :user_uuid;",
-        {
+      },
+      {
+        sql: "\
+insert into Employer (id)\
+select id from User where user_uuid = :user_uuid;",
+        args: {
           user_uuid,
         },
-      ),
-      await tx.execute(`select id from User where id = '${user_uuid}'`),
-    ];
+      },
+      {
+        sql: "select id from User where user_uuid = :user_uuid;",
+        args: { user_uuid },
+      },
+    ],
+    "write",
+  );
 
-    return await Promise.all(queries);
-  });
+  const insertedId = createEmployerQuery[2]?.rows[0] as
+    | Pick<User, "id">
+    | undefined;
 
-  return createEmployerQuery[2]?.rows[0] as Pick<User, "id">;
+  if (!insertedId) {
+    return {
+      ok: null,
+      err: "Something went wrong, user id is not inserted",
+    };
+  }
+
+  return {
+    ok: {
+      id: insertedId.id,
+    },
+    err: null,
+  };
 }
 
-async function createAdminTransaction(
-  login: string,
-  password: string,
-  user_uuid: string,
-) {
-  const createEmployerQuery = await dbClient.transaction(async (tx) => {
-    const queries = [
-      await tx.execute(
-        "insert into User (user_uuid, login, password, user_type) values (:user_uuid, :login, :password, 'EMPLOYER');",
-        {
-          user_uuid,
-          login,
-          password,
-        },
-      ),
-      await tx.execute(`select id from User where id = '${user_uuid}'`),
-    ];
+async function defaultModerationStatus(): Promise<Result<number, string>> {
+  const query = await dbClient.execute(
+    "select id from status_type where status = 'PENDING';",
+  );
+  const defaultStatus = query.rows[0] as { id: number } | undefined;
 
-    return await Promise.all(queries);
-  });
+  if (!defaultStatus) {
+    return {
+      ok: null,
+      err: "",
+    };
+  }
 
-  return createEmployerQuery[1]?.rows[0] as Pick<User, "id">;
+  return {
+    ok: defaultStatus.id,
+    err: null,
+  };
 }

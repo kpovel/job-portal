@@ -1,1 +1,1 @@
-select id, password from User where login = :login;
+select id, password from user where login = :login;

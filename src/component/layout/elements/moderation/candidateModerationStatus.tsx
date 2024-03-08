@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { ModerationLabel } from "~/component/layout/elements/moderation/moderationLabel";
-import { ModerationStatus } from "~/utils/dbSchema/enums";
 
 export function CandidateModerationStatus() {
   const authContext = useContext(AuthContext);
