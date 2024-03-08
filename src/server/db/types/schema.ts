@@ -1,16 +1,20 @@
-import type {
-  UserType,
-  ModerationStatus,
-  ResponseBy,
-  ResponseResult,
-} from "./enums";
+export type UserType = {
+  id: number;
+  type: "CANDIDATE" | "EMPLOYER" | "ADMIN";
+};
+
+export type StatusType = {
+  id: number;
+  status: "PENDING" | "ACCEPTED" | "REJECTED";
+};
 
 export type User = {
   id: number;
   user_uuid: string;
-  user_type: UserType;
+  user_type_id: UserType["id"];
   login: string;
   password: string;
+
   last_name: string | null;
   first_name: string | null;
   age: number | null;
@@ -21,20 +25,15 @@ export type User = {
 };
 
 export type Candidate = {
-  candidate_id: number;
-};
-
-export type Employer = {
-  employer_id: number;
-  company_name: string | null;
-  company_address: string | null;
+  id: User["id"];
 };
 
 export type Resume = {
-  id: number;
+  id: string;
   resume_uuid: string;
-  candidate_id: number;
-  moderation_status: ModerationStatus;
+  candidate_id: Candidate["id"];
+
+  moderation_status_id: StatusType["id"];
   work_experience: string | null;
   skills: string | null;
   education: string | null;
@@ -47,10 +46,16 @@ export type Resume = {
   updated_at: Date;
 };
 
+export type Employer = {
+  id: User["id"];
+  company_name: string;
+  company_address: string;
+};
+
 export type Vacancy = {
   id: number;
   vacancy_uuid: string;
-  employer_id: number;
+  employer_id: Employer["id"];
 
   specialty: string;
   salary: string | null;
@@ -60,16 +65,17 @@ export type Vacancy = {
   work_schedule: string | null;
   employment: string | null;
   publication_date: Date;
-  moderation_status: ModerationStatus;
+  moderation_status_id: StatusType["id"];
 };
 
 export type Response = {
   id: number;
   response_uuid: string;
-  candidate_id: number;
-  employer_id: number;
-  vacancy_id: number;
-  response_by: ResponseBy;
+
+  candidate_id: Candidate["id"];
+  employer_id: Employer["id"];
+  vacancy_id: Vacancy["id"];
+  response_by_user_type_id: UserType["id"];
 
   cover_letter: string;
   response_date: Date;
@@ -78,9 +84,9 @@ export type Response = {
 export type FeedbackResult = {
   id: number;
   feedback_result_uuid: string;
-  response_id: number;
+  response_id: Response["id"];
 
   response: string;
   response_date: Date;
-  response_result: ResponseResult;
+  feedback_result_status_id: StatusType["id"];
 };
