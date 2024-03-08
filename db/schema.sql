@@ -1,9 +1,14 @@
-create table UserType (
+create table user_type (
     id   integer primary key autoincrement,
     type text unique not null
 );
 
-create table User (
+create table status_type (
+    id     integer primary key autoincrement,
+    status text unique not null
+);
+
+create table user (
     id            integer primary key autoincrement,
     user_uuid     text    not null,
     user_type_id  integer not null,
@@ -19,22 +24,16 @@ create table User (
     linkedin_link text,
     github_link   text,
 
-    foreign key (user_type_id) references UserType (id)
+    foreign key (user_type_id) references user_type (id)
 );
 
-create table Candidate (
+create table candidate (
     id integer primary key,
 
-    foreign key (id) references User (id)
+    foreign key (id) references user (id)
 );
 
--- enum('PENDING', 'ACCEPTED', 'REJECTED' )
-create table ModerationStatus (
-    id     integer primary key autoincrement,
-    status text unique not null
-);
-
-create table Resume (
+create table resume (
     id                   integer primary key autoincrement,
     resume_uuid          text    not null,
     candidate_id         integer not null,
@@ -50,21 +49,20 @@ create table Resume (
     desired_salary       text,
     employment           text,
     updated_at           timestamp default current_timestamp,
---     on update current_timestamp,
 
-    foreign key (moderation_status_id) references ModerationStatus (id)
+    foreign key (moderation_status_id) references status_type (id)
 );
 
 
-create table Employer (
+create table employer (
     id              integer primary key,
     company_name    text,
     company_address text,
 
-    foreign key (id) references User (id)
+    foreign key (id) references user (id)
 );
 
-create table Vacancy (
+create table vacancy (
     id                   integer primary key autoincrement,
     vacancy_uuid         text         not null,
     employer_id          int unsigned not null,
@@ -79,11 +77,11 @@ create table Vacancy (
     publication_date     timestamp    not null default current_timestamp,
     moderation_status_id integer      not null,
 
-    foreign key (moderation_status_id) references ModerationStatus (id)
+    foreign key (moderation_status_id) references status_type (id)
 );
 
 -- split this column
-create table Response (
+create table response (
     id                       integer primary key autoincrement,
     response_uuid            text      not null,
 
@@ -95,18 +93,12 @@ create table Response (
     cover_letter             text      not null,
     response_date            timestamp not null default current_timestamp,
 
-    foreign key (candidate_id) references Candidate (id),
-    foreign key (employer_id) references Employer (id),
-    foreign key (vacancy_id) references Vacancy (id)
+    foreign key (candidate_id) references candidate (id),
+    foreign key (employer_id) references employer (id),
+    foreign key (vacancy_id) references vacancy (id)
 );
 
--- enum('ACCEPTED', 'REJECTED')
-create table FeedbackResultStatus (
-    id     integer primary key autoincrement,
-    status text unique not null
-);
-
-create table FeedbackResult (
+create table feedback_result (
     id                        integer primary key autoincrement,
     feedback_result_uuid      text unique not null,
     response_id               integer     not null,
@@ -115,6 +107,6 @@ create table FeedbackResult (
     response_date             timestamp   not null default current_timestamp,
     feedback_result_status_id integer     not null,
 
-    foreign key (response_id) references Response (id),
-    foreign key (feedback_result_status_id) references FeedbackResultStatus(id)
+    foreign key (response_id) references response (id),
+    foreign key (feedback_result_status_id) references status_type (id)
 );
