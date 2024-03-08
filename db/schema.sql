@@ -80,7 +80,6 @@ create table vacancy (
     foreign key (moderation_status_id) references status_type (id)
 );
 
--- split this column
 create table response (
     id                       integer primary key autoincrement,
     response_uuid            text      not null,
@@ -95,7 +94,8 @@ create table response (
 
     foreign key (candidate_id) references candidate (id),
     foreign key (employer_id) references employer (id),
-    foreign key (vacancy_id) references vacancy (id)
+    foreign key (vacancy_id) references vacancy (id),
+    foreign key (response_by_user_type_id) references user_type (id)
 );
 
 create table feedback_result (
