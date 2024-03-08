@@ -35,10 +35,10 @@ create table candidate (
 
 create table resume (
     id                   integer primary key autoincrement,
-    resume_uuid          text    not null,
-    candidate_id         integer not null,
+    resume_uuid          text      not null,
+    candidate_id         integer   not null,
 
-    moderation_status_id integer not null,
+    moderation_status_id integer   not null,
     work_experience      text,
     skills               text,
     education            text,
@@ -48,7 +48,7 @@ create table resume (
     specialty            text,
     desired_salary       text,
     employment           text,
-    updated_at           timestamp default current_timestamp,
+    updated_at           timestamp not null default current_timestamp,
 
     foreign key (moderation_status_id) references status_type (id)
 );
@@ -56,27 +56,28 @@ create table resume (
 
 create table employer (
     id              integer primary key,
-    company_name    text,
-    company_address text,
+    company_name    text not null,
+    company_address text not null,
 
     foreign key (id) references user (id)
 );
 
 create table vacancy (
     id                   integer primary key autoincrement,
-    vacancy_uuid         text         not null,
-    employer_id          int unsigned not null,
+    vacancy_uuid         text      not null,
+    employer_id          integer   not null,
 
-    specialty            text         not null,
+    specialty            text      not null,
     salary               text,
     duties               text,
     requirements         text,
     conditions           text,
     work_schedule        text,
     employment           text,
-    publication_date     timestamp    not null default current_timestamp,
-    moderation_status_id integer      not null,
+    publication_date     timestamp not null default current_timestamp,
+    moderation_status_id integer   not null,
 
+    foreign key (employer_id) references employer (id),
     foreign key (moderation_status_id) references status_type (id)
 );
 
