@@ -6,6 +6,7 @@ import { ProfileDropdownMenu } from "~/component/layout/elements/profileDropdown
 import { useContext } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { CandidateModerationStatus } from "~/component/layout/elements/moderation/candidateModerationStatus";
+import type { UserType } from "~/server/db/types/schema";
 
 const navigation: { name: string; href: string }[] = [
   { name: "Пропозиції", href: "/my/offers" },
@@ -13,7 +14,7 @@ const navigation: { name: string; href: string }[] = [
 ];
 
 const navigationsLinks: {
-  [key in UserType]: { name: string; href: string }[];
+  [key in UserType["type"]]: { name: string; href: string }[];
 } = {
   CANDIDATE: [
     { name: "Вакансії", href: "/jobs" },
@@ -33,10 +34,12 @@ export function classNames(...classes: { toString: () => string }[]) {
 export function Header() {
   const router = useRouter();
   const authContext = useContext(AuthContext);
-  const userType = authContext?.userType as UserType;
-  const isCandidate = userType === UserType.CANDIDATE;
+  const userType = authContext?.type as UserType["type"];
+  const isCandidate = userType === "CANDIDATE";
 
-  const isActivePage = (currentPage: string) => currentPage === router.pathname;
+  function isActivePage(currentPage: string) {
+    return currentPage === router.pathname;
+  }
 
   return (
     <header className="fixed top-0 z-10 w-full">

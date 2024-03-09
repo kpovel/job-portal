@@ -3,12 +3,6 @@ import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
 } from "next";
-import type {
-  Employer,
-  Questionnaire,
-  User,
-  Vacancy,
-} from "~/utils/dbSchema/models";
 import { type ChangeEvent, type FormEvent, useState } from "react";
 import { FormInput } from "~/component/profileForm/formInput";
 import { EmployerNavigationMenu } from "~/component/employer/employerNavigationMenu";
@@ -17,7 +11,6 @@ import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import type { VerifyToken } from "~/utils/auth/withoutAuth";
 import { verifyToken } from "~/utils/auth/auth";
 import { dbClient } from "~/server/db";
-import { UserType } from "~/utils/dbSchema/enums";
 
 export type EmployerData =
   | User & {

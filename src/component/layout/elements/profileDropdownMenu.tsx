@@ -5,14 +5,14 @@ import { classNames } from "~/component/layout/elements/header";
 import { AuthContext } from "~/utils/auth/authContext";
 import Cookie from "js-cookie";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
-import type { UserType } from "~/utils/dbSchema/enums";
+import type { UserType } from "~/server/db/types/schema";
 
 export function ProfileDropdownMenu() {
   const authContext = useContext(AuthContext);
-  const userType = authContext?.userType as UserType;
+  const userType = authContext?.type as UserType["type"];
   const previewName =
-    authContext?.firstName && authContext?.lastName
-      ? authContext.firstName.slice(0, 1) + authContext.lastName.slice(0, 1)
+    authContext?.first_name && authContext?.last_name
+      ? authContext.first_name.slice(0, 1) + authContext.last_name.slice(0, 1)
       : authContext?.login.slice(0, 2);
 
   function signOut() {
@@ -20,7 +20,7 @@ export function ProfileDropdownMenu() {
   }
 
   const navigationsLinks: {
-    [key in UserType]: { name: string; href: string }[];
+    [key in UserType["type"]]: { name: string; href: string }[];
   } = {
     CANDIDATE: [{ name: "Мій профіль", href: "/my/profile" }],
     EMPLOYER: [
@@ -66,7 +66,7 @@ export function ProfileDropdownMenu() {
                       href={item.href}
                       className={classNames(
                         active ? "bg-gray-100" : "",
-                        "block px-4 py-2 text-sm text-gray-700"
+                        "block px-4 py-2 text-sm text-gray-700",
                       )}
                     >
                       {item.name}
@@ -82,7 +82,7 @@ export function ProfileDropdownMenu() {
                   href="/"
                   className={classNames(
                     active ? "bg-gray-100" : "",
-                    "block px-4 py-2 text-sm text-gray-700"
+                    "block px-4 py-2 text-sm text-gray-700",
                   )}
                 >
                   Вийти
