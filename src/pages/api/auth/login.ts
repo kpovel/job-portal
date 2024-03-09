@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { verifyPassword, generateToken } from "~/utils/auth/auth";
 import { dbClient } from "~/server/db";
-import type { User } from "dbSchema/models";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+import type { User } from "~/server/db/types/schema";
 
 export default async function login(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -12,12 +12,12 @@ export default async function login(req: NextApiRequest, res: NextApiResponse) {
   const { login, password } = req.body as { login: string; password: string };
 
   try {
-    const findUserQuery = await dbClient.execute(
-      "select id, password from User where login = :login;",
-      {
+    const findUserQuery = await dbClient.execute({
+      sql: "select id, password from User where login = :login;",
+      args: {
         login,
       },
-    );
+    });
 
     const user = findUserQuery.rows[0] as
       | Pick<User, "id" | "password">
