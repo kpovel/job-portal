@@ -1,23 +1,23 @@
 import { SelectModerationStatus } from "~/component/admin/moderation/selectModerationStatus";
 import { useState } from "react";
-import type { ModerationStatus } from "~/utils/dbSchema/enums";
+import type { StatusType } from "~/server/db/types/schema";
 
 export function ModerateJob({
   questionnaireId,
   moderationStatus,
 }: {
   questionnaireId: string;
-  moderationStatus: ModerationStatus;
+  moderationStatus: StatusType["status"];
 }) {
   const [selectedStatus, setSelectedStatus] =
-    useState<ModerationStatus>(moderationStatus);
+    useState<StatusType["status"]>(moderationStatus);
 
-  function handleChangeStatus(moderationStatus: ModerationStatus) {
+  function handleChangeStatus(moderationStatus: StatusType["status"]) {
     void updateModerationStatus(moderationStatus);
   }
 
   async function updateModerationStatus(
-    moderationStatus: ModerationStatus,
+    moderationStatus: StatusType["status"],
   ): Promise<void> {
     try {
       const response = await fetch("/api/employer/updateModerationStatus", {
