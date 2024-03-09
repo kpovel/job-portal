@@ -21,12 +21,16 @@ export const withoutAuth = (): GetServerSideProps => {
         authorizationToken,
       ) as VerifyToken | null;
 
-      const authorizedUser = await dbClient.execute(
-        "select id from User where id = :userId;",
-        {
-          userId: verifiedToken?.userId,
+      if (!verifiedToken) {
+        return { props: {} };
+      }
+
+      const authorizedUser = await dbClient.execute({
+        sql: "select id from User where id = :userId;",
+        args: {
+          userId: verifiedToken.userId,
         },
-      );
+      });
 
       if (!authorizedUser.rows.length) {
         return { props: {} };
