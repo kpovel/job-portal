@@ -56,8 +56,8 @@ create table resume (
 
 create table employer (
     id              integer primary key,
-    company_name    text not null,
-    company_address text not null,
+    company_name    text,
+    company_address text,
 
     foreign key (id) references user (id)
 );
