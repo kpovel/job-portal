@@ -1,4 +1,4 @@
 import { createContext } from "react";
-import type { User } from "dbSchema/models";
+import type { UserDataClient } from "./useAuth";
 
-export const AuthContext = createContext<Omit<User, "password"> | null>(null);
+export const AuthContext = createContext<UserDataClient | null>(null);
