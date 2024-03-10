@@ -33,7 +33,7 @@ export default function EditVacancy({
     duties: vacancy.duties || "",
     requirements: vacancy.requirements || "",
     conditions: vacancy.conditions || "",
-    workSchedule: vacancy.workSchedule || "",
+    work_schedule: vacancy.workSchedule || "",
     employment: vacancy.employment || "",
   });
 

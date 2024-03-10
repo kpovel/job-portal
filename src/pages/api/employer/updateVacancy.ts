@@ -18,7 +18,7 @@ export default async function updateProfile(
       duties,
       requirements,
       conditions,
-      workSchedule,
+      work_schedule: workSchedule,
       employment,
     } = req.body as { questionnaireId: string } & VacancyFields;
 
