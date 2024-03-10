@@ -67,7 +67,6 @@ export default function Profile({
               >
                 <CandidateResumeForm
                   candidateResume={nestedCandidateProfile.resume}
-                  candidateId={nestedCandidateProfile.candidate.id}
                 />
               </Tabs.Content>
             </Tabs.Root>

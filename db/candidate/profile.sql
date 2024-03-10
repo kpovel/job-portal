@@ -17,3 +17,14 @@ from user
          inner join resume on resume.candidate_id = user.id
 where user.id = :candidate_id
   and user_type_id = (select id from user_type where type = 'CANDIDATE');
+
+-- update profile 
+
+update User
+set first_name    = :first_name,
+    last_name     = :last_name,
+    github_link   = :github_link,
+    linkedin_link = :linkedin_link,
+    phone_number  = :phone_number,
+    email         = :email
+where id = :id;
