@@ -10,20 +10,16 @@ export function CandidateModerationStatus() {
 
   useEffect(() => {
     void (async () => {
-      // todo: fix this route
-      const response = await fetch("/api/candidate/moderationStatus", {
-        method: "POST",
-        // todo: find candidate id using token on server side
-        // body: JSON.stringify({ candidateId: authContext?.id }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await fetch("/api/candidate/moderationStatus");
+      const text = await res.text();
 
-      const json = (await response.json()) as {
-        moderationStatus: StatusType["status"];
-      };
-      setModerationStatus(json.moderationStatus);
+      if (res.status === 401) {
+        console.error(text);
+      } else if (res.status === 500) {
+        console.error(text);
+      } else if (res.status === 200) {
+        setModerationStatus(text as StatusType["status"]);
+      }
     })();
   }, [authContext?.user_uuid]);
 
