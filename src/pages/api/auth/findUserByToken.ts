@@ -28,7 +28,6 @@ select user.user_uuid,\
        type,\
        first_name,\
        last_name,\
-       age,\
        phone_number,\
        email,\
        linkedin_link,\

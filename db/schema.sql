@@ -18,7 +18,6 @@ create table user (
 
     last_name     text,
     first_name    text,
-    age           tinyint,
     phone_number  text,
     email         text unique,
     linkedin_link text,

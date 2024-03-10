@@ -17,7 +17,6 @@ export type User = {
 
   last_name: string | null;
   first_name: string | null;
-  age: number | null;
   phone_number: string | null;
   email: string | null;
   linkedin_link: string | null;
