@@ -26,13 +26,6 @@ const formInputs: FormInputConfig[] = [
     autoComplete: "given-name",
   },
   {
-    label: "Вік",
-    type: "text",
-    name: "age",
-    id: "age",
-    autoComplete: "age",
-  },
-  {
     label: "Номер телефону",
     type: "tel",
     name: "phoneNumber",
@@ -69,21 +62,6 @@ const formInputs: FormInputConfig[] = [
   },
 ];
 
-export type CandidateFields = {
-  firstName: string;
-  lastName: string;
-  age: string;
-  phoneNumber: string;
-  email: string;
-  linkedinLink: string;
-  githubLink: string;
-  telegramLink: string;
-};
-
-type FormData = {
-  [key: string]: string;
-} & Omit<NestedCandidateProfile["candidate"], "id">;
-
 /**
  * CandidateAccountForm component for rendering a form that allows candidates to update their account data.
  */
@@ -92,15 +70,13 @@ export function CandidateAccountForm({
 }: {
   candidateData: NestedCandidateProfile["candidate"];
 }) {
-  const [formData, setFormData] = useState<FormData>({
-    firstName: candidateData.firstName ?? "",
-    lastName: candidateData.lastName ?? "",
-    age: candidateData.age ?? "",
-    phoneNumber: candidateData.phoneNumber ?? "",
+  const [formData, setFormData] = useState({
+    first_name: candidateData.first_name ?? "",
+    last_name: candidateData.last_name ?? "",
+    phone_number: candidateData.phone_number ?? "",
     email: candidateData.email ?? "",
-    linkedinLink: candidateData.linkedinLink ?? "",
-    githubLink: candidateData.githubLink ?? "",
-    telegramLink: candidateData.telegramLink ?? "",
+    linkedin_link: candidateData.linkedin_link ?? "",
+    github_link: candidateData.github_link ?? "",
   });
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -122,7 +98,9 @@ export function CandidateAccountForm({
       await fetch("/api/user/updateProfile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, id: candidateData?.id }),
+        // todo: find candidate id using token on server side
+        body: JSON.stringify(formData),
+        // { ...formData, id: candidateData?.id }
       });
     } catch (e) {
       console.log(e);
@@ -141,7 +119,7 @@ export function CandidateAccountForm({
               name={formInput.name}
               id={formInput.id}
               autoComplete={formInput.autoComplete}
-              value={formData[formInput.name] as string}
+              value={formData[formInput.name as never]}
               onChange={handleInputChange}
             />
           );

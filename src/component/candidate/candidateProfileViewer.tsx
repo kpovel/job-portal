@@ -1,5 +1,5 @@
-import { renderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
-import { renderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
+import { RenderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
+import { RenderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
 import { ModerateCandidate } from "~/component/admin/moderation/moderateCandidate";
 import { UserType } from "~/utils/dbSchema/enums";
 import type { ResumePreview } from "~/pages/candidate/[candidate]";
@@ -23,52 +23,52 @@ export function CandidateProfileViewer({
         <h3 className="mb-4 text-xl font-medium">
           {candidateResume?.specialty}
         </h3>
-        {renderQuestionnaireDetail(
+        {RenderQuestionnaireDetail(
           "Досвід роботи",
           candidateResume?.workExperience,
         )}
-        {renderQuestionnaireDetail("Навички", candidateResume?.skills)}
-        {renderQuestionnaireDetail("Освіта", candidateResume?.education)}
-        {renderQuestionnaireDetail(
+        {RenderQuestionnaireDetail("Навички", candidateResume?.skills)}
+        {RenderQuestionnaireDetail("Освіта", candidateResume?.education)}
+        {RenderQuestionnaireDetail(
           "Іноземні мови",
           candidateResume?.foreignLanguages,
         )}
-        {renderQuestionnaireDetail("Інтереси", candidateResume?.interests)}
-        {renderQuestionnaireDetail("Досягнення", candidateResume?.achievements)}
+        {RenderQuestionnaireDetail("Інтереси", candidateResume?.interests)}
+        {RenderQuestionnaireDetail("Досягнення", candidateResume?.achievements)}
       </div>
       <div className="w-1/3 rounded-lg border bg-white p-6 shadow-lg">
         <h3 className="mb-4 text-xl font-medium">Контактна інформація</h3>
-        {renderQuestionnaireInfo(
+        {RenderQuestionnaireInfo(
           "Бажана зарплата",
           candidateResume?.desiredSalary,
         )}
-        {renderQuestionnaireInfo(
+        {RenderQuestionnaireInfo(
           "Бажана зайнятість",
           candidateResume?.employment,
         )}
-        {renderQuestionnaireInfo(
+        {RenderQuestionnaireInfo(
           "Номере телефону",
           candidateResume?.phoneNumber,
           candidateResume?.phoneNumber
             ? `tel:${candidateResume.phoneNumber}`
             : "",
         )}
-        {renderQuestionnaireInfo(
+        {RenderQuestionnaireInfo(
           "Email",
           candidateResume?.email,
           candidateResume?.email ? `mailto:${candidateResume.email}` : "",
         )}
-        {renderQuestionnaireInfo(
+        {RenderQuestionnaireInfo(
           "Linkedin",
           candidateResume?.linkedinLink,
           candidateResume?.linkedinLink,
         )}
-        {renderQuestionnaireInfo(
+        {RenderQuestionnaireInfo(
           "Github",
           candidateResume?.githubLink,
           candidateResume?.githubLink,
         )}
-        {renderQuestionnaireInfo(
+        {RenderQuestionnaireInfo(
           "Telegram",
           candidateResume?.telegramLink,
           candidateResume?.telegramLink,

@@ -72,20 +72,18 @@ type FormData = {
 
 export function CandidateResumeForm({
   candidateResume,
-  candidateId,
 }: {
   candidateResume: NestedCandidateProfile["resume"];
-  candidateId: string
 }) {
   const [formData, setFormData] = useState<FormData>({
-    workExperience: candidateResume.workExperience ?? "",
+    work_experience: candidateResume.work_experience ?? "",
     skills: candidateResume.skills ?? "",
     education: candidateResume.education ?? "",
-    foreignLanguages: candidateResume.foreignLanguages ?? "",
+    foreign_languages: candidateResume.foreign_languages ?? "",
     interests: candidateResume.interests ?? "",
     achievements: candidateResume.achievements ?? "",
     specialty: candidateResume.specialty ?? "",
-    desiredSalary: candidateResume.desiredSalary ?? "",
+    desired_salary: candidateResume.desired_salary ?? "",
     employment: candidateResume.employment ?? "",
   });
 
@@ -100,13 +98,12 @@ export function CandidateResumeForm({
   }
 
   async function updateCandidateResume(): Promise<void> {
+    // todo: find candidate id using token on server side
     await fetch("/api/candidate/updateResume", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...formData,
-        candidateId
-      }),
+      body: JSON.stringify(formData),
+      //{ formData, ...candidateId }
     });
   }
 

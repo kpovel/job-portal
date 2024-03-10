@@ -10,49 +10,7 @@ import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { verifyToken } from "~/utils/auth/auth";
 import type { VerifyToken } from "~/utils/auth/withoutAuth";
 import { dbClient } from "~/server/db";
-
-export type CandidateDetails = {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  age: string | null;
-  phoneNumber: string | null;
-  email: string | null;
-  linkedinLink: string | null;
-  githubLink: string | null;
-  telegramLink: string | null;
-  workExperience: string | null;
-  skills: string | null;
-  education: string | null;
-  foreignLanguages: string | null;
-  interests: string | null;
-  achievements: string | null;
-  specialty: string | null;
-  desiredSalary: string | null;
-  employment: string | null;
-};
-
-type CandidateProfileKeys =
-  | "id"
-  | "firstName"
-  | "lastName"
-  | "age"
-  | "phoneNumber"
-  | "email"
-  | "linkedinLink"
-  | "githubLink"
-  | "telegramLink";
-type CandidateResumeKeys = Exclude<
-  keyof CandidateDetails,
-  CandidateProfileKeys
->;
-
-type PickByKeys<T, K extends keyof T> = Pick<T, K>;
-
-export type NestedCandidateProfile = {
-  candidate: PickByKeys<CandidateDetails, CandidateProfileKeys>;
-  resume: PickByKeys<CandidateDetails, CandidateResumeKeys>;
-};
+import type { Resume, User } from "~/server/db/types/schema";
 
 export default function Profile({
   nestedCandidateProfile,
@@ -135,34 +93,33 @@ export const getServerSideProps = async ({
     };
   }
 
-  const candidateProfileQuery = await dbClient.execute(
-    `select id,
-       firstName,
-       lastName,
-       age,
-       phoneNumber,
-       email,
-       linkedinLink,
-       githubLink,
-       telegramLink,
-       workExperience,
-       skills,
-       education,
-       foreignLanguages,
-       interests,
-       achievements,
-       specialty,
-       desiredSalary,
-       employment
-    from User
-         inner join Resume on Resume.candidateId = User.id
-    where id = :candidateId
-       and userType = 'CANDIDATE';`,
-    { candidateId: verifiedToken.userId },
-  );
+  const candidateProfileQuery = await dbClient.execute({
+    sql: "\
+select first_name,\
+       last_name,\
+       phone_number,\
+       email,\
+       linkedin_link,\
+       github_link,\
+       work_experience,\
+       skills,\
+       education,\
+       foreign_languages,\
+       interests,\
+       achievements,\
+       specialty,\
+       desired_salary,\
+       employment \
+from user \
+         inner join resume on resume.candidate_id = user.id \
+where user.id = :candidate_id \
+  and user_type_id = (select id from user_type where type = 'CANDIDATE');",
+    args: { candidate_id: verifiedToken.userId },
+  });
 
-  const candidateProfile = candidateProfileQuery
-    .rows[0] as CandidateDetails | null;
+  const candidateProfile = candidateProfileQuery.rows[0] as
+    | (NestedCandidateProfile["candidate"] & NestedCandidateProfile["resume"])
+    | undefined;
 
   if (!candidateProfile) {
     return {
@@ -175,25 +132,22 @@ export const getServerSideProps = async ({
 
   const nestedCandidateProfile: NestedCandidateProfile = {
     candidate: {
-      id: candidateProfile.id,
-      firstName: candidateProfile.firstName,
-      lastName: candidateProfile.lastName,
-      age: candidateProfile.age,
-      phoneNumber: candidateProfile.phoneNumber,
+      first_name: candidateProfile.first_name,
+      last_name: candidateProfile.last_name,
+      phone_number: candidateProfile.phone_number,
       email: candidateProfile.email,
-      linkedinLink: candidateProfile.linkedinLink,
-      githubLink: candidateProfile.githubLink,
-      telegramLink: candidateProfile.telegramLink,
+      linkedin_link: candidateProfile.linkedin_link,
+      github_link: candidateProfile.github_link,
     },
     resume: {
-      workExperience: candidateProfile.workExperience,
+      work_experience: candidateProfile.work_experience,
       skills: candidateProfile.skills,
       education: candidateProfile.education,
-      foreignLanguages: candidateProfile.foreignLanguages,
+      foreign_languages: candidateProfile.foreign_languages,
       interests: candidateProfile.interests,
       achievements: candidateProfile.achievements,
       specialty: candidateProfile.specialty,
-      desiredSalary: candidateProfile.desiredSalary,
+      desired_salary: candidateProfile.desired_salary,
       employment: candidateProfile.employment,
     },
   };
@@ -203,4 +157,23 @@ export const getServerSideProps = async ({
       nestedCandidateProfile,
     },
   };
+};
+
+export type NestedCandidateProfile = {
+  candidate: Omit<
+    User,
+    "id" | "user_uuid" | "user_type_id" | "login" | "password"
+  >;
+  resume: Pick<
+    Resume,
+    | "work_experience"
+    | "skills"
+    | "education"
+    | "foreign_languages"
+    | "interests"
+    | "achievements"
+    | "specialty"
+    | "desired_salary"
+    | "employment"
+  >;
 };

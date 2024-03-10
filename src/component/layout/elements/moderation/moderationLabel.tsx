@@ -1,9 +1,9 @@
-import type { ModerationStatus } from "~/utils/dbSchema/enums";
+import type { StatusType } from "~/server/db/types/schema";
 
 export function ModerationLabel({
   moderationStatus,
 }: {
-  moderationStatus: ModerationStatus;
+  moderationStatus: StatusType["status"];
 }) {
   const moderationStyle = {
     ACCEPTED: "bg-green-50 text-green-700 ring-green-600/20",
