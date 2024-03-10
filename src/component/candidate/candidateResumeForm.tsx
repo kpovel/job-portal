@@ -13,7 +13,7 @@ const resumeInputs: ResumeInput[] = [
   {
     label: "Досвід роботи",
     type: "text",
-    name: "workExperience",
+    name: "work_experience",
     id: "workExperience",
   },
   {
@@ -31,7 +31,7 @@ const resumeInputs: ResumeInput[] = [
   {
     label: "Іноземні мови",
     type: "text",
-    name: "foreignLanguages",
+    name: "foreign_languages",
     id: "foreignLanguages",
   },
   {
@@ -55,7 +55,7 @@ const resumeInputs: ResumeInput[] = [
   {
     label: "Очікувана заробітня плата",
     type: "text",
-    name: "desiredSalary",
+    name: "desired_salary",
     id: "desiredSalary",
   },
   {
@@ -66,16 +66,12 @@ const resumeInputs: ResumeInput[] = [
   },
 ];
 
-type FormData = {
-  [key: string]: string;
-} & NestedCandidateProfile["resume"];
-
 export function CandidateResumeForm({
   candidateResume,
 }: {
   candidateResume: NestedCandidateProfile["resume"];
 }) {
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState({
     work_experience: candidateResume.work_experience ?? "",
     skills: candidateResume.skills ?? "",
     education: candidateResume.education ?? "",
@@ -86,6 +82,7 @@ export function CandidateResumeForm({
     desired_salary: candidateResume.desired_salary ?? "",
     employment: candidateResume.employment ?? "",
   });
+  const [submitting, setSubmitting] = useState(false);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -98,13 +95,17 @@ export function CandidateResumeForm({
   }
 
   async function updateCandidateResume(): Promise<void> {
-    // todo: find candidate id using token on server side
-    await fetch("/api/candidate/updateResume", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-      //{ formData, ...candidateId }
-    });
+    setSubmitting(true);
+    try {
+      await fetch("/api/candidate/updateResume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+    } catch (e) {
+      console.error(e);
+    }
+    setSubmitting(false);
   }
 
   return (
@@ -118,7 +119,7 @@ export function CandidateResumeForm({
               label={resumeInput.label}
               name={resumeInput.name}
               id={resumeInput.id}
-              value={formData[resumeInput.name] as string}
+              value={formData[resumeInput.name as never]}
               onChange={handleInputChange}
             />
           );
@@ -127,7 +128,12 @@ export function CandidateResumeForm({
       <div className="mt-10">
         <button
           type="submit"
-          className="block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          className="mt-10 block w-full rounded-md bg-indigo-600 px-3.5 py-2.5
+          text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500
+          focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+          focus-visible:outline-indigo-600 disabled:bg-indigo-600/50"
+          aria-disabled={submitting}
+          disabled={submitting}
         >
           Оновити моє резюме
         </button>
