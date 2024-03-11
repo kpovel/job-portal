@@ -38,7 +38,10 @@ from response \
 where candidate_id = (select id from candidate_id)\
   and employer_id = :employer_id\
   and response_by_user_type_id = (select id as response_by_user_type_id from user_type where type = 'EMPLOYER');",
-      args: { candidateUUID, employer_id: verifiedToken.userId },
+      args: {
+        candidate_uuid: candidateUUID,
+        employer_id: verifiedToken.userId,
+      },
     });
     const sentOffers = sentOfferQuery.rows[0] as
       | { "count(*)": number }
