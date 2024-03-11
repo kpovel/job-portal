@@ -1,95 +1,65 @@
-import { type FormEvent, useContext, useEffect, useState } from "react";
-import { AuthContext } from "~/utils/auth/authContext";
+import { type FormEvent, useEffect, useState } from "react";
 import { ChooseVacancyToOffer } from "./chooseVacancyToOffer";
-import type { Vacancy } from "~/utils/dbSchema/models";
+import type { Vacancy } from "~/server/db/types/schema";
 
-export function SendJobOffer({ candidateId }: { candidateId: string }) {
-  const authContext = useContext(AuthContext);
-
+export function SendJobOffer({ candidateUUID }: { candidateUUID: string }) {
   const [offerDescription, setOfferDescription] = useState("");
   const [isSentOffer, setIsSentOffer] = useState<boolean>(false);
-  const [availableVacancies, setAvailableVacancies] = useState<Vacancy[]>([]);
-  const [selectedVacancy, setSelectedVacancy] = useState<Vacancy | null>(null);
-
-  function setCurrentVacancy(questionnaireId: string) {
-    const selectedVacancy = availableVacancies.find(
-      (vacancy) => vacancy.questionnaireId === questionnaireId,
-    );
-    setSelectedVacancy(selectedVacancy || null);
-  }
-
+  const [availableVacancies, setAvailableVacancies] = useState<
+    AcceptedVacancy[]
+  >([]);
+  const [selectedVacancy, setSelectedVacancy] =
+    useState<AcceptedVacancy | null>(null);
   const isFormFieldOut = offerDescription.length > 100;
 
-  async function checkIsSentOffer(candidateId: string, employerId: string) {
+  useEffect(() => {
+    void getEmployerVacancies();
+    void checkIsSentOffer(candidateUUID);
+  }, [candidateUUID]);
+
+  function setCurrentVacancy(vacancyUUID: string) {
+    const selectedVacancy = availableVacancies.find(
+      (vacancy) => vacancy.vacancy_uuid === vacancyUUID,
+    );
+    setSelectedVacancy(selectedVacancy ?? null);
+  }
+
+  async function checkIsSentOffer(candidateUUID: string) {
     try {
-      const isSentOffer = await fetch("/api/employer/isSentOffer", {
+      const res = await fetch("/api/employer/isSentOffer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ candidateId, employerId }),
+        body: JSON.stringify({ candidateUUID }),
       });
 
-      type SuccessResponse = {
-        message: string;
-        isSentOffer: boolean;
-      };
-
-      type ErrorResponse = {
-        message: string;
-        error: string;
-      };
-
-      type OfferResponse = SuccessResponse | ErrorResponse;
-
-      const offerResponse = (await isSentOffer.json()) as OfferResponse;
-      if ("isSentOffer" in offerResponse) {
+      if (res.status === 200) {
+        const offerResponse = (await res.json()) as {
+          isSentOffer: boolean;
+        };
         setIsSentOffer(offerResponse.isSentOffer);
-      } else if ("error" in offerResponse) {
-        console.error(offerResponse.error);
-        setIsSentOffer(true);
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
-  async function getEmployerVacancies(employerId: string): Promise<void> {
+  async function getEmployerVacancies(): Promise<void> {
     try {
       const response = await fetch("/api/employer/acceptedVacancies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ employerId }),
       });
 
-      type SuccessResponse = {
-        message: string;
-        acceptedVacancies: Vacancy[];
-      };
-
-      type ErrorResponse = {
-        message: string;
-        error: string;
-      };
-
-      type OfferResponse = SuccessResponse | ErrorResponse;
-      const vacanciesResponse = (await response.json()) as OfferResponse;
-
-      if ("acceptedVacancies" in vacanciesResponse) {
+      if (response.status === 200) {
+        const vacanciesResponse = (await response.json()) as {
+          acceptedVacancies: AcceptedVacancy[];
+        };
         setAvailableVacancies(vacanciesResponse.acceptedVacancies);
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
-
-  useEffect(() => {
-    void getEmployerVacancies(authContext?.id || "");
-  }, [authContext?.id]);
-
-  useEffect(() => {
-    if (authContext?.id) {
-      void checkIsSentOffer(candidateId, authContext.id);
-    }
-  }, [authContext?.id, candidateId]);
 
   function handleSubmitCoverLetter(e: FormEvent) {
     e.preventDefault();
@@ -97,24 +67,27 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
   }
 
   async function sendJobOffer() {
+    if (!selectedVacancy) {
+      return;
+    }
+
     try {
       const sentOffer = await fetch("/api/employer/sendOffer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          employerId: authContext?.id,
-          candidateId,
+          candidateUUID,
           offerDescription,
-          vacancyId: selectedVacancy?.questionnaireId,
+          vacancyId: selectedVacancy.vacancy_uuid,
         }),
       });
 
-      if (sentOffer.ok) {
+      if (sentOffer.status === 200) {
         setIsSentOffer(true);
         setOfferDescription("");
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -165,3 +138,5 @@ export function SendJobOffer({ candidateId }: { candidateId: string }) {
     </div>
   );
 }
+
+export type AcceptedVacancy = Pick<Vacancy, "vacancy_uuid" | "specialty">;

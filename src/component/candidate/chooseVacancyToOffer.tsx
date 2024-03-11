@@ -4,21 +4,20 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
 } from "@radix-ui/react-icons";
-import type { Vacancy } from "~/utils/dbSchema/models";
+import type { AcceptedVacancy } from "./sendJobOffer";
 
 export function ChooseVacancyToOffer({
   vacancies,
   selectedVacancy,
-  selectVacancy
+  selectVacancy,
 }: {
-  vacancies: Vacancy[];
-  selectedVacancy: Vacancy | null;
-  selectVacancy: (questionnaireId: string) => void
-
+  vacancies: AcceptedVacancy[];
+  selectedVacancy: AcceptedVacancy | null;
+  selectVacancy: (questionnaireId: string) => void;
 }) {
   return (
     <Select.Root
-      value={selectedVacancy?.questionnaireId}
+      value={selectedVacancy?.vacancy_uuid}
       onValueChange={selectVacancy}
     >
       <Select.Trigger
@@ -43,7 +42,7 @@ export function ChooseVacancyToOffer({
               {vacancies.map((vacancy) => {
                 return (
                   <SelectVacancy
-                    key={vacancy.questionnaireId}
+                    key={vacancy.vacancy_uuid}
                     vacancy={vacancy}
                   />
                 );
@@ -59,11 +58,11 @@ export function ChooseVacancyToOffer({
   );
 }
 
-const SelectVacancy = ({ vacancy }: { vacancy: Vacancy }) => {
+function SelectVacancy({ vacancy }: { vacancy: AcceptedVacancy }) {
   return (
     <Select.Item
       className="text-s relative my-1 flex h-7 select-none items-center rounded px-6 data-[disabled]:pointer-events-none data-[highlighted]:bg-violet-500 data-[disabled]:text-gray-400 data-[highlighted]:text-purple-50 data-[highlighted]:outline-none"
-      value={vacancy.questionnaireId}
+      value={vacancy.vacancy_uuid}
     >
       <Select.ItemText>{vacancy.specialty}</Select.ItemText>
       <Select.ItemIndicator className="absolute left-0 inline-flex w-6 items-center justify-center">
@@ -71,4 +70,4 @@ const SelectVacancy = ({ vacancy }: { vacancy: Vacancy }) => {
       </Select.ItemIndicator>
     </Select.Item>
   );
-};
+}
