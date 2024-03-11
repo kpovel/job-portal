@@ -82,7 +82,7 @@ export function SendJobOffer({ candidateUUID }: { candidateUUID: string }) {
         }),
       });
 
-      if (sentOffer.status === 200) {
+      if (sentOffer.status === 201) {
         setIsSentOffer(true);
         setOfferDescription("");
       }
