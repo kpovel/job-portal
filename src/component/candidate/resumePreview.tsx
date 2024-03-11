@@ -1,30 +1,23 @@
 import Link from "next/link";
-import type { Resume } from "~/utils/dbSchema/models";
+import type { ResumePreview } from "~/pages/candidates";
 
-export function CandidateResumePreview({
-  resume,
-}: {
-  resume: Omit<Resume, "moderationStation"> & {
-    firstName: string;
-    lastName: string;
-  };
-}) {
+export function CandidateResumePreview({ resume }: { resume: ResumePreview }) {
   return (
     <div className="rounded-md border border-gray-300 p-4">
       <Link
-        href={`/candidate/${resume.candidateId}`}
+        href={`/candidate/${resume.user_uuid}`}
         className="mb-3 flex items-center"
       >
         <div>
           <div className="font-bold text-blue-600  hover:text-blue-800">
-            {resume.firstName} {resume.lastName}
+            {resume.first_name} {resume.last_name}
           </div>
           <div className="text-sm text-gray-500">{resume.specialty}</div>
         </div>
       </Link>
-      {resume.workExperience && (
+      {resume.work_experience && (
         <div className="mb-2">
-          <strong>Work Experience:</strong> {resume.workExperience}
+          <strong>Work Experience:</strong> {resume.work_experience}
         </div>
       )}
       {resume.skills && (
@@ -37,9 +30,9 @@ export function CandidateResumePreview({
           <strong>Education:</strong> {resume.education}
         </div>
       )}
-      {resume.foreignLanguages && (
+      {resume.foreign_languages && (
         <div className="mb-2">
-          <strong>Foreign Languages:</strong> {resume.foreignLanguages}
+          <strong>Foreign Languages:</strong> {resume.foreign_languages}
         </div>
       )}
       {resume.interests && (

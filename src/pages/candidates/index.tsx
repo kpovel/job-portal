@@ -3,7 +3,7 @@ import { dbClient } from "~/server/db";
 import Head from "next/head";
 import type { InferGetStaticPropsType } from "next";
 import { CandidateResumePreview } from "~/component/candidate/resumePreview";
-import type { Resume } from "~/utils/dbSchema/models";
+import type { Resume, User } from "~/server/db/types/schema";
 
 export default function Candidates({
   acceptedResumes,
@@ -22,10 +22,7 @@ export default function Candidates({
           </h2>
           <div className="grid grid-cols-1 gap-4">
             {acceptedResumes.map((resume) => (
-              <CandidateResumePreview
-                key={resume.questionnaireId}
-                resume={resume}
-              />
+              <CandidateResumePreview key={resume.user_uuid} resume={resume} />
             ))}
           </div>
         </div>
@@ -35,16 +32,27 @@ export default function Candidates({
 }
 
 export async function getStaticProps() {
-  const acceptedResumeQuery = await dbClient.execute(`
-      select questionnaireId, workExperience, skills, education, foreignLanguages, interests, achievements, specialty, desiredSalary, employment, updatedAt, candidateId, firstName, lastName
-      from Resume
-      inner join User on User.id = Resume.candidateId
-      where moderationStatus = 'ACCEPTED';`);
+  const acceptedResumeQuery = await dbClient.execute(
+    "\
+select user_uuid,\
+       first_name,\
+       last_name,\
+       work_experience,\
+       skills,\
+       education,\
+       foreign_languages,\
+       interests,\
+       achievements,\
+       specialty,\
+       desired_salary,\
+       employment,\
+       updated_at \
+from Resume\
+         inner join user on user.id = resume.candidate_id \
+where moderation_status_id = (select id as moderation_status_id from status_type where status = 'ACCEPTED');",
+  );
 
-  const acceptedResumes = acceptedResumeQuery.rows as (Omit<
-    Resume,
-    "moderationStation"
-  > & { firstName: string; lastName: string })[];
+  const acceptedResumes = acceptedResumeQuery.rows as never as ResumePreview[];
 
   return {
     props: {
@@ -53,3 +61,9 @@ export async function getStaticProps() {
     revalidate: 20,
   };
 }
+
+export type ResumePreview = Pick<
+  User,
+  "user_uuid" | "first_name" | "last_name"
+> &
+  Omit<Resume, "id" | "resume_uuid" | "candidate_id" | "moderation_status_id">;
