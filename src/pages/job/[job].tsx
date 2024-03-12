@@ -96,7 +96,7 @@ export default function Job({
             {isAdmin && (
               <ModerateJob
                 moderationStatus={vacancy.status}
-                questionnaireId={vacancy.status}
+                vacancyUUID={vacancy.vacancy_uuid}
               />
             )}
           </div>

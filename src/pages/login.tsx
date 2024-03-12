@@ -19,6 +19,7 @@ export default function Login() {
       if (res.status === 200) {
         const redirectLocation = await res.text();
         await router.push(redirectLocation);
+        return "";
       }
 
       const errorData = await res.text();

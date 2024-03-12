@@ -3,10 +3,10 @@ import { useState } from "react";
 import type { StatusType } from "~/server/db/types/schema";
 
 export function ModerateJob({
-  questionnaireId,
+  vacancyUUID,
   moderationStatus,
 }: {
-  questionnaireId: string;
+  vacancyUUID: string;
   moderationStatus: StatusType["status"];
 }) {
   const [selectedStatus, setSelectedStatus] =
@@ -18,22 +18,22 @@ export function ModerateJob({
 
   async function updateModerationStatus(
     moderationStatus: StatusType["status"],
-  ): Promise<void> {
+  ) {
     try {
       const response = await fetch("/api/employer/updateModerationStatus", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           moderationStatus,
-          questionnaireId,
+          vacancyUUID,
         }),
       });
 
-      if (response.ok) {
+      if (response.status === 204) {
         setSelectedStatus(moderationStatus);
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
