@@ -20,7 +20,6 @@ export function ModerateCandidate({
     moderationStatus: StatusType["status"],
   ) {
     try {
-      // todo: update server side
       const response = await fetch("/api/candidate/updateModerationStatus", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
