@@ -8,7 +8,7 @@ import Head from "next/head";
 import { VacancyPreview } from "~/component/employer/vacancyPreview";
 import { adminOnlyAccess } from "~/utils/admin/adminOnlyAccess";
 import { dbClient } from "~/server/db";
-import type { Vacancy } from "~/utils/dbSchema/models";
+import type { Vacancy } from "~/server/db/types/schema";
 
 export default function Candidates({
   unmoderatedVacancies,
@@ -24,7 +24,7 @@ export default function Candidates({
           <hr className="w-full border-gray-300" />
           {unmoderatedVacancies.map((vacancy) => {
             return (
-              <VacancyPreview key={vacancy.questionnaireId} vacancy={vacancy} />
+              <VacancyPreview key={vacancy.vacancy_uuid} vacancy={vacancy} />
             );
           })}
         </div>
@@ -48,13 +48,23 @@ export const getServerSideProps = async (
   }
 
   const vacanciesQuery = await dbClient.execute(
-    `select questionnaireId, specialty, salary, duties, requirements, conditions, workSchedule, employment, dateOfPublication
-    from Vacancy where moderationStatus != 'ACCEPTED';`,
+    "\
+select vacancy_uuid,\
+       specialty,\
+       salary,\
+       duties,\
+       requirements,\
+       conditions,\
+       work_schedule,\
+       employment,\
+       publication_date \
+from vacancy \
+where moderation_status_id != (select id from status_type where status = 'ACCEPTED');",
   );
 
-  const unmoderatedVacancies = vacanciesQuery.rows as Omit<
+  const unmoderatedVacancies = vacanciesQuery.rows as never as Omit<
     Vacancy,
-    "employerId" | "moderationStatus"
+    "id" | "employer_id" | "moderation_status_id"
   >[];
 
   return {
