@@ -1,30 +1,49 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dbClient } from "~/server/db";
-import type { ModerationStatus } from "dbSchema/enums";
+import type { StatusType } from "~/server/db/types/schema";
+import { verifyToken } from "~/utils/auth/auth";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+import type { VerifyToken } from "~/utils/auth/withoutAuth";
 
 export default async function updateProfile(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
-    res.status(405).json({ message: "Method not allowed" });
+    res.status(405).send("Method not allowed");
+  }
+
+  const employerToken = req.cookies[AUTHORIZATION_TOKEN_KEY];
+  if (!employerToken) {
+    res.status(401).send("Authorization cookie not provided");
+    return;
   }
 
   try {
-    const { moderationStatus, questionnaireId } = req.body as {
-      moderationStatus: keyof typeof ModerationStatus;
-      questionnaireId: string;
+    const verifiedToken = verifyToken(employerToken) as VerifyToken | null;
+    if (!verifiedToken?.userId) {
+      res.status(401).send("Invalid token key");
+      return;
+    }
+    const { moderationStatus, candidateUUID } = req.body as {
+      moderationStatus: StatusType["status"];
+      candidateUUID: string;
     };
 
-    await dbClient.execute(
-      "update Resume set moderationStatus = :moderationStatus where questionnaireId = :questionnaireId",
-      { moderationStatus, questionnaireId },
-    );
-
-    res.status(200).json({
-      message: "Successfully updated Resume moderation status",
+    await dbClient.execute({
+      sql: "\
+update resume \
+set moderation_status_id = (select id from status_type where status = :moderation_status) \
+where candidate_id = (select id from user where user_uuid = :candidate_uuid);",
+      args: {
+        moderation_status: moderationStatus,
+        candidate_uuid: candidateUUID,
+      },
     });
+
+    res.status(200).send("");
   } catch (error) {
-    res.status(400).json({ message: "Error of updating resume moderation status", error });
+    console.error(error);
+    res.status(400).send("Error of updating resume moderation status");
   }
 }

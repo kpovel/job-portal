@@ -26,11 +26,11 @@ export function ModerateCandidate({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           moderationStatus,
-          questionnaireId: candidateUUID,
+          candidateUUID,
         }),
       });
 
-      if (response.ok) {
+      if (response.status === 200) {
         setSelectedStatus(moderationStatus);
       }
     } catch (e) {
