@@ -74,7 +74,7 @@ export function EmployerFeedback({
               type="submit"
               className="rounded-md border bg-red-400 p-2"
               onClick={() => {
-                void sendFeedbackResult("ACCEPTED");
+                void sendFeedbackResult("REJECTED");
               }}
             >
               Відхилити
