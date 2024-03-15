@@ -1,44 +1,55 @@
-import { createId } from "@paralleldrive/cuid2";
+import { randomUUID } from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dbClient } from "~/server/db";
-import type { ResponseResult } from "~/utils/dbSchema/enums";
+import type { StatusType } from "~/server/db/types/schema";
+import { verifyToken } from "~/utils/auth/auth";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+import type { VerifyToken } from "~/utils/auth/withoutAuth";
 
 export default async function createFeedbackResult(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
-    res.status(405).json({ message: "Method not allowed" });
+    res.status(405).send("Method not allowed");
+  }
+
+  const employerToken = req.cookies[AUTHORIZATION_TOKEN_KEY];
+  if (!employerToken) {
+    res.status(401).send("Authorization cookie not provided");
+    return;
   }
 
   try {
-    const { responseId, responseResult, feedbackContent } = req.body as {
-      responseId: string;
-      responseResult: ResponseResult;
-      feedbackContent: string;
+    const verifiedToken = verifyToken(employerToken) as VerifyToken | null;
+    if (!verifiedToken?.userId) {
+      res.status(401).send("Invalid token key");
+      return;
+    }
+
+    const { responseUUID, responseResult, feedbackContent } = req.body as {
+          responseUUID: string,
+          responseResult: StatusType["status"],
+          feedbackContent: string,
     };
 
-    const feedbackResultId = createId();
-    await dbClient.execute(
-      `insert into FeedbackResult (responseId, response, feedbackResultId, responseResult)
-      values (:responseId, :response, :feedbackResultId, :responseResult);`,
-      {
-        responseId,
-        response: feedbackContent,
-        responseResult,
-        feedbackResultId,
+    await dbClient.execute({
+      sql: "\
+insert into feedback_result (feedback_result_uuid, response_id, response, feedback_result_status_id)\
+values (:feedback_result_uuid, (select id from response where response_uuid = :response_uuid), :respose,\
+        (select id from status_type where status = :status));",
+      args: {
+        feedback_result_uuid: randomUUID(),
+        response_uuid: responseUUID,
+        respose: feedbackContent,
+        status: responseResult,
       },
-    );
-    const responseQuery = await dbClient.execute(
-      "select * from FeedbackResult where feedbackResultId = :feedbackResultId",
-      { feedbackResultId },
-    );
-
-    res.status(200).json({
-      message: "Successfully receive responses",
-      response: responseQuery.rows[0],
     });
+
+    res.status(200).send("");
   } catch (error) {
-    res.status(400).json({ message: "Something went wrong", error });
+    console.error(error);
+
+    res.status(400).send("Something went wrong");
   }
 }
