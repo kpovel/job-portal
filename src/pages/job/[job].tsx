@@ -103,8 +103,8 @@ export default function Job({
         </div>
         {isCandidate && (
           <VacancyResponse
-            vacancyId={vacancy.status}
-            employerId={vacancy.status}
+            vacancyUUID={vacancy.vacancy_uuid}
+            employerUUID={vacancy.user_uuid}
           />
         )}
       </Layout>
@@ -140,8 +140,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const getStaticProps = async ({ params }: StaticPath) => {
   const vacancyQuery = await dbClient.execute({
     sql: "\
-select v.vacancy_uuid,\
-       v.employer_id,\
+select user_uuid,\
+       v.vacancy_uuid,\
        v.specialty,\
        v.salary,\
        v.duties,\
@@ -164,10 +164,13 @@ where v.vacancy_uuid = :vacancy_uuid;",
     args: { vacancy_uuid: params.job },
   });
 
-  const vacancy = vacancyQuery.rows[0] as never as Omit<Vacancy, "id"> &
+  const vacancy = vacancyQuery.rows[0] as never as Omit<
+    Vacancy,
+    "id" | "employer_id"
+  > &
     Pick<StatusType, "status"> &
     Omit<Employer, "id"> &
-    Pick<User, "phone_number" | "email" | "linkedin_link">;
+    Pick<User, "user_uuid" | "phone_number" | "email" | "linkedin_link">;
 
   return {
     props: {

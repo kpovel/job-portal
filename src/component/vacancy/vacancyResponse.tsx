@@ -2,11 +2,11 @@ import { type FormEvent, useEffect, useState } from "react";
 import type { StatusType } from "~/server/db/types/schema";
 
 export function VacancyResponse({
-  vacancyId,
-  employerId,
+  vacancyUUID,
+  employerUUID,
 }: {
-  vacancyId: string;
-  employerId: string;
+  vacancyUUID: string;
+  employerUUID: string;
 }) {
   const [coverLetter, setCoverLetter] = useState("");
   const [isSentResponse, setIsSentResponse] = useState<boolean>(false);
@@ -20,8 +20,7 @@ export function VacancyResponse({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function checkIsSentResponse(): Promise<void> {
-    // todo: find candidate id using token on server side
+  async function checkIsSentResponse() {
     try {
       const responsesByCandidate = await fetch(
         "/api/response/findResponsesByCandidate",
@@ -29,20 +28,18 @@ export function VacancyResponse({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            // candidateId: authContext?.id,
-            vacancyId,
+            vacancyUUID,
           }),
         },
       );
 
-      if (responsesByCandidate.ok) {
+      if (responsesByCandidate.status === 200) {
         const parsedResponses = (await responsesByCandidate.json()) as {
-          isSentResponse: boolean;
+          canSendResponse: boolean;
           resumeModerationStatus: StatusType["status"];
-          message: string;
         };
 
-        setIsSentResponse(parsedResponses.isSentResponse);
+        setIsSentResponse(!parsedResponses.canSendResponse);
         setResumeModerationStatus(parsedResponses.resumeModerationStatus);
       }
     } catch (e) {
@@ -57,22 +54,22 @@ export function VacancyResponse({
 
   async function sendResponse() {
     try {
-      // todo: find candidate id using token on server side
-      await fetch("/api/response/responseOnVacancy", {
+      const res = await fetch("/api/response/responseOnVacancy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          // candidateId,
-          employerId,
-          vacancyId,
+          employerUUID,
+          vacancyUUID,
           coverLetter,
         }),
       });
 
-      setIsSentResponse(true);
-      setCoverLetter("");
+      if (res.status === 200) {
+        setIsSentResponse(true);
+        setCoverLetter("");
+      }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
