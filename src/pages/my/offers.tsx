@@ -7,32 +7,22 @@ import type { VerifyToken } from "~/utils/auth/withoutAuth";
 import type { GetServerSidePropsContext } from "next";
 import { format } from "date-fns";
 import Link from "next/link";
-import { useContext } from "react";
-import { AuthContext } from "~/utils/auth/authContext";
 import { EmployerApplication } from "~/component/inbox/employerApplication";
 import { EmployerFeedback } from "~/component/inbox/employerFeedback";
-import type { ResponseBy, ResponseResult } from "~/utils/dbSchema/enums";
-
-type CandidateOffer = {
-  responseId: string;
-  vacancyId: string;
-  response: string | null;
-  specialty: string;
-  responseResult: ResponseResult | null;
-  coverLetter: string;
-  responseDate: Date;
-  responseBy: ResponseBy;
-};
+import type {
+  Response,
+  StatusType,
+  Vacancy,
+  UserType,
+} from "~/server/db/types/schema";
 
 export default function Offers({
   candidateOffers,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const authContext = useContext(AuthContext);
-
   return (
     <Layout>
-      <div className="container mx-auto px-4">
-        <h2 className="py-3 text-2xl font-bold">
+      <div className="container mx-auto p-4">
+        <h2 className="pb-3 text-2xl font-bold">
           {candidateOffers.length
             ? "Список пропозицій"
             : "Ви ще не маєте пропозицій"}
@@ -40,31 +30,31 @@ export default function Offers({
         <div className="grid grid-cols-1 gap-4">
           {candidateOffers.map((offer) => (
             <div
-              key={offer.responseId}
+              key={offer.response_uuid}
               className="flex w-full flex-col gap-2 rounded-md border border-gray-300 p-4"
             >
-              <Link href={`/job/${offer.vacancyId}`}>
+              <Link href={`/job/${offer.vacancy_uuid}`}>
                 <div className="font-bold text-blue-600 hover:text-blue-800">
                   {offer.specialty}
                 </div>
               </Link>
               <p>
-                <strong>Супровідний лист:</strong> {offer.coverLetter}
+                <strong>Супровідний лист:</strong> {offer.cover_letter}
               </p>
               <p>
                 <strong>Надіслано: </strong>
-                {format(new Date(offer.responseDate), "d MMMM yyyy, HH:mm")}
+                {format(new Date(offer.response_date), "d MMMM yyyy, HH:mm")}
               </p>
-              {offer.responseBy.toString() === authContext?.userType ? (
+              {offer.type === "CANDIDATE" ? (
                 <EmployerApplication
-                  response={offer.response}
-                  responseResult={offer.responseResult}
+                  feedbackStatus={offer.status}
+                  feedbackResponse={offer.response}
                 />
               ) : (
                 <EmployerFeedback
-                  response={offer.response}
-                  responseresult={offer.responseResult}
-                  responseId={offer.responseId}
+                  feedbackStatus={offer.status}
+                  feedbackResponse={offer.response}
+                  responseUUID={offer.response_uuid}
                 />
               )}
             </div>
@@ -75,9 +65,7 @@ export default function Offers({
   );
 }
 
-export const getServerSideProps = async ({
-  req,
-}: GetServerSidePropsContext) => {
+export async function getServerSideProps({ req }: GetServerSidePropsContext) {
   const authToken = req.cookies[AUTHORIZATION_TOKEN_KEY] ?? "";
   const verifiedToken = verifyToken(authToken) as VerifyToken | null;
 
@@ -90,12 +78,15 @@ export const getServerSideProps = async ({
     };
   }
 
-  const candidateQuery = await dbClient.execute(
-    "select candidateId from Candidate where candidateId = :candidateId;",
-    {
-      candidateId: verifiedToken.userId,
+  const candidateQuery = await dbClient.execute({
+    sql: "\
+select id \
+from candidate \
+where id = :candidate_id;",
+    args: {
+      candidate_id: verifiedToken.userId,
     },
-  );
+  });
 
   if (!candidateQuery.rows.length) {
     return {
@@ -106,21 +97,42 @@ export const getServerSideProps = async ({
     };
   }
 
-  const candidateOffersQuery = await dbClient.execute(
-    `select r.responseId, r.vacancyId, v.specialty, fr.response, fr.responseResult, coverLetter, r.responseDate, r.responseBy
-    from Response as r
-    left join FeedbackResult fr on fr.responseId = r.responseId
-    left join Vacancy v on v.questionnaireId = r.responseId
-    where candidateId = :candidateId;`,
-    {
-      candidateId: verifiedToken.userId,
+  const candidateOffersQuery = await dbClient.execute({
+    sql: "\
+select r.response_uuid,\
+       r.response_date,\
+       cover_letter,\
+       v.vacancy_uuid,\
+       v.specialty,\
+       fr.response,\
+       st.status,\
+       ut.type \
+from response as r\
+         left join feedback_result fr on fr.response_id = r.id\
+         inner join vacancy v on v.id = r.vacancy_id\
+         inner join user_type ut on r.response_by_user_type_id = ut.id\
+         left join status_type st on fr.feedback_result_status_id = st.id \
+where candidate_id = :candidate_id \
+order by r.response_date desc;",
+    args: {
+      candidate_id: verifiedToken.userId,
     },
-  );
-  const candidateOffers = candidateOffersQuery.rows as CandidateOffer[];
+  });
+  const candidateOffers =
+    candidateOffersQuery.rows as never as CandidateOffer[];
 
   return {
     props: {
       candidateOffers,
     },
   };
-};
+}
+
+type CandidateOffer = Pick<
+  Response,
+  "response_uuid" | "response_date" | "cover_letter"
+> &
+  Pick<Vacancy, "vacancy_uuid" | "specialty"> & {
+    response: string | null;
+    status: StatusType["status"] | null;
+  } & Pick<UserType, "type">;

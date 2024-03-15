@@ -1,21 +1,21 @@
 import { type FormEvent, useState, useContext } from "react";
+import type { StatusType } from "~/server/db/types/schema";
 import { AuthContext } from "~/utils/auth/authContext";
-import { ResponseResult, UserType } from "dbSchema/enums";
 
 export function EmployerFeedback({
-  response,
-  responseresult,
-  responseId,
+  feedbackResponse,
+  feedbackStatus,
+  responseUUID,
 }: {
-  response: string | null;
-  responseresult: ResponseResult | null;
-  responseId: string;
+  feedbackResponse: string | null;
+  feedbackStatus: StatusType["status"] | null;
+  responseUUID: string;
 }) {
   const [isOpenFeedbackMenu, setIsOpenFeedbackMany] = useState<boolean>(false);
   const [feedbackContent, setFeedbackContent] = useState<string>("");
-  const [responseResult, setResponseResult] = useState<ResponseResult | null>(
-    responseresult,
-  );
+  const [responseResult, setResponseResult] = useState<
+    StatusType["status"] | null
+  >(feedbackStatus);
   const authContext = useContext(AuthContext);
 
   function handleSubmitForm(e: FormEvent) {
@@ -25,12 +25,12 @@ export function EmployerFeedback({
 
   async function sendFeedbackResult() {
     try {
-      // should I handle the request?
+      // todo: update api
       await fetch("/api/response/createFeedbackResult", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          responseId,
+          responseUUID,
           responseResult,
           feedbackContent,
         }),
@@ -50,7 +50,7 @@ export function EmployerFeedback({
           </p>
           <p className="pt-2">
             <strong>Відповідь на пропозицію: </strong>
-            {response}
+            {feedbackResponse}
           </p>
         </div>
       ) : (
@@ -59,9 +59,7 @@ export function EmployerFeedback({
           className="mt-2 rounded-md border bg-gray-300 p-2"
         >
           Відповісти{" "}
-          {authContext?.userType === UserType.EMPLOYER
-            ? "кандидату"
-            : "роботодавцю"}
+          {authContext?.type === "EMPLOYER" ? "кандидату" : "роботодавцю"}
         </button>
       )}
       {isOpenFeedbackMenu && !responseResult && (
@@ -76,14 +74,14 @@ export function EmployerFeedback({
             <button
               type="submit"
               className="rounded-md border bg-red-400 p-2"
-              onClick={() => setResponseResult(ResponseResult.REJECTED)}
+              onClick={() => setResponseResult("REJECTED")}
             >
               Відхилити
             </button>
             <button
               type="submit"
               className="rounded-md border bg-green-400 p-2"
-              onClick={() => setResponseResult(ResponseResult.ACCEPTED)}
+              onClick={() => setResponseResult("ACCEPTED")}
             >
               Прийняти
             </button>
