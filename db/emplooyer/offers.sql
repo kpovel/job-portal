@@ -1,19 +1,19 @@
 select id
-from candidate
-where id = :candidate_id;
+from employer
+where id = :employer_id;
 
 select r.response_uuid,
        r.response_date,
-       cover_letter,
-       v.vacancy_uuid,
-       v.specialty,
+       r.cover_letter,
        fr.response,
-       st.status,
-       ut.type
+       status,
+       user_uuid,
+       u.first_name,
+       u.last_name,
+       type as responseBy
 from response as r
          left join feedback_result fr on fr.response_id = r.id
-         inner join vacancy v on v.id = r.vacancy_id
+         left join user u on u.id = r.candidate_id
          inner join user_type ut on r.response_by_user_type_id = ut.id
          left join status_type st on fr.feedback_result_status_id = st.id
-where candidate_id = :candidate_id
-order by r.response_date desc;
+where employer_id = :employer_id;
