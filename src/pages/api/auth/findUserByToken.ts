@@ -9,7 +9,7 @@ export default async function findUserByToken(
   res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
-    res.status(405).json({ message: "Method not allowed" });
+    res.status(405).send("Method not allowed");
   }
 
   const { authToken } = req.body as { authToken: string };
@@ -47,6 +47,7 @@ where user.id = :userId;",
         `${AUTHORIZATION_TOKEN_KEY}=; Max-Age=0; Path=/`,
       );
       res.status(404).send("User is not find");
+      return;
     }
 
     res.status(200).json({
@@ -54,6 +55,7 @@ where user.id = :userId;",
     });
   } catch (error) {
     console.error(error);
-    res.status(400).json({ message: "Error token validation", error });
+
+    res.status(400).send("Error token validation");
   }
 }
