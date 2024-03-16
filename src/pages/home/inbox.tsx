@@ -53,7 +53,7 @@ export default function Inbox({
                     "d MMMM yyyy, HH:mm",
                   )}
                 </p>
-                {response.type === "EMPLOYER" ? (
+                {response.responseBy === "EMPLOYER" ? (
                   <EmployerApplication
                     feedbackStatus={response.status}
                     feedbackResponse={response.response}
@@ -142,4 +142,4 @@ type EmployerResponse = Pick<User, "user_uuid" | "first_name" | "last_name"> &
   Pick<Response, "response_uuid" | "response_date" | "cover_letter"> & {
     response: string | null;
     status: StatusType["status"] | null;
-  } & Pick<UserType, "type">;
+  } & { responseBy: UserType["type"] };
