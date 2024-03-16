@@ -23,6 +23,7 @@ export default function Signup() {
       if (res.status === 200) {
         const redirectLocation = await res.text();
         await router.push(redirectLocation);
+        return "";
       }
 
       return await res.text();
