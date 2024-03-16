@@ -8,11 +8,13 @@ export interface AuthFormProps {
     userType?: string,
   ) => Promise<string>;
   authorizationType: "Log in" | "Sign up";
+  loading: boolean;
 }
 
 export function AuthForm({
   handleFormSubmit,
   authorizationType,
+  loading,
 }: AuthFormProps) {
   const [login, setLogin] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -99,11 +101,13 @@ export function AuthForm({
       <button
         type="submit"
         disabled={!isFilledForm[authorizationType]}
-        className={`flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
-          !isFilledForm[authorizationType]
-            ? "cursor-not-allowed opacity-50"
-            : ""
-        }`}
+        className={
+          "flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 " +
+          (!isFilledForm[authorizationType]
+            ? "cursor-not-allowed opacity-50 "
+            : "") +
+          (loading ? "cursor-wait opacity-50" : "")
+        }
       >
         {authorizationType}
       </button>

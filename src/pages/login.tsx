@@ -4,11 +4,14 @@ import { AuthForm } from "~/component/auth/authForm";
 import { AuthLayout } from "~/component/auth/authLayout";
 import { withoutAuth } from "~/utils/auth/withoutAuth";
 import { useRouter } from "next/router";
+import { useState } from "react";
 
 export default function Login() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   async function verifyLogin(login: string, password: string) {
+    setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -27,12 +30,18 @@ export default function Login() {
     } catch (error) {
       console.error(error);
       return "Network error";
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <AuthLayout authorizationType="Log in">
-      <AuthForm handleFormSubmit={verifyLogin} authorizationType="Log in" />
+      <AuthForm
+        handleFormSubmit={verifyLogin}
+        authorizationType="Log in"
+        loading={loading}
+      />
       <p className="mt-10 text-center text-sm text-gray-500">
         Not a member?{" "}
         <Link

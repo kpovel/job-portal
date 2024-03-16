@@ -31,7 +31,7 @@ export async function createUser(
     };
   } catch (e) {
     return {
-      err: "Catched an error, I don't care",
+      err: "Catched an error, please try again later",
       ok: null,
     };
   }
