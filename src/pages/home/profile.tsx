@@ -77,11 +77,11 @@ export default function EmployerProfile({
               />
               <FormInput
                 label="Прізвище"
-                id="lastName"
-                name="first_name"
-                autoComplete="given-name"
+                id="last_name"
+                name="last_name"
+                autoComplete="family-name"
                 type="text"
-                value={formData.first_name}
+                value={formData.last_name}
                 onChange={handleUpdateForm}
               />
               <FormInput
