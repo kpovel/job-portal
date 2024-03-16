@@ -4,27 +4,24 @@ import type { GetStaticPaths, InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import { useContext } from "react";
 import { format } from "date-fns";
-import { renderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
-import { renderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
+import { RenderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
+import { RenderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
 import { AuthContext } from "~/utils/auth/authContext";
 import { ModerateJob } from "~/component/admin/moderation/moderateJob";
 import { VacancyResponse } from "~/component/vacancy/vacancyResponse";
-import type { Vacancy } from "~/utils/dbSchema/models";
-
-type VacancyPreview = Vacancy & {
-  companyName: string | null;
-  companyAddress: string | null;
-  phoneNumber: string | null;
-  email: string | null;
-  linkedinLink: string | null;
-};
+import type {
+  Employer,
+  StatusType,
+  User,
+  Vacancy,
+} from "~/server/db/types/schema";
 
 export default function Job({
   vacancy,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const authContext = useContext(AuthContext);
-  const isAdmin = authContext?.userType === "ADMIN";
-  const isCandidate = authContext?.userType === "CANDIDATE";
+  const isAdmin = authContext?.type === "ADMIN";
+  const isCandidate = authContext?.type === "CANDIDATE";
 
   return (
     <>
@@ -35,58 +32,79 @@ export default function Job({
         <div className="container mx-auto mt-6 flex flex-row gap-4">
           <div className="basis-2/3 rounded-lg border bg-white p-6 shadow-lg">
             <h2 className="mb-6 text-2xl font-bold">{vacancy.specialty}</h2>
-            {renderQuestionnaireDetail("Обов'язки", vacancy.duties)}
-            {renderQuestionnaireDetail("Вимоги", vacancy.requirements)}
-            {renderQuestionnaireDetail("Умови", vacancy.conditions)}
-            {renderQuestionnaireDetail("Графік роботи", vacancy.workSchedule)}
-            {renderQuestionnaireDetail("Тип зайнятості", vacancy.employment)}
+            <RenderQuestionnaireDetail
+              title="Обов'язки"
+              data={vacancy.duties}
+            />
+            <RenderQuestionnaireDetail
+              title="Вимоги"
+              data={vacancy.requirements}
+            />
+            <RenderQuestionnaireDetail
+              title="Умови"
+              data={vacancy.conditions}
+            />
+            <RenderQuestionnaireDetail
+              title="Графік роботи"
+              data={vacancy.work_schedule}
+            />
+            <RenderQuestionnaireDetail
+              title="Тип зайнятості"
+              data={vacancy.employment}
+            />
             <div className="mb-4">
               <strong className="text-lg font-semibold">
                 Дата публікації:
               </strong>
               <p className="mt-2 text-gray-700">
-                {vacancy.dateOfPublication &&
+                {vacancy.publication_date &&
                   format(
-                    new Date(vacancy.dateOfPublication),
+                    new Date(vacancy.publication_date),
                     "d MMMM yyyy, HH:mm",
                   )}
               </p>
             </div>
           </div>
           <div className="w-28 basis-1/3 rounded-lg border bg-white p-6 shadow-lg">
-            {renderQuestionnaireInfo(
-              "Salary",
-              vacancy.salary && `$${vacancy.salary}`,
-            )}
-            {renderQuestionnaireInfo("Company name", vacancy.companyName)}
-            {renderQuestionnaireInfo("Company address", vacancy.companyAddress)}
-            {renderQuestionnaireInfo(
-              "Phone number",
-              vacancy.phoneNumber,
-              vacancy.phoneNumber && `tel:${vacancy.phoneNumber}`,
-            )}
-            {renderQuestionnaireInfo(
-              "Email",
-              vacancy.email,
-              vacancy.email && `mailto:${vacancy.email}`,
-            )}
-            {renderQuestionnaireInfo(
-              "Linkedin link",
-              vacancy.linkedinLink,
-              vacancy.linkedinLink,
-            )}
+            <RenderQuestionnaireInfo
+              title="Salary"
+              data={vacancy.salary && `$${vacancy.salary}`}
+            />
+            <RenderQuestionnaireInfo
+              title="Company name"
+              data={vacancy.company_name}
+            />
+            <RenderQuestionnaireInfo
+              title="Company address"
+              data={vacancy.company_address}
+            />
+            <RenderQuestionnaireInfo
+              title="Phone number"
+              data={vacancy.phone_number}
+              href={vacancy.phone_number && `tel:${vacancy.phone_number}`}
+            />
+            <RenderQuestionnaireInfo
+              title="Email"
+              data={vacancy.email}
+              href={vacancy.email && `mailto:${vacancy.email}`}
+            />
+            <RenderQuestionnaireInfo
+              title="Linkedin link"
+              data={vacancy.linkedin_link}
+              href={vacancy.linkedin_link}
+            />
             {isAdmin && (
               <ModerateJob
-                moderationStatus={vacancy.moderationStatus}
-                questionnaireId={vacancy.questionnaireId}
+                moderationStatus={vacancy.status}
+                vacancyUUID={vacancy.vacancy_uuid}
               />
             )}
           </div>
         </div>
         {isCandidate && (
           <VacancyResponse
-            vacancyId={vacancy.questionnaireId}
-            employerId={vacancy.employerId}
+            vacancyUUID={vacancy.vacancy_uuid}
+            employerUUID={vacancy.user_uuid}
           />
         )}
       </Layout>
@@ -102,12 +120,15 @@ type StaticPath = {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const vacancyQuery = await dbClient.execute(
-    "select questionnaireId from Vacancy;",
+    "select vacancy_uuid from vacancy;",
   );
-  const vacancies = vacancyQuery.rows as { questionnaireId: string }[];
+  const vacancies = vacancyQuery.rows as never as Pick<
+    Vacancy,
+    "vacancy_uuid"
+  >[];
 
   const paths: StaticPath[] = vacancies.map((job) => ({
-    params: { job: job.questionnaireId },
+    params: { job: job.vacancy_uuid },
   }));
 
   return {
@@ -117,21 +138,39 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 export const getStaticProps = async ({ params }: StaticPath) => {
-  const vacancyQuery = await dbClient.execute(
-    `select Vacancy.*,
-       companyName,
-       companyAddress,
-       phoneNumber,
-       email,
-       linkedinLink
-    from Vacancy
-         inner join Employer on Employer.employerId = Vacancy.employerId
-         inner join User on User.id = Vacancy.employerId
-    where questionnaireId = :questionnaireId;`,
-    { questionnaireId: params.job },
-  );
+  const vacancyQuery = await dbClient.execute({
+    sql: "\
+select user_uuid,\
+       v.vacancy_uuid,\
+       v.specialty,\
+       v.salary,\
+       v.duties,\
+       v.requirements,\
+       v.conditions,\
+       v.work_schedule,\
+       v.employment,\
+       v.publication_date,\
+       status,\
+       company_name,\
+       company_address,\
+       phone_number,\
+       email,\
+       linkedin_link \
+from vacancy v \
+         inner join employer on employer.id = v.employer_id \
+         inner join user on user.id = v.employer_id \
+         inner join status_type on v.moderation_status_id = status_type.id \
+where v.vacancy_uuid = :vacancy_uuid;",
+    args: { vacancy_uuid: params.job },
+  });
 
-  const vacancy = vacancyQuery.rows[0] as VacancyPreview;
+  const vacancy = vacancyQuery.rows[0] as never as Omit<
+    Vacancy,
+    "id" | "employer_id"
+  > &
+    Pick<StatusType, "status"> &
+    Omit<Employer, "id"> &
+    Pick<User, "user_uuid" | "phone_number" | "email" | "linkedin_link">;
 
   return {
     props: {

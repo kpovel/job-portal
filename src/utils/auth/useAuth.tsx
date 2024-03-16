@@ -1,23 +1,18 @@
 import { useEffect, useState } from "react";
-import type { User } from "dbSchema/models";
-import Cookie from "js-cookie";
-import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+import type { User, UserType } from "~/server/db/types/schema";
 
+export type UserDataClient = Omit<User, "id" | "user_type_id" | "password"> &
+  Pick<UserType, "type">;
 type SuccessResponse = {
-  message: string;
-  authorizedUser: User;
+  user: UserDataClient;
 };
 
-type ErrorResponse = {
-  error: string;
-};
-
-const useCurrentUser = (authToken: string | undefined) => {
-  const [currentUser, setCurrentUser] = useState<Omit<User, "password"> | null>(null);
+export default function useCurrentUser(authToken: string | undefined) {
+  const [currentUser, setCurrentUser] = useState<UserDataClient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAuthUser = async () => {
+    async function fetchAuthUser() {
       if (!authToken) {
         setCurrentUser(null);
         setIsLoading(false);
@@ -31,27 +26,25 @@ const useCurrentUser = (authToken: string | undefined) => {
           body: JSON.stringify({ authToken }),
         });
 
-        if (response.ok) {
-          const { authorizedUser } = (await response.json()) as SuccessResponse;
-          setCurrentUser(authorizedUser);
-        } else {
-          const { error } = (await response.json()) as ErrorResponse;
-          console.error(error);
-          Cookie.set(AUTHORIZATION_TOKEN_KEY, "");
-          setCurrentUser(null);
+        if (response.status === 200) {
+          const json = (await response.json()) as SuccessResponse;
+          setCurrentUser(json.user);
+          return;
         }
+
+        const error = await response.text();
+        console.error(error);
+        setCurrentUser(null);
       } catch (e) {
         console.error(e);
         setCurrentUser(null);
       } finally {
         setIsLoading(false);
       }
-    };
+    }
 
     void fetchAuthUser();
   }, [authToken]);
 
   return { currentUser, isLoading };
-};
-
-export default useCurrentUser;
+}

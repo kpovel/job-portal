@@ -7,8 +7,8 @@ import type {
 import Head from "next/head";
 import { CandidateResumePreview } from "~/component/candidate/resumePreview";
 import { adminOnlyAccess } from "~/utils/admin/adminOnlyAccess";
-import type { Resume } from "~/utils/dbSchema/models";
 import { dbClient } from "~/server/db";
+import type { ResumePreview } from "../candidates";
 
 export default function Candidates({
   unmoderatedCandidates,
@@ -26,7 +26,7 @@ export default function Candidates({
             return (
               <CandidateResumePreview
                 resume={candidate}
-                key={candidate.questionnaireId}
+                key={candidate.user_uuid}
               />
             );
           })}
@@ -48,16 +48,28 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     };
   }
 
-  const unmoderatedCandidatesQuery = await dbClient.execute(`
-      select questionnaireId, workExperience, skills, education, foreignLanguages, interests, achievements, specialty, desiredSalary, employment, updatedAt, candidateId, firstName, lastName
-      from Resume
-      inner join User on User.id = Resume.candidateId
-      where moderationStatus != 'ACCEPTED';`);
+  const unmoderatedCandidatesQuery = await dbClient.execute(
+    "\
+select user.user_uuid,\
+       first_name,\
+       last_name,\
+       work_experience,\
+       skills,\
+       education,\
+       foreign_languages,\
+       interests,\
+       achievements,\
+       specialty,\
+       desired_salary,\
+       employment,\
+       updated_at \
+from resume \
+         inner join user on user.id = resume.candidate_id \
+where moderation_status_id != (select id from status_type where status = 'ACCEPTED');",
+  );
 
-  const unmoderatedCandidates = unmoderatedCandidatesQuery.rows as (Omit<
-    Resume,
-    "moderationStation"
-  > & { firstName: string; lastName: string })[];
+  const unmoderatedCandidates =
+    unmoderatedCandidatesQuery.rows as never as ResumePreview[];
 
   return {
     props: {

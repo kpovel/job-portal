@@ -5,8 +5,8 @@ export interface AuthFormProps {
   handleFormSubmit: (
     login: string,
     password: string,
-    userType?: string
-  ) => Promise<void>;
+    userType?: string,
+  ) => Promise<string>;
   authorizationType: "Log in" | "Sign up";
 }
 
@@ -19,13 +19,26 @@ export function AuthForm({
   const [selectedUserType, setSelectedUserType] = useState<
     UserType | undefined
   >();
+  const [authError, setAuthError] = useState("");
 
-  function submitForm(e: FormEvent) {
+  function handleSubmitForm(e: FormEvent) {
     e.preventDefault();
+    void submitForm();
+  }
 
-    authorizationType === "Sign up"
-      ? void handleFormSubmit(login, password, selectedUserType?.type)
-      : void handleFormSubmit(login, password);
+  async function submitForm() {
+    if (authorizationType === "Sign up") {
+      const error = await handleFormSubmit(
+        login,
+        password,
+        selectedUserType?.type,
+      );
+      setAuthError(error);
+      return;
+    }
+
+    const error = await handleFormSubmit(login, password);
+    setAuthError(error);
   }
 
   const isFilledForm = {
@@ -34,7 +47,7 @@ export function AuthForm({
   };
 
   return (
-    <form className="space-y-6" action="#" onSubmit={submitForm}>
+    <form className="space-y-6" action="#" onSubmit={handleSubmitForm}>
       <div>
         <label
           htmlFor="login"
@@ -94,6 +107,7 @@ export function AuthForm({
       >
         {authorizationType}
       </button>
+      <div className="text-red-500">{authError}</div>
     </form>
   );
 }

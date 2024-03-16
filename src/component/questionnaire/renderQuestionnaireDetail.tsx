@@ -1,10 +1,16 @@
 import React from "react";
 
-export function renderQuestionnaireDetail(
-  title: string,
-  data: string | null | undefined
-) {
-  if (!data) return null;
+export function RenderQuestionnaireDetail({
+  title,
+  data,
+}: {
+  title: string;
+  data: string | null | undefined;
+}) {
+  if (!data) {
+    return null;
+  }
+
   return (
     <div className="mb-4">
       <strong className="text-lg font-semibold">{title}:</strong>

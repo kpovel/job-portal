@@ -1,7 +1,6 @@
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { classNames } from "~/component/layout/elements/header";
-import React from "react";
 
 export function EmployerNavigationMenu() {
   const router = useRouter();

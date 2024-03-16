@@ -12,17 +12,7 @@ import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { verifyToken } from "~/utils/auth/auth";
 import type { VerifyToken } from "~/utils/auth/withoutAuth";
 import { dbClient } from "~/server/db";
-import type { ModerationStatus } from "~/utils/dbSchema/enums";
-import { UserType } from "~/utils/dbSchema/enums";
-
-type EmployerVacancy = {
-  questionnaireId: string;
-  specialty: string;
-  moderationStatus: ModerationStatus;
-  salary: string;
-  requirements: string | null;
-  conditions: string | null;
-};
+import type { StatusType, Vacancy } from "~/server/db/types/schema";
 
 export default function Vacancies({
   employerVacancies,
@@ -41,22 +31,20 @@ export default function Vacancies({
               {employerVacancies.length ? (
                 employerVacancies.map((vacancy) => (
                   <div
-                    key={vacancy.questionnaireId}
+                    key={vacancy.vacancy_uuid}
                     className="mb-4 rounded-lg bg-white p-6 shadow-lg"
                   >
                     <div className="mb-4 flex items-center align-top">
                       <h2 className="grow text-xl font-bold text-gray-800">
                         <Link
-                          href={`/home/edit-vacancy/${vacancy.questionnaireId}`}
+                          href={`/home/edit-vacancy/${vacancy.vacancy_uuid}`}
                           className="text-blue-600  hover:text-blue-800"
                         >
                           {vacancy.specialty}
                         </Link>
                       </h2>
                       <div className="mr-3">
-                        <ModerationLabel
-                          moderationStatus={vacancy.moderationStatus}
-                        />
+                        <ModerationLabel moderationStatus={vacancy.status} />
                       </div>
                       {vacancy.salary && (
                         <p className="font-semibold text-gray-700">
@@ -114,31 +102,25 @@ export const getServerSideProps = async ({
     };
   }
 
-  const userQuery = await dbClient.execute(
-    "select userType from User where id = :id;",
-    { id: verifiedToken.userId },
-  );
-  const user = userQuery.rows[0] as { userType: UserType };
-  if (user.userType !== UserType.EMPLOYER) {
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
+  const employerVacancies = await dbClient.execute({
+    sql: "\
+select vacancy_uuid, specialty, status, salary, requirements, conditions \
+from vacancy \
+         inner join status_type on vacancy.moderation_status_id = status_type.id \
+where employer_id = :employer_id \
+order by publication_date desc, vacancy.id desc;",
+    args: { employer_id: verifiedToken.userId },
+  });
 
-  const employerVacancies = await dbClient.execute(
-      `select questionnaireId, specialty, moderationStatus, salary, requirements, conditions
-      from Vacancy
-      where employerId = :employerId
-      order by dateOfPublication desc, questionnaireId desc;`,
-    { employerId: verifiedToken.userId },
-  );
+  const rows = employerVacancies.rows as unknown as (Pick<
+    Vacancy,
+    "vacancy_uuid" | "specialty" | "salary" | "requirements" | "conditions"
+  > &
+    Pick<StatusType, "status">)[];
 
   return {
     props: {
-      employerVacancies: employerVacancies.rows as EmployerVacancy[],
+      employerVacancies: rows,
     },
   };
 };

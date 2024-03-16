@@ -1,31 +1,31 @@
 import { useContext } from "react";
+import type { StatusType } from "~/server/db/types/schema";
 import { AuthContext } from "~/utils/auth/authContext";
-import { type ResponseResult, UserType } from "dbSchema/enums";
 
 export function EmployerApplication({
-  response,
-  responseResult
+  feedbackResponse,
+  feedbackStatus,
 }: {
-  responseResult: ResponseResult | null;
-  response: string | null
+  feedbackResponse: string | null;
+  feedbackStatus: StatusType["status"] | null;
 }) {
   const authContext = useContext(AuthContext);
   const noFeedbackMessage =
-    authContext?.userType === UserType.EMPLOYER
+    authContext?.type === "EMPLOYER"
       ? "Кандидат ще не відповів на вашу пропозицію"
       : "Роботодавець ще не відповів на ваш відгук";
 
   return (
     <div>
-      {responseResult ? (
+      {feedbackStatus ? (
         <div>
           <p>
             <strong>Результат відгуку: </strong>
-            {responseResult}
+            {feedbackResponse}
           </p>
           <p className="pt-2">
             <strong>Відповідь на пропозицію: </strong>
-            {response}
+            {feedbackStatus}
           </p>
         </div>
       ) : (

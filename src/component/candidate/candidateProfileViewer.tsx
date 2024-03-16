@@ -1,82 +1,90 @@
-import { renderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
-import { renderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
+import { RenderQuestionnaireInfo } from "~/component/questionnaire/renderQuestionnaireInfo";
+import { RenderQuestionnaireDetail } from "~/component/questionnaire/renderQuestionnaireDetail";
 import { ModerateCandidate } from "~/component/admin/moderation/moderateCandidate";
-import { UserType } from "~/utils/dbSchema/enums";
 import type { ResumePreview } from "~/pages/candidate/[candidate]";
+import type { UserType } from "~/server/db/types/schema";
 
 export function CandidateProfileViewer({
   userType,
   candidateResume,
 }: {
-  userType: UserType | undefined;
+  userType: UserType["type"] | undefined;
   candidateResume: ResumePreview;
 }) {
-  const isAdmin = userType === UserType.ADMIN;
+  const isAdmin = userType === "ADMIN";
 
   return (
     <>
       <div className="w-2/3 rounded-lg border bg-white p-6 shadow-lg">
         <h2 className="mb-6 text-2xl font-bold">
-          {candidateResume?.firstName} {candidateResume?.lastName}
-          {candidateResume?.age ? ` - ${candidateResume?.age}` : ""}
+          {candidateResume.first_name} {candidateResume.last_name}
         </h2>
         <h3 className="mb-4 text-xl font-medium">
-          {candidateResume?.specialty}
+          {candidateResume.specialty}
         </h3>
-        {renderQuestionnaireDetail(
-          "Досвід роботи",
-          candidateResume?.workExperience,
-        )}
-        {renderQuestionnaireDetail("Навички", candidateResume?.skills)}
-        {renderQuestionnaireDetail("Освіта", candidateResume?.education)}
-        {renderQuestionnaireDetail(
-          "Іноземні мови",
-          candidateResume?.foreignLanguages,
-        )}
-        {renderQuestionnaireDetail("Інтереси", candidateResume?.interests)}
-        {renderQuestionnaireDetail("Досягнення", candidateResume?.achievements)}
+        <RenderQuestionnaireDetail
+          title="Досвід роботи"
+          data={candidateResume.work_experience}
+        />
+        <RenderQuestionnaireDetail
+          title="Навички"
+          data={candidateResume.skills}
+        />
+        <RenderQuestionnaireDetail
+          title="Освіта"
+          data={candidateResume.education}
+        />
+        <RenderQuestionnaireDetail
+          title="Іноземні мови"
+          data={candidateResume.foreign_languages}
+        />
+        <RenderQuestionnaireDetail
+          title="Інтереси"
+          data={candidateResume.interests}
+        />
+        <RenderQuestionnaireDetail
+          title="Досягнення"
+          data={candidateResume.achievements}
+        />
       </div>
       <div className="w-1/3 rounded-lg border bg-white p-6 shadow-lg">
         <h3 className="mb-4 text-xl font-medium">Контактна інформація</h3>
-        {renderQuestionnaireInfo(
-          "Бажана зарплата",
-          candidateResume?.desiredSalary,
-        )}
-        {renderQuestionnaireInfo(
-          "Бажана зайнятість",
-          candidateResume?.employment,
-        )}
-        {renderQuestionnaireInfo(
-          "Номере телефону",
-          candidateResume?.phoneNumber,
-          candidateResume?.phoneNumber
-            ? `tel:${candidateResume.phoneNumber}`
-            : "",
-        )}
-        {renderQuestionnaireInfo(
-          "Email",
-          candidateResume?.email,
-          candidateResume?.email ? `mailto:${candidateResume.email}` : "",
-        )}
-        {renderQuestionnaireInfo(
-          "Linkedin",
-          candidateResume?.linkedinLink,
-          candidateResume?.linkedinLink,
-        )}
-        {renderQuestionnaireInfo(
-          "Github",
-          candidateResume?.githubLink,
-          candidateResume?.githubLink,
-        )}
-        {renderQuestionnaireInfo(
-          "Telegram",
-          candidateResume?.telegramLink,
-          candidateResume?.telegramLink,
-        )}
-        {isAdmin && candidateResume?.questionnaireId && (
+        <RenderQuestionnaireInfo
+          title="Бажана зарплата"
+          data={candidateResume.desired_salary}
+        />
+        <RenderQuestionnaireInfo
+          title="Бажана зайнятість"
+          data={candidateResume.employment}
+        />
+        <RenderQuestionnaireInfo
+          title="Номере телефону"
+          data={candidateResume.phone_number}
+          href={
+            candidateResume?.phone_number
+              ? `tel:${candidateResume.phone_number}`
+              : ""
+          }
+        />
+        <RenderQuestionnaireInfo
+          title="Email"
+          data={candidateResume.email}
+          href={candidateResume.email ? `mailto:${candidateResume.email}` : ""}
+        />
+        <RenderQuestionnaireInfo
+          title="Linkedin"
+          data={candidateResume.linkedin_link}
+          href={candidateResume.linkedin_link}
+        />
+        <RenderQuestionnaireInfo
+          title="Github"
+          data={candidateResume.github_link}
+          href={candidateResume.github_link}
+        />
+        {isAdmin && (
           <ModerateCandidate
-            questionnaireId={candidateResume.questionnaireId}
-            moderationStatus={candidateResume.moderationStatus}
+            candidateUUID={candidateResume.user_uuid}
+            moderationStatus={candidateResume.status}
           />
         )}
       </div>

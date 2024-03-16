@@ -1,9 +1,13 @@
 import type { VacancyFields } from "~/pages/home/create-vacancy";
 import { FormInput } from "~/component/profileForm/formInput";
+import type { ChangeEvent } from "react";
 
-export function VacancyInputField(props: {
-  formData: { [p: string]: string | number } & VacancyFields;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+export function VacancyInputField({
+  formData,
+  onChange,
+}: {
+  formData: VacancyFields;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
     <div className="space-y-4">
@@ -13,8 +17,8 @@ export function VacancyInputField(props: {
         name="specialty"
         autoComplete="specialty"
         type="text"
-        value={props.formData.specialty}
-        onChange={props.onChange}
+        value={formData.specialty}
+        onChange={onChange}
       />
       <FormInput
         label="Зарплата"
@@ -22,8 +26,8 @@ export function VacancyInputField(props: {
         name="salary"
         autoComplete="salary"
         type="text"
-        value={props.formData.salary}
-        onChange={props.onChange}
+        value={formData.salary}
+        onChange={onChange}
       />
       <FormInput
         label="Обов'язки"
@@ -31,8 +35,8 @@ export function VacancyInputField(props: {
         name="duties"
         autoComplete="duties"
         type="text"
-        value={props.formData.duties}
-        onChange={props.onChange}
+        value={formData.duties}
+        onChange={onChange}
       />
       <FormInput
         label="Вимоги"
@@ -40,8 +44,8 @@ export function VacancyInputField(props: {
         name="requirements"
         autoComplete="requirements"
         type="text"
-        value={props.formData.requirements}
-        onChange={props.onChange}
+        value={formData.requirements}
+        onChange={onChange}
       />
       <FormInput
         label="Умови праці"
@@ -49,17 +53,17 @@ export function VacancyInputField(props: {
         name="conditions"
         autoComplete="conditions"
         type="text"
-        value={props.formData.conditions}
-        onChange={props.onChange}
+        value={formData.conditions}
+        onChange={onChange}
       />
       <FormInput
         label="Графік роботи"
-        id="workSchedule"
-        name="workSchedule"
-        autoComplete="workSchedule"
+        id="work_schedule"
+        name="work_schedule"
+        autoComplete="work_schedule"
         type="text"
-        value={props.formData.workSchedule}
-        onChange={props.onChange}
+        value={formData.work_schedule}
+        onChange={onChange}
       />
       <FormInput
         label="Тип зайнятості"
@@ -67,8 +71,8 @@ export function VacancyInputField(props: {
         name="employment"
         autoComplete="employment"
         type="text"
-        value={props.formData.employment}
-        onChange={props.onChange}
+        value={formData.employment}
+        onChange={onChange}
       />
     </div>
   );

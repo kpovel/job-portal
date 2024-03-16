@@ -10,29 +10,18 @@ import { dbClient } from "~/server/db";
 import Link from "next/link";
 import { format } from "date-fns";
 import { EmployerFeedback } from "~/component/inbox/employerFeedback";
-import { useContext } from "react";
-import { AuthContext } from "~/utils/auth/authContext";
 import { EmployerApplication } from "~/component/inbox/employerApplication";
 import Head from "next/head";
-import type { ResponseResult, ResponseBy } from "~/utils/dbSchema/enums";
-
-type EmployerResponse = {
-  responseId: string;
-  response: string | null;
-  responseResult: ResponseResult | null;
-  candidateId: string;
-  firstName: string;
-  lastName: string;
-  coverLetter: string;
-  responseDate: Date;
-  responseBy: ResponseBy;
-};
+import type {
+  Response,
+  StatusType,
+  User,
+  UserType,
+} from "~/server/db/types/schema";
 
 export default function Inbox({
   responses,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const authContext = useContext(AuthContext);
-
   return (
     <>
       <Head>
@@ -46,34 +35,34 @@ export default function Inbox({
           <div className="grid grid-cols-1 gap-4">
             {responses.map((response) => (
               <div
-                key={response.responseId}
+                key={response.response_uuid}
                 className="flex w-full flex-col gap-2 rounded-md border border-gray-300 p-4"
               >
-                <Link href={`/candidate/${response.candidateId}`}>
+                <Link href={`/candidate/${response.user_uuid}`}>
                   <div className="font-bold text-blue-600 hover:text-blue-800">
-                    {response.firstName} {response.lastName}
+                    {response.first_name} {response.last_name}
                   </div>
                 </Link>
                 <p>
-                  <strong>Супровідний лист:</strong> {response.coverLetter}
+                  <strong>Супровідний лист:</strong> {response.cover_letter}
                 </p>
                 <p>
                   <strong>Надіслано:</strong>{" "}
                   {format(
-                    new Date(response.responseDate),
+                    new Date(response.response_date),
                     "d MMMM yyyy, HH:mm",
                   )}
                 </p>
-                {authContext?.userType.toString() === response.responseBy ? (
+                {response.responseBy === "EMPLOYER" ? (
                   <EmployerApplication
-                    responseResult={response.responseResult}
-                    response={response.response}
+                    feedbackStatus={response.status}
+                    feedbackResponse={response.response}
                   />
                 ) : (
                   <EmployerFeedback
-                    response={response.response}
-                    responseresult={response.responseResult}
-                    responseId={response.responseId}
+                    feedbackStatus={response.status}
+                    feedbackResponse={response.response}
+                    responseUUID={response.response_uuid}
                   />
                 )}
               </div>
@@ -100,14 +89,17 @@ export const getServerSideProps = async ({
     };
   }
 
-  const user = await dbClient.execute(
-    "select id from User where id = :userId and userType = 'EMPLOYER';",
-    {
-      userId: verifiedToken.userId,
+  const employer = await dbClient.execute({
+    sql: "\
+select id \
+from employer \
+where id = :employer_id;",
+    args: {
+      employer_id: verifiedToken.userId,
     },
-  );
+  });
 
-  if (!user.rows.length) {
+  if (!employer.rows.length) {
     return {
       redirect: {
         destination: "/",
@@ -116,16 +108,28 @@ export const getServerSideProps = async ({
     };
   }
 
-  const responsesQuery = await dbClient.execute(
-    `select r.responseId, fr.response, fr.responseResult, candidateId, u.firstName, u.lastName ,coverLetter, r.responseDate, r.responseBy
-    from Response as r left join FeedbackResult fr on fr.responseId = r.responseId
-    left join User u on u.id = r.candidateId
-    where employerId = :employerId;`,
-    {
-      employerId: verifiedToken.userId,
+  const responsesQuery = await dbClient.execute({
+    sql: "\
+select r.response_uuid,\
+       r.response_date,\
+       r.cover_letter,\
+       fr.response,\
+       status,\
+       user_uuid,\
+       u.first_name,\
+       u.last_name,\
+       type as responseBy \
+from response as r\
+         left join feedback_result fr on fr.response_id = r.id\
+         left join user u on u.id = r.candidate_id\
+         inner join user_type ut on r.response_by_user_type_id = ut.id\
+         left join status_type st on fr.feedback_result_status_id = st.id \
+where employer_id = :employer_id;",
+    args: {
+      employer_id: verifiedToken.userId,
     },
-  );
-  const responses = responsesQuery.rows as EmployerResponse[];
+  });
+  const responses = responsesQuery.rows as never as EmployerResponse[];
 
   return {
     props: {
@@ -133,3 +137,9 @@ export const getServerSideProps = async ({
     },
   };
 };
+
+type EmployerResponse = Pick<User, "user_uuid" | "first_name" | "last_name"> &
+  Pick<Response, "response_uuid" | "response_date" | "cover_letter"> & {
+    response: string | null;
+    status: StatusType["status"] | null;
+  } & { responseBy: UserType["type"] };

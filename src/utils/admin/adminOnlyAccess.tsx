@@ -17,12 +17,16 @@ export async function adminOnlyAccess(
     return false;
   }
 
-  const admin = await dbClient.execute(
-    "select id from User where id = :userId and userType = 'ADMIN';",
-    {
-      userId: verifiedToken.userId,
+  const admin = await dbClient.execute({
+    sql: "\
+select id \
+from user \
+where id = :user_id\
+  and user_type_id = (select id from user_type where type = 'ADMIN');",
+    args: {
+      user_id: verifiedToken.userId,
     },
-  );
+  });
 
   return !!admin.rows.length;
 }

@@ -6,23 +6,13 @@ import type {
   InferGetServerSidePropsType,
 } from "next";
 import { EmployerNavigationMenu } from "~/component/employer/employerNavigationMenu";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useState, type ChangeEvent } from "react";
 import type { VacancyFields } from "~/pages/home/create-vacancy";
 import { VacancyInputField } from "~/component/employer/vacancyInputField";
 import { verifyToken } from "~/utils/auth/auth";
 import type { VerifyToken } from "~/utils/auth/withoutAuth";
 import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
-
-type Vacancy = {
-  questionnaireId: string;
-  specialty: string;
-  salary: string | null;
-  duties: string | null;
-  requirements: string | null;
-  conditions: string | null;
-  workSchedule: string | null;
-  employment: string | null;
-};
+import type { Vacancy } from "~/server/db/types/schema";
 
 export default function EditVacancy({
   vacancy,
@@ -33,11 +23,12 @@ export default function EditVacancy({
     duties: vacancy.duties || "",
     requirements: vacancy.requirements || "",
     conditions: vacancy.conditions || "",
-    workSchedule: vacancy.workSchedule || "",
+    work_schedule: vacancy.work_schedule || "",
     employment: vacancy.employment || "",
   });
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleUpdateForm(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleUpdateForm(event: ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
     setFormData((prevState) => ({
       ...prevState,
@@ -51,20 +42,22 @@ export default function EditVacancy({
   }
 
   async function updateVacancy(): Promise<void> {
+    setSubmitting(true);
     try {
       await fetch("/api/employer/updateVacancy", {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
-          questionnaireId: vacancy.questionnaireId,
+          vacancy_uuid: vacancy.vacancy_uuid,
         }),
       });
     } catch (error) {
       console.error(error);
     }
+    setSubmitting(false);
   }
 
   return (
@@ -86,7 +79,12 @@ export default function EditVacancy({
             />
             <button
               type="submit"
-              className="mt-6 block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="mt-6 block w-full rounded-md bg-indigo-600 px-3.5 py-2.5
+              text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500
+              focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+              focus-visible:outline-indigo-600 disabled:bg-indigo-600/50"
+              aria-disabled={submitting}
+              disabled={submitting}
             >
               Оновити дані вакансії
             </button>
@@ -122,16 +120,38 @@ export async function getServerSideProps(
     };
   }
 
-  const vacancyQuery = await dbClient.execute(
-    `select questionnaireId, specialty, salary, duties, requirements, conditions, workSchedule, employment
-    from Vacancy where questionnaireId = :questionnaireId and employerId = :employerId;`,
-    {
-      questionnaireId: context.params.vacancy,
-      employerId: verifiedToken.userId,
+  const vacancyQuery = await dbClient.execute({
+    sql: "\
+select vacancy_uuid,\
+       specialty,\
+       salary,\
+       duties,\
+       requirements,\
+       conditions,\
+       work_schedule,\
+       employment \
+from vacancy \
+where vacancy_uuid = :vacancy_uuid\
+  and employer_id = :employer_id;",
+    args: {
+      vacancy_uuid: context.params.vacancy,
+      employer_id: verifiedToken.userId,
     },
-  );
+  });
 
-  const vacancy = vacancyQuery.rows[0] as Vacancy | undefined;
+  const vacancy = vacancyQuery.rows[0] as
+    | Pick<
+        Vacancy,
+        | "vacancy_uuid"
+        | "specialty"
+        | "salary"
+        | "duties"
+        | "requirements"
+        | "conditions"
+        | "work_schedule"
+        | "employment"
+      >
+    | undefined;
 
   if (!vacancy) {
     return {

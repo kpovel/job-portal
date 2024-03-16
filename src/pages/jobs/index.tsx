@@ -3,7 +3,7 @@ import Head from "next/head";
 import type { InferGetStaticPropsType } from "next";
 import { VacancyPreview } from "~/component/employer/vacancyPreview";
 import { dbClient } from "~/server/db";
-import type { Vacancy } from "~/utils/dbSchema/models";
+import type { Vacancy } from "~/server/db/types/schema";
 
 export default function Candidates({
   vacancies,
@@ -22,7 +22,7 @@ export default function Candidates({
           </h2>
           <div className="grid grid-cols-1 gap-4">
             {vacancies.map((vacancy) => (
-              <VacancyPreview key={vacancy.questionnaireId} vacancy={vacancy} />
+              <VacancyPreview key={vacancy.vacancy_uuid} vacancy={vacancy} />
             ))}
           </div>
         </div>
@@ -32,13 +32,25 @@ export default function Candidates({
 }
 
 export const getStaticProps = async () => {
-  const vacanciesQuery = await dbClient.execute(
-    `select questionnaireId, specialty, salary, duties, requirements, conditions, workSchedule, employment, dateOfPublication
-    from Vacancy where moderationStatus = 'ACCEPTED';`,
-  );
-  const vacancies = vacanciesQuery.rows as Omit<
+  const vacanciesQuery = await dbClient.execute({
+    sql: "\
+select vacancy_uuid,\
+       specialty,\
+       salary,\
+       duties,\
+       requirements,\
+       conditions,\
+       work_schedule,\
+       employment,\
+       publication_date \
+from vacancy \
+where moderation_status_id = (select id from status_type where status = 'ACCEPTED');",
+    args: {},
+  });
+
+  const vacancies = vacanciesQuery.rows as never as Omit<
     Vacancy,
-    "employerId" | "moderationStatus"
+    "id" | "employer_id" | "moderation_status_id"
   >[];
 
   return {

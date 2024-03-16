@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { generateToken, hashPassword } from "~/utils/auth/auth";
-import type { UserType } from "dbSchema/enums";
-import type { User } from "dbSchema/models";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import { dbClient } from "~/server/db";
-import { createId } from "@paralleldrive/cuid2";
+import { createUser } from "~/server/db/createUser";
+import type { UserType } from "~/server/db/types/schema";
 
 export default async function signup(
   req: NextApiRequest,
@@ -14,109 +14,53 @@ export default async function signup(
   }
 
   const { userType, login, password } = req.body as {
-    userType: keyof typeof UserType;
+    userType: Exclude<UserType["type"], "ADMIN">;
     login: string;
     password: string;
   };
 
   try {
-    const query = await dbClient.execute(
-      "select * from User where login = :login",
-      {
+    const query = await dbClient.execute({
+      sql: "select * from User where login = :login",
+      args: {
         login,
       },
-    );
+    });
 
     if (query.rows.length) {
-      res.status(409).json({
-        message: `User with login "${login}" already exists. Consider using a different login`,
-      });
+      res
+        .status(409)
+        .send(
+          `User with login "${login}" already exists. Consider using a different login`,
+        );
     }
 
     const hashedPassword = await hashPassword(password);
-    const createdUser = await createUser(
-      userType as UserType,
-      login,
-      hashedPassword,
+    const createdUser = await createUser(userType, login, hashedPassword);
+
+    if (createdUser.err !== null) {
+      return res.status(401).send("Failed to create a user, please try again");
+    }
+
+    const token = generateToken(createdUser.ok.id);
+    res.setHeader(
+      "Set-Cookie",
+      `${AUTHORIZATION_TOKEN_KEY}=${token}; Max-Age=${60 * 60 * 24 * 30}; Path=/`,
     );
 
-    if (createdUser) {
-      const token = generateToken(createdUser.id);
-
-      res.status(201).json({
-        message: "User created successfully",
-        user: createdUser,
-        token,
-      });
-    }
+    res.status(200).send(redirectLocation(userType));
   } catch (error) {
-    res.status(400).json({ message: "Error creating user", error });
+    res.status(400).send("Error creating user");
   }
 }
 
-async function createUser(
-  userType: UserType,
-  login: string,
-  password: string,
-): Promise<User | undefined> {
-  try {
-    const userId = createId();
-    const questionnaireId = createId();
-
-    switch (userType) {
-      case "CANDIDATE":
-        const createCandidateQuery = await dbClient.transaction(async (tx) => {
-          const queries = [
-            await tx.execute(
-              `insert into User (id, login, password, userType) values ('${userId}', '${login}', '${password}', 'CANDIDATE');`,
-            ),
-            await tx.execute(
-              `insert into Candidate (candidateId) values ('${userId}');`,
-            ),
-            await tx.execute(
-              `insert into Questionnaire (questionnaireId, questionnaireType, candidateId) values ('${questionnaireId}', 'RESUME', '${userId}');`,
-            ),
-            await tx.execute(
-              `insert into Resume (questionnaireId, candidateId) values ('${questionnaireId}', '${userId}');`,
-            ),
-            await tx.execute(`select * from User where id = '${userId}'`),
-          ];
-
-          return await Promise.all(queries);
-        });
-
-        return createCandidateQuery[4]?.rows[0] as User;
-      case "EMPLOYER":
-        const createEmployerQuery = await dbClient.transaction(async (tx) => {
-          const queries = [
-            await tx.execute(
-              `insert into User (id, login, password, userType) values ('${userId}', '${login}', '${password}', 'EMPLOYER');`,
-            ),
-            await tx.execute(
-              `insert into Employer (employerId) values ('${userId}');`,
-            ),
-            await tx.execute(`select * from User where id = '${userId}'`),
-          ];
-
-          return await Promise.all(queries);
-        });
-
-        return createEmployerQuery[2]?.rows[0] as User;
-      case "ADMIN":
-        const createAdminQuery = await dbClient.transaction(async (tx) => {
-          const queries = [
-            await tx.execute(
-              `insert into User (id, login, password, userType) values ('${userId}', '${login}', '${password}', 'ADMIN');`,
-            ),
-            await tx.execute(`select * from User where id = '${userId}'`),
-          ];
-
-          return await Promise.all(queries);
-        });
-
-        return createAdminQuery[1]?.rows[0] as User;
-    }
-  } catch (e) {
-    console.log(e);
+function redirectLocation(userType: UserType["type"]) {
+  switch (userType) {
+    case "EMPLOYER":
+      return "/home/profile";
+    case "CANDIDATE":
+      return "/my/profile";
+    case "ADMIN":
+      return "/admin";
   }
 }

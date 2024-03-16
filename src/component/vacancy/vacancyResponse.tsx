@@ -1,28 +1,26 @@
-import React, { type FormEvent, useContext, useEffect, useState } from "react";
-import { AuthContext } from "~/utils/auth/authContext";
-import { ModerationStatus } from "~/utils/dbSchema/enums";
+import { type FormEvent, useEffect, useState } from "react";
+import type { StatusType } from "~/server/db/types/schema";
 
 export function VacancyResponse({
-  vacancyId,
-  employerId,
+  vacancyUUID,
+  employerUUID,
 }: {
-  vacancyId: string;
-  employerId: string;
+  vacancyUUID: string;
+  employerUUID: string;
 }) {
-  const authContext = useContext(AuthContext);
-
   const [coverLetter, setCoverLetter] = useState("");
   const [isSentResponse, setIsSentResponse] = useState<boolean>(false);
   const [resumeModerationStatus, setResumeModerationStatus] =
-    useState<ModerationStatus>(ModerationStatus.PENDING);
+    useState<StatusType["status"]>("PENDING");
 
   const isFormFieldOut = coverLetter.length > 100;
 
   useEffect(() => {
     void checkIsSentResponse();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function checkIsSentResponse(): Promise<void> {
+  async function checkIsSentResponse() {
     try {
       const responsesByCandidate = await fetch(
         "/api/response/findResponsesByCandidate",
@@ -30,20 +28,18 @@ export function VacancyResponse({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            candidateId: authContext?.id,
-            vacancyId,
+            vacancyUUID,
           }),
         },
       );
 
-      if (responsesByCandidate.ok) {
+      if (responsesByCandidate.status === 200) {
         const parsedResponses = (await responsesByCandidate.json()) as {
-          isSentResponse: boolean;
-          resumeModerationStatus: ModerationStatus;
-          message: string;
+          canSendResponse: boolean;
+          resumeModerationStatus: StatusType["status"];
         };
 
-        setIsSentResponse(parsedResponses.isSentResponse);
+        setIsSentResponse(!parsedResponses.canSendResponse);
         setResumeModerationStatus(parsedResponses.resumeModerationStatus);
       }
     } catch (e) {
@@ -57,24 +53,23 @@ export function VacancyResponse({
   }
 
   async function sendResponse() {
-    const candidateId = authContext?.id;
-
     try {
-      await fetch("/api/response/responseOnVacancy", {
+      const res = await fetch("/api/response/responseOnVacancy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          candidateId,
-          employerId,
-          vacancyId,
+          employerUUID,
+          vacancyUUID,
           coverLetter,
         }),
       });
 
-      setIsSentResponse(true);
-      setCoverLetter("");
+      if (res.status === 200) {
+        setIsSentResponse(true);
+        setCoverLetter("");
+      }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -83,7 +78,7 @@ export function VacancyResponse({
       return "Ви вже відправили відгук на цю вакансію";
     }
 
-    if (resumeModerationStatus === ModerationStatus.PENDING) {
+    if (resumeModerationStatus === "PENDING") {
       return "Почекайте допоки адміністратор не підтвердить вашу анкету";
     }
 
@@ -116,12 +111,12 @@ export function VacancyResponse({
             disabled={
               isSentResponse ||
               !isFormFieldOut ||
-              resumeModerationStatus === ModerationStatus.PENDING
+              resumeModerationStatus === "PENDING"
             }
             className={`mt-6 block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
               isSentResponse ||
               !isFormFieldOut ||
-              resumeModerationStatus === ModerationStatus.PENDING
+              resumeModerationStatus === "PENDING"
                 ? "cursor-not-allowed opacity-50"
                 : ""
             }`}

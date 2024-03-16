@@ -3,12 +3,6 @@ import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
 } from "next";
-import type {
-  Employer,
-  Questionnaire,
-  User,
-  Vacancy,
-} from "~/utils/dbSchema/models";
 import { type ChangeEvent, type FormEvent, useState } from "react";
 import { FormInput } from "~/component/profileForm/formInput";
 import { EmployerNavigationMenu } from "~/component/employer/employerNavigationMenu";
@@ -17,44 +11,19 @@ import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
 import type { VerifyToken } from "~/utils/auth/withoutAuth";
 import { verifyToken } from "~/utils/auth/auth";
 import { dbClient } from "~/server/db";
-import { UserType } from "~/utils/dbSchema/enums";
-
-export type EmployerData =
-  | User & {
-      employer:
-        | Employer & {
-            questionnaires: (Questionnaire & { vacancy: Vacancy })[];
-          };
-    };
-
-type EmployerProfile = {
-  id: string;
-  userType: UserType;
-  firstName: string | null;
-  lastName: string | null;
-  phoneNumber: string | null;
-  email: string | null;
-  linkedinLink: string | null;
-};
-
-type FormData = Omit<EmployerProfile, "id" | "userType">;
-
-type NonNullableKeys<T> = {
-  [K in keyof T]: NonNullable<T[K]>;
-};
-
-type NonNullableFormData = NonNullableKeys<FormData>;
+import type { User } from "~/server/db/types/schema";
 
 export default function EmployerProfile({
   employerProfile,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const [formData, setFormData] = useState<NonNullableFormData>({
-    firstName: employerProfile.firstName ?? "",
-    lastName: employerProfile.lastName ?? "",
-    phoneNumber: employerProfile.phoneNumber ?? "",
+  const [formData, setFormData] = useState({
+    first_name: employerProfile.first_name ?? "",
+    last_name: employerProfile.last_name ?? "",
+    phone_number: employerProfile.phone_number ?? "",
     email: employerProfile.email ?? "",
-    linkedinLink: employerProfile.linkedinLink ?? "",
+    linkedin_link: employerProfile.linkedin_link ?? "",
   });
+  const [submitting, setSubmitting] = useState(false);
 
   function handleUpdateForm(event: ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -64,21 +33,23 @@ export default function EmployerProfile({
     }));
   }
 
-  function handleUpdateEmployerProfile(e: FormEvent): void {
+  function handleUpdateEmployerProfile(e: FormEvent) {
     e.preventDefault();
     void updateEmployerProfile();
   }
 
-  async function updateEmployerProfile(): Promise<void> {
+  async function updateEmployerProfile() {
+    setSubmitting(true);
     try {
       await fetch("/api/user/updateProfile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, id: employerProfile.id }),
+        body: JSON.stringify(formData),
       });
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
+    setSubmitting(false);
   }
 
   return (
@@ -98,28 +69,28 @@ export default function EmployerProfile({
               <FormInput
                 label="Імʼя"
                 id="firstName"
-                name="firstName"
+                name="first_name"
                 autoComplete="given-name"
                 type="text"
-                value={formData.firstName}
+                value={formData.first_name}
                 onChange={handleUpdateForm}
               />
               <FormInput
                 label="Прізвище"
-                id="lastName"
-                name="lastName"
-                autoComplete="given-name"
+                id="last_name"
+                name="last_name"
+                autoComplete="family-name"
                 type="text"
-                value={formData.lastName}
+                value={formData.last_name}
                 onChange={handleUpdateForm}
               />
               <FormInput
                 label="Номер телефону"
                 id="phoneNumber"
-                name="phoneNumber"
+                name="phone_number"
                 autoComplete="tel"
                 type="text"
-                value={formData.phoneNumber}
+                value={formData.phone_number}
                 onChange={handleUpdateForm}
               />
               <FormInput
@@ -134,16 +105,21 @@ export default function EmployerProfile({
               <FormInput
                 label="Посилання на LinkedIn"
                 id="linkedinLink"
-                name="linkedinLink"
+                name="linkedin_link"
                 autoComplete="linkedinLink"
                 type="url"
-                value={formData.linkedinLink}
+                value={formData.linkedin_link}
                 onChange={handleUpdateForm}
               />
             </div>
             <button
               type="submit"
-              className="mt-6 block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="mt-6 block w-full rounded-md bg-indigo-600 px-3.5 py-2.5
+              text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500
+              focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+              focus-visible:outline-indigo-600 disabled:bg-indigo-600/50"
+              aria-disabled={submitting}
+              disabled={submitting}
             >
               Оновити дані мого профілю
             </button>
@@ -154,9 +130,7 @@ export default function EmployerProfile({
   );
 }
 
-export const getServerSideProps = async ({
-  req,
-}: GetServerSidePropsContext) => {
+export async function getServerSideProps({ req }: GetServerSidePropsContext) {
   const authToken = req?.cookies[AUTHORIZATION_TOKEN_KEY];
   if (!authToken) {
     return {
@@ -177,17 +151,28 @@ export const getServerSideProps = async ({
     };
   }
 
-  const employerProfileQuery = await dbClient.execute(
-    `select id, userType, firstName, lastName, phoneNumber, email, linkedinLink
-      from User
-      left join Employer on User.id = Employer.employerId
-      where id = :employerId;`,
-    { employerId: verifiedToken.userId },
-  );
+  const employerProfileQuery = await dbClient.execute({
+    sql: "\
+select first_name,\
+       last_name,\
+       phone_number,\
+       email,\
+       linkedin_link \
+from user \
+         left join employer on user.id = employer.id \
+where user.id = :employer_id \
+and user.user_type_id = (select id from user_type where type = 'EMPLOYER');",
+    args: { employer_id: verifiedToken.userId },
+  });
 
-  const employerProfile = employerProfileQuery.rows[0] as EmployerProfile;
+  const employerProfile = employerProfileQuery.rows[0] as
+    | Pick<
+        User,
+        "first_name" | "last_name" | "phone_number" | "email" | "linkedin_link"
+      >
+    | undefined;
 
-  if (employerProfile.userType !== UserType.EMPLOYER) {
+  if (!employerProfile) {
     return {
       redirect: {
         destination: "/",
@@ -201,4 +186,4 @@ export const getServerSideProps = async ({
       employerProfile,
     },
   };
-};
+}

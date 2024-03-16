@@ -16,7 +16,7 @@ export async function verifyPassword(
   return compare(password, hashedPassword);
 }
 
-export function generateToken(userId: string): string {
+export function generateToken(userId: number): string {
   return jwt.sign({ userId }, jwtSecret, { expiresIn: "30d" });
 }
 

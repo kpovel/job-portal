@@ -1,30 +1,27 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "~/utils/auth/authContext";
 import { ModerationLabel } from "~/component/layout/elements/moderation/moderationLabel";
-import { ModerationStatus } from "~/utils/dbSchema/enums";
+import type { StatusType } from "~/server/db/types/schema";
 
 export function CandidateModerationStatus() {
   const authContext = useContext(AuthContext);
-  const [moderationStatus, setModerationStatus] = useState<ModerationStatus>(
-    ModerationStatus.PENDING,
-  );
+  const [moderationStatus, setModerationStatus] =
+    useState<StatusType["status"]>("PENDING");
 
   useEffect(() => {
     void (async () => {
-      const response = await fetch("/api/candidate/moderationStatus", {
-        method: "POST",
-        body: JSON.stringify({ candidateId: authContext?.id }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await fetch("/api/candidate/moderationStatus");
+      const text = await res.text();
 
-      const json = (await response.json()) as {
-        moderationStatus: ModerationStatus;
-      };
-      setModerationStatus(json.moderationStatus);
+      if (res.status === 401) {
+        console.error(text);
+      } else if (res.status === 500) {
+        console.error(text);
+      } else if (res.status === 200) {
+        setModerationStatus(text as StatusType["status"]);
+      }
     })();
-  }, [authContext?.id]);
+  }, [authContext?.user_uuid]);
 
   return <ModerationLabel moderationStatus={moderationStatus} />;
 }

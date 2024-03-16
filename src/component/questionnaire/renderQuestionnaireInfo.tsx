@@ -1,11 +1,18 @@
 import React from "react";
 
-export function renderQuestionnaireInfo(
-  title: string,
-  data: string | null | undefined,
-  href?: string | null
-) {
-  if (!data) return null;
+export function RenderQuestionnaireInfo({
+  title,
+  data,
+  href,
+}: {
+  title: string;
+  data: string | null | undefined;
+  href?: string | null;
+}) {
+  if (!data) {
+    return <></>;
+  }
+
   return (
     <div className="mb-4 flex items-center gap-2">
       <strong className="text-lg font-semibold">{title}:</strong>

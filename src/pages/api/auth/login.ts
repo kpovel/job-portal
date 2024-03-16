@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { verifyPassword, generateToken } from "~/utils/auth/auth";
 import { dbClient } from "~/server/db";
-import type { User } from "dbSchema/models";
+import { AUTHORIZATION_TOKEN_KEY } from "~/utils/auth/authorizationTokenKey";
+import type { User } from "~/server/db/types/schema";
 
 export default async function login(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -11,28 +12,32 @@ export default async function login(req: NextApiRequest, res: NextApiResponse) {
   const { login, password } = req.body as { login: string; password: string };
 
   try {
-    const findUserQuery = await dbClient.execute(
-      "select * from User where login = :login",
-      {
+    const findUserQuery = await dbClient.execute({
+      sql: "select id, password from User where login = :login;",
+      args: {
         login,
       },
-    );
+    });
 
-    const user = findUserQuery.rows[0] as User | undefined;
-
+    const user = findUserQuery.rows[0] as
+      | Pick<User, "id" | "password">
+      | undefined;
     if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).send("Invalid email or password");
     }
 
     const isPasswordValid = await verifyPassword(password, user.password);
-
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Password doesn't match" });
+      return res.status(401).send("Invalid email or password");
     }
 
     const token = generateToken(user.id);
-    res.status(200).json({ message: "Login successful", token });
+    res.setHeader(
+      "Set-Cookie",
+      `${AUTHORIZATION_TOKEN_KEY}=${token}; Max-Age=${60 * 60 * 24 * 30}; Path=/`,
+    );
+    res.status(200).send("/jobs");
   } catch (error) {
-    res.status(400).json({ message: "Error logging in", error });
+    res.status(400).send("Error logging in");
   }
 }

@@ -14,28 +14,21 @@ const formInputs: FormInputConfig[] = [
   {
     label: "Прізвище",
     type: "text",
-    name: "lastName",
+    name: "last_name",
     id: "lastName",
     autoComplete: "family-name",
   },
   {
     label: "Імʼя",
     type: "text",
-    name: "firstName",
+    name: "first_name",
     id: "firstName",
     autoComplete: "given-name",
   },
   {
-    label: "Вік",
-    type: "text",
-    name: "age",
-    id: "age",
-    autoComplete: "age",
-  },
-  {
     label: "Номер телефону",
     type: "tel",
-    name: "phoneNumber",
+    name: "phone_number",
     id: "phoneNumber",
     autoComplete: "tel",
   },
@@ -49,40 +42,18 @@ const formInputs: FormInputConfig[] = [
   {
     label: "Посилання на LinkedIn акаунт",
     type: "url",
-    name: "linkedinLink",
+    name: "linkedin_link",
     id: "linkedinLink",
     autoComplete: "LinkedIn",
   },
   {
     label: "Посилання на GitHub акаунт",
     type: "url",
-    name: "githubLink",
+    name: "github_link",
     id: "githubLink",
     autoComplete: "GitHub",
   },
-  {
-    label: "Посилання на Telegram акаунт",
-    type: "url",
-    name: "telegramLink",
-    id: "telegramLink",
-    autoComplete: "Telegram",
-  },
 ];
-
-export type CandidateFields = {
-  firstName: string;
-  lastName: string;
-  age: string;
-  phoneNumber: string;
-  email: string;
-  linkedinLink: string;
-  githubLink: string;
-  telegramLink: string;
-};
-
-type FormData = {
-  [key: string]: string;
-} & Omit<NestedCandidateProfile["candidate"], "id">;
 
 /**
  * CandidateAccountForm component for rendering a form that allows candidates to update their account data.
@@ -92,16 +63,15 @@ export function CandidateAccountForm({
 }: {
   candidateData: NestedCandidateProfile["candidate"];
 }) {
-  const [formData, setFormData] = useState<FormData>({
-    firstName: candidateData.firstName ?? "",
-    lastName: candidateData.lastName ?? "",
-    age: candidateData.age ?? "",
-    phoneNumber: candidateData.phoneNumber ?? "",
+  const [formData, setFormData] = useState({
+    first_name: candidateData.first_name ?? "",
+    last_name: candidateData.last_name ?? "",
+    phone_number: candidateData.phone_number ?? "",
     email: candidateData.email ?? "",
-    linkedinLink: candidateData.linkedinLink ?? "",
-    githubLink: candidateData.githubLink ?? "",
-    telegramLink: candidateData.telegramLink ?? "",
+    linkedin_link: candidateData.linkedin_link ?? "",
+    github_link: candidateData.github_link ?? "",
   });
+  const [submitting, setSubmitting] = useState(false);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -118,15 +88,17 @@ export function CandidateAccountForm({
   }
 
   async function updateCandidateAccountData(): Promise<void> {
+    setSubmitting(true);
     try {
       await fetch("/api/user/updateProfile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, id: candidateData?.id }),
+        body: JSON.stringify(formData),
       });
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
+    setSubmitting(false);
   }
 
   return (
@@ -141,20 +113,23 @@ export function CandidateAccountForm({
               name={formInput.name}
               id={formInput.id}
               autoComplete={formInput.autoComplete}
-              value={formData[formInput.name] as string}
+              value={formData[formInput.name as never]}
               onChange={handleInputChange}
             />
           );
         })}
       </div>
-      <div className="mt-10">
-        <button
-          type="submit"
-          className="block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-        >
-          Оновити дані мого акаунту
-        </button>
-      </div>
+      <button
+        type="submit"
+        className="mt-10 block w-full rounded-md bg-indigo-600 px-3.5 py-2.5
+          text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500
+          focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+          focus-visible:outline-indigo-600 disabled:bg-indigo-600/50"
+        aria-disabled={submitting}
+        disabled={submitting}
+      >
+        Оновити дані мого акаунту
+      </button>
     </form>
   );
 }
