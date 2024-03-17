@@ -3,7 +3,11 @@
 
 ## Introduction
 
-This Job Portal simplifies the job application and recruitment process for job seekers and employers. It uses modern technologies such as TypeScript, Next.js, TailwindCSS, and PlanetScale. The platform is designed to quickly and efficiently connect job seekers with potential employers, providing a simplified response and feedback loop.
+This Job Portal simplifies the job application and recruitment process for job
+seekers and employers. It uses modern technologies such as TypeScript, Next.js,
+TailwindCSS, and LibSQL. The platform is designed to quickly and
+efficiently connect job seekers with potential employers, providing a
+simplified response and feedback loop.
 
 
 ## Features
